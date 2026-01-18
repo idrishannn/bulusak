@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import { googleIleGiris, cikisYap, kullaniciBilgisiGetir } from './firebase';
 // ============================================
 // BULUŞAK v6.0 - Tam Çalışır Versiyon
 // Header sola yaslı, Story düzeltildi
@@ -194,23 +194,32 @@ export default function BulusakApp() {
   const googleIleGirisYap = async () => {
     setYukleniyor(true);
     
-    // TODO: Gerçek Firebase entegrasyonu
-    // const result = await googleIleGiris();
-    // if (result.success) {
-    //   if (result.isNewUser) {
-    //     setKayitAsamasi('avatar');
-    //   } else {
-    //     const userData = await kullaniciBilgisiGetir(result.user.uid);
-    //     setKullanici(userData);
-    //     setGirisYapildi(true);
-    //   }
-    // }
+    try {
+      const result = await googleIleGiris();
+      if (result.success) {
+        if (result.isNewUser) {
+          // Yeni kullanıcı - avatar seçimine git
+          setKayitAsamasi('avatar');
+        } else {
+          // Mevcut kullanıcı - bilgilerini al
+          const userData = await kullaniciBilgisiGetir(result.user.uid);
+          if (userData) {
+            setKullanici(userData);
+            setGirisYapildi(true);
+            bildirimGoster('Tekrar hoş geldin! 🎉');
+          } else {
+            setKayitAsamasi('avatar');
+          }
+        }
+      } else {
+        bildirimGoster('Giriş başarısız: ' + result.error, 'hata');
+      }
+    } catch (error) {
+      bildirimGoster('Bir hata oluştu!', 'hata');
+      console.error(error);
+    }
     
-    // Demo için direkt avatar seçimine git
-    setTimeout(() => {
-      setYukleniyor(false);
-      setKayitAsamasi('avatar');
-    }, 1000);
+    setYukleniyor(false);
   };
 
   const etkinlikBul = (tarih, saat) => {
@@ -1615,15 +1624,21 @@ export default function BulusakApp() {
                   <p className={`text-sm ${tema.textSecondary}`}>{aktivite.plan.tarih}</p>
                 </div>
               </div>
-              <button 
-                onClick={() => katilimIstegiGonder(aktivite.id, aktivite.plan)}
-                disabled={animasyonAktif}
-                className={`w-full mt-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-xl font-bold transition-all ${
-                  animasyonAktif ? 'opacity-50' : 'hover:shadow-lg hover:scale-[1.02]'
-                }`}
-              >
-                {animasyonAktif ? '✓ Gönderildi!' : 'Katılmak İstiyorum! 🙋'}
-              </button>
+              {aktivite.kullanici.id === (kullanici?.id || 1) ? (
+  <div className="w-full mt-3 bg-gray-100 text-gray-500 py-2.5 rounded-xl font-bold text-center">
+    📌 Senin Planın
+  </div>
+) : (
+  <button 
+    onClick={() => katilimIstegiGonder(aktivite.id, aktivite.plan)}
+    disabled={animasyonAktif}
+    className={`w-full mt-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-xl font-bold transition-all ${
+      animasyonAktif ? 'opacity-50' : 'hover:shadow-lg hover:scale-[1.02]'
+    }`}
+  >
+    {animasyonAktif ? '✓ Gönderildi!' : 'Katılmak İstiyorum! 🙋'}
+  </button>
+)}
             </div>
           )}
 
