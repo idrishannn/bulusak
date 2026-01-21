@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { googleIleGiris, cikisYap, kullaniciBilgisiGetir } from './firebase';
+import { 
+  googleIleGiris, 
+  cikisYap, 
+  kullaniciBilgisiGetir, 
+  profilGuncelle,
+  gruplariDinle,
+  grupOlustur,
+  etkinlikleriDinle,
+  etkinlikOlustur,
+  auth
+} from './firebase';
+
 // ============================================
-// BULUŞAK v6.0 - Tam Çalışır Versiyon
-// Header sola yaslı, Story düzeltildi
-// Firebase entegrasyonu hazır (ayrı dosyada)
+// BULUŞAK v7.0 - Firebase Entegrasyonu Düzeltildi
 // ============================================
 
 const gunler = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
@@ -34,14 +43,6 @@ const avatarlar = {
   fantastik: ['🤖', '👽', '👻', '🎃', '😺', '🦊', '🐶', '🐱', '🦁', '🐯', '🐻', '🐼', '🐨', '🐸', '🦄', '🐲', '🦋', '🌸', '⭐', '🌈']
 };
 
-const demoKullanicilar = [
-  { id: 1, isim: 'Ahmet', kullaniciAdi: '@ahmet', avatar: '🧔', renk: '#FF6B35', online: true, bio: 'Kahve tutkunu ☕' },
-  { id: 2, isim: 'Ayşe', kullaniciAdi: '@ayse', avatar: '👩‍🎨', renk: '#FF8C42', online: true, bio: 'Sanat & Tasarım 🎨' },
-  { id: 3, isim: 'Mehmet', kullaniciAdi: '@mehmet', avatar: '👨‍💼', renk: '#FFD166', online: false, bio: 'İş & Eğlence 💼' },
-  { id: 4, isim: 'Zeynep', kullaniciAdi: '@zeynep', avatar: '👩‍🎓', renk: '#F4845F', online: true, bio: 'Öğrenci hayatı 📚' },
-  { id: 5, isim: 'Can', kullaniciAdi: '@can', avatar: '🦊', renk: '#F7B267', online: false, bio: 'Gamer 🎮' },
-];
-
 const mekanOnerileri = [
   { isim: 'Starbucks Moda', tip: 'Kafe', puan: 4.5, emoji: '☕' },
   { isim: 'Big Chefs', tip: 'Restoran', puan: 4.3, emoji: '🍽️' },
@@ -50,7 +51,6 @@ const mekanOnerileri = [
   { isim: 'Halı Saha Plus', tip: 'Spor', puan: 4.1, emoji: '⚽' },
 ];
 
-// Tema - Sadece Light Mode
 const tema = {
   bg: 'bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100',
   bgSecondary: 'bg-white/60',
@@ -74,80 +74,16 @@ export default function BulusakApp() {
   const [girisYapildi, setGirisYapildi] = useState(false);
   const [kayitAsamasi, setKayitAsamasi] = useState('giris');
   const [kullanici, setKullanici] = useState(null);
-  const [yukleniyor, setYukleniyor] = useState(false);
+  const [yukleniyor, setYukleniyor] = useState(true); // BAŞLANGIÇTA TRUE
+  const [islemYukleniyor, setIslemYukleniyor] = useState(false);
   
   const [aktifSayfa, setAktifSayfa] = useState('feed');
   const [seciliGrup, setSeciliGrup] = useState(null);
   const [musaitlikler, setMusaitlikler] = useState({});
   
-  const [gruplar, setGruplar] = useState([
-    { id: 1, isim: 'Üniversite Tayfa', emoji: '🎓', uyeler: [1, 2, 3, 4], renk: '#FF6B35' },
-    { id: 2, isim: 'İş Arkadaşları', emoji: '💼', uyeler: [1, 3, 5], renk: '#FF8C42' },
-    { id: 3, isim: 'Futbol Grubu', emoji: '⚽', uyeler: [1, 2, 5], renk: '#FFD166' },
-  ]);
-  
-  const [etkinlikler, setEtkinlikler] = useState([
-    {
-      id: 1,
-      baslik: 'Rahatlama Kahvesi',
-      ikon: 'kahve',
-      grup: { id: 1, isim: 'Üniversite Tayfa', emoji: '🎓', uyeler: [1, 2, 3, 4], renk: '#FF6B35' },
-      tarih: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-      saat: '15:00',
-      mekan: 'Kadıköy Moda',
-      katilimcilar: [
-        { kullanici: demoKullanicilar[0], durum: 'varim' },
-        { kullanici: demoKullanicilar[1], durum: 'varim' },
-        { kullanici: demoKullanicilar[2], durum: 'bakariz' },
-        { kullanici: demoKullanicilar[3], durum: 'bekliyor' },
-      ],
-      durum: 'aktif',
-      reactler: [],
-      mesajlar: [
-        { kullanici: demoKullanicilar[1], mesaj: 'Moda sahil olsun mu?', zaman: '10:30' },
-        { kullanici: demoKullanicilar[0], mesaj: 'Olur, güzel hava var', zaman: '10:35' },
-      ]
-    },
-    {
-      id: 2,
-      baslik: 'Haftalık Futbol',
-      ikon: 'spor',
-      grup: { id: 3, isim: 'Futbol Grubu', emoji: '⚽', uyeler: [1, 2, 5], renk: '#FFD166' },
-      tarih: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      saat: '19:00',
-      mekan: 'Halı Saha - Ataşehir',
-      katilimcilar: [
-        { kullanici: demoKullanicilar[0], durum: 'varim' },
-        { kullanici: demoKullanicilar[1], durum: 'varim' },
-        { kullanici: demoKullanicilar[4], durum: 'varim' },
-      ],
-      durum: 'aktif',
-      reactler: [],
-      mesajlar: []
-    },
-  ]);
-  
-  const [aktiviteler, setAktiviteler] = useState([
-    {
-      id: 1,
-      tip: 'yeni_plan',
-      kullanici: demoKullanicilar[1],
-      plan: { baslik: 'Kahve Molası', ikon: 'kahve', tarih: 'Yarın 15:00' },
-      zaman: '5 dk önce',
-      reactler: [
-        { emoji: '❤️', kullanicilar: [demoKullanicilar[0], demoKullanicilar[3]] },
-        { emoji: '🔥', kullanicilar: [demoKullanicilar[2]] },
-      ]
-    },
-    {
-      id: 2,
-      tip: 'katilim',
-      kullanici: demoKullanicilar[2],
-      plan: { baslik: 'Haftalık Futbol', ikon: 'spor' },
-      zaman: '1 saat önce',
-      reactler: [{ emoji: '👏', kullanicilar: [demoKullanicilar[0]] }]
-    },
-  ]);
+  const [gruplar, setGruplar] = useState([]);
+  const [etkinlikler, setEtkinlikler] = useState([]);
+  const [aktiviteler, setAktiviteler] = useState([]);
   
   const [katilimIstekleri, setKatilimIstekleri] = useState([]);
   const [bildirim, setBildirim] = useState(null);
@@ -158,17 +94,61 @@ export default function BulusakApp() {
   const [seciliAvatar, setSeciliAvatar] = useState('👨');
   const [avatarKategori, setAvatarKategori] = useState('erkek');
   
-  const [bucketList, setBucketList] = useState([
-    { id: 1, baslik: 'Kapadokya\'da balon turu', tamamlandi: false, emoji: '🎈' },
-    { id: 2, baslik: 'Birlikte konser', tamamlandi: true, emoji: '🎵' },
-    { id: 3, baslik: 'Kamp yapmak', tamamlandi: false, emoji: '⛺' },
-  ]);
-  const [bildirimler, setBildirimler] = useState([
-    { id: 1, mesaj: '☕ Kahve Molası 1 saat kaldı!', zaman: 'Az önce', okundu: false },
-    { id: 2, mesaj: '🎉 Ayşe yeni plan oluşturdu', zaman: '5 dk önce', okundu: false },
-  ]);
+  const [bucketList, setBucketList] = useState([]);
+  const [bildirimler, setBildirimler] = useState([]);
   const [galeri, setGaleri] = useState([]);
   const [animasyonluKart, setAnimasyonluKart] = useState(null);
+
+  // Firebase Auth Listener - DÜZELTİLDİ
+  useEffect(() => {
+    const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const userData = await kullaniciBilgisiGetir(user.uid);
+        if (userData && userData.profilTamamlandi) {
+          setKullanici({ 
+            ...userData, 
+            id: user.uid,
+            odUserId: user.uid 
+          });
+          setGirisYapildi(true);
+          setKayitAsamasi('giris');
+        } else {
+          // Kullanıcı var ama profil tamamlanmamış
+          setGirisYapildi(false);
+          setKayitAsamasi('avatar');
+        }
+      } else {
+        // Kullanıcı yok
+        setKullanici(null);
+        setGirisYapildi(false);
+        setKayitAsamasi('giris');
+      }
+      setYukleniyor(false); // Yükleme bitti
+    });
+    
+    return () => unsubscribeAuth();
+  }, []);
+
+  // Grupları dinle
+  useEffect(() => {
+    if (kullanici?.odUserId) {
+      const unsubscribe = gruplariDinle(kullanici.odUserId, (yeniGruplar) => {
+        setGruplar(yeniGruplar);
+      });
+      return () => unsubscribe();
+    }
+  }, [kullanici?.odUserId]);
+
+  // Etkinlikleri dinle
+  useEffect(() => {
+    if (gruplar.length > 0) {
+      const grupIds = gruplar.map(g => g.id);
+      const unsubscribe = etkinlikleriDinle(grupIds, (yeniEtkinlikler) => {
+        setEtkinlikler(yeniEtkinlikler);
+      });
+      return () => unsubscribe();
+    }
+  }, [gruplar]);
 
   const bugun = new Date();
   
@@ -184,27 +164,28 @@ export default function BulusakApp() {
 
   const saatler = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
 
-  // Fonksiyonlar
   const bildirimGoster = (mesaj, tip = 'basari') => {
     setBildirim({ mesaj, tip });
     setTimeout(() => setBildirim(null), 3000);
   };
 
-  // Google ile giriş (Firebase entegrasyonu için hazır)
+  // Google ile giriş - DÜZELTİLDİ
   const googleIleGirisYap = async () => {
-    setYukleniyor(true);
+    setIslemYukleniyor(true);
     
     try {
       const result = await googleIleGiris();
       if (result.success) {
         if (result.isNewUser) {
-          // Yeni kullanıcı - avatar seçimine git
           setKayitAsamasi('avatar');
         } else {
-          // Mevcut kullanıcı - bilgilerini al
           const userData = await kullaniciBilgisiGetir(result.user.uid);
-          if (userData) {
-            setKullanici(userData);
+          if (userData && userData.profilTamamlandi) {
+            setKullanici({
+              ...userData,
+              id: result.user.uid,
+              odUserId: result.user.uid
+            });
             setGirisYapildi(true);
             bildirimGoster('Tekrar hoş geldin! 🎉');
           } else {
@@ -219,7 +200,22 @@ export default function BulusakApp() {
       console.error(error);
     }
     
-    setYukleniyor(false);
+    setIslemYukleniyor(false);
+  };
+
+  // Çıkış yap - DÜZELTİLDİ
+  const cikisYapFunc = async () => {
+    try {
+      await cikisYap();
+      setKullanici(null);
+      setGirisYapildi(false);
+      setKayitAsamasi('giris');
+      setGruplar([]);
+      setEtkinlikler([]);
+      bildirimGoster('Çıkış yapıldı!');
+    } catch (error) {
+      console.error('Çıkış hatası:', error);
+    }
   };
 
   const etkinlikBul = (tarih, saat) => {
@@ -234,46 +230,66 @@ export default function BulusakApp() {
     setMusaitlikler(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const yeniGrupOlustur = (isim, emoji, uyeler) => {
-    const yeniGrup = {
-      id: Date.now(),
+  // Grup oluştur - DÜZELTİLDİ
+  const yeniGrupOlustur = async (isim, emoji, uyeler) => {
+    if (!kullanici?.odUserId) {
+      bildirimGoster('Önce giriş yapmalısın!', 'hata');
+      return null;
+    }
+    
+    setIslemYukleniyor(true);
+    
+    const result = await grupOlustur({
       isim,
       emoji,
-      uyeler: [kullanici?.id || 1, ...uyeler],
       renk: '#FF6B35'
-    };
-    setGruplar(prev => [...prev, yeniGrup]);
-    return yeniGrup;
+    }, kullanici.odUserId);
+    
+    setIslemYukleniyor(false);
+    
+    if (result.success) {
+      bildirimGoster(`${emoji} ${isim} oluşturuldu!`);
+      return { id: result.id, isim, emoji, uyeler: [kullanici.odUserId], renk: '#FF6B35' };
+    } else {
+      bildirimGoster('Grup oluşturulamadı!', 'hata');
+      return null;
+    }
   };
 
-  const yeniEtkinlikOlustur = (data) => {
-    const yeniEtkinlik = {
-      id: Date.now(),
+  // Etkinlik oluştur - DÜZELTİLDİ
+  const yeniEtkinlikOlustur = async (data) => {
+    if (!kullanici?.odUserId) {
+      bildirimGoster('Önce giriş yapmalısın!', 'hata');
+      return false;
+    }
+    
+    if (!data.grup || !data.grup.id) {
+      bildirimGoster('Lütfen bir grup seç!', 'hata');
+      return false;
+    }
+    
+    setIslemYukleniyor(true);
+    
+    const result = await etkinlikOlustur({
       baslik: data.baslik,
       ikon: data.ikon,
+      grupId: data.grup.id,
       grup: data.grup,
-      tarih: data.tarih,
+      tarih: data.tarih.toISOString(),
       saat: data.saat,
-      mekan: data.mekan,
-      katilimcilar: [{ kullanici: kullanici || demoKullanicilar[0], durum: 'varim' }],
-      durum: 'aktif',
-      reactler: [],
-      mesajlar: []
-    };
+      mekan: data.mekan
+    }, kullanici.odUserId);
     
-    setEtkinlikler(prev => [...prev, yeniEtkinlik]);
+    setIslemYukleniyor(false);
     
-    setAktiviteler(prev => [{
-      id: Date.now(),
-      tip: 'yeni_plan',
-      kullanici: kullanici || demoKullanicilar[0],
-      plan: { baslik: data.baslik, ikon: data.ikon, tarih: `${gunlerTam[data.tarih.getDay()]} ${data.saat}` },
-      zaman: 'Az önce',
-      reactler: []
-    }, ...prev]);
-    
-    bildirimGoster('Plan oluşturuldu! 🎉');
-    setModalAcik(null);
+    if (result.success) {
+      bildirimGoster('Plan oluşturuldu! 🎉');
+      setModalAcik(null);
+      return true;
+    } else {
+      bildirimGoster('Plan oluşturulamadı!', 'hata');
+      return false;
+    }
   };
 
   const katilimIstegiGonder = (aktiviteId, plan) => {
@@ -289,25 +305,25 @@ export default function BulusakApp() {
       
       setAktiviteler(prev => prev.filter(a => a.id !== aktiviteId));
       setAnimasyonluKart(null);
-      bildirimGoster('İstek gönderildi! 📋 Planlar\'dan takip et');
+      bildirimGoster('İstek gönderildi! 📋');
     }, 800);
   };
 
   const katilimDurumuGuncelle = (etkinlikId, durum) => {
     setEtkinlikler(prev => prev.map(e => {
       if (e.id === etkinlikId) {
-        const mevcutKatilimci = e.katilimcilar.find(k => k.kullanici.id === (kullanici?.id || 1));
+        const mevcutKatilimci = e.katilimcilar?.find(k => k.odUserId === kullanici?.odUserId);
         if (mevcutKatilimci) {
           return {
             ...e,
             katilimcilar: e.katilimcilar.map(k => 
-              k.kullanici.id === (kullanici?.id || 1) ? { ...k, durum } : k
+              k.odUserId === kullanici?.odUserId ? { ...k, durum } : k
             )
           };
         } else {
           return {
             ...e,
-            katilimcilar: [...e.katilimcilar, { kullanici: kullanici || demoKullanicilar[0], durum }]
+            katilimcilar: [...(e.katilimcilar || []), { odUserId: kullanici?.odUserId, durum }]
           };
         }
       }
@@ -319,38 +335,49 @@ export default function BulusakApp() {
   const reactEkle = (aktiviteId, emoji) => {
     setAktiviteler(prev => prev.map(a => {
       if (a.id === aktiviteId) {
-        const mevcutReact = a.reactler.find(r => r.emoji === emoji);
-        if (mevcutReact) {
-          const kullaniciVarMi = mevcutReact.kullanicilar.some(k => k.id === (kullanici?.id || 1));
-          if (kullaniciVarMi) {
-            return {
-              ...a,
-              reactler: a.reactler.map(r => 
-                r.emoji === emoji 
-                  ? { ...r, kullanicilar: r.kullanicilar.filter(k => k.id !== (kullanici?.id || 1)) }
-                  : r
-              ).filter(r => r.kullanicilar.length > 0)
+        const kullaniciId = kullanici?.id || 1;
+        const buEmojiyeBasmisMi = a.reactler?.find(r => r.emoji === emoji)?.kullanicilar?.some(k => k.id === kullaniciId);
+        
+        let yeniReactler = (a.reactler || []).map(r => ({
+          ...r,
+          kullanicilar: r.kullanicilar.filter(k => k.id !== kullaniciId)
+        })).filter(r => r.kullanicilar.length > 0);
+        
+        if (!buEmojiyeBasmisMi) {
+          const mevcutEmojiIndex = yeniReactler.findIndex(r => r.emoji === emoji);
+          if (mevcutEmojiIndex >= 0) {
+            yeniReactler[mevcutEmojiIndex] = {
+              ...yeniReactler[mevcutEmojiIndex],
+              kullanicilar: [...yeniReactler[mevcutEmojiIndex].kullanicilar, kullanici]
             };
           } else {
-            return {
-              ...a,
-              reactler: a.reactler.map(r =>
-                r.emoji === emoji
-                  ? { ...r, kullanicilar: [...r.kullanicilar, kullanici || demoKullanicilar[0]] }
-                  : r
-              )
-            };
+            yeniReactler.push({ emoji, kullanicilar: [kullanici] });
           }
-        } else {
-          return {
-            ...a,
-            reactler: [...a.reactler, { emoji, kullanicilar: [kullanici || demoKullanicilar[0]] }]
-          };
         }
+        
+        return { ...a, reactler: yeniReactler };
       }
       return a;
     }));
   };
+
+  // ============================================
+  // YÜKLEME EKRANI
+  // ============================================
+  
+  if (yukleniyor) {
+    return (
+      <div className={`min-h-screen ${tema.bg} flex items-center justify-center`}>
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">🎉</div>
+          <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">
+            Buluşak
+          </h1>
+          <p className={`${tema.textSecondary} mt-2`}>Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
 
   // ============================================
   // GİRİŞ EKRANLARI
@@ -360,7 +387,7 @@ export default function BulusakApp() {
     <div className={`min-h-screen ${tema.bg} flex flex-col`}>
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 mb-2 tracking-tight" style={{ fontFamily: 'Nunito, sans-serif' }}>
+          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 mb-2 tracking-tight">
             Buluşak
           </h1>
           <div className="w-24 h-1 bg-gradient-to-r from-orange-500 to-amber-500 mx-auto rounded-full mb-3"></div>
@@ -387,13 +414,12 @@ export default function BulusakApp() {
       </div>
 
       <div className="p-6 space-y-3">
-        {/* Google ile Giriş */}
         <button
           onClick={googleIleGirisYap}
-          disabled={yukleniyor}
-          className="w-full bg-white text-gray-700 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border border-gray-200"
+          disabled={islemYukleniyor}
+          className="w-full bg-white text-gray-700 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border border-gray-200 disabled:opacity-50"
         >
-          {yukleniyor ? (
+          {islemYukleniyor ? (
             <span className="animate-spin">⏳</span>
           ) : (
             <>
@@ -406,14 +432,6 @@ export default function BulusakApp() {
               Google ile Devam Et
             </>
           )}
-        </button>
-
-        {/* Hızlı Başla (Demo için) */}
-        <button
-          onClick={() => setKayitAsamasi('avatar')}
-          className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3"
-        >
-          🚀 Hızlı Başla (Demo)
         </button>
 
         <p className={`text-center text-sm ${tema.textMuted} mt-4`}>
@@ -494,18 +512,42 @@ export default function BulusakApp() {
   const BilgiEkrani = () => {
     const [isim, setIsim] = useState('');
     const [kullaniciAdi, setKullaniciAdi] = useState('');
+    const [kayitYukleniyor, setKayitYukleniyor] = useState(false);
 
-    const tamamla = () => {
-      setKullanici({
-        id: 1,
+    const tamamla = async () => {
+      if (!auth.currentUser) {
+        bildirimGoster('Önce Google ile giriş yapmalısın!', 'hata');
+        setKayitAsamasi('giris');
+        return;
+      }
+      
+      setKayitYukleniyor(true);
+      const userId = auth.currentUser.uid;
+      
+      const result = await profilGuncelle(userId, {
         isim: isim || 'Kullanıcı',
-        kullaniciAdi: kullaniciAdi || '@kullanici',
+        kullaniciAdi: kullaniciAdi ? `@${kullaniciAdi.replace('@', '')}` : `@kullanici${Date.now()}`,
         avatar: seciliAvatar,
         online: true,
         bio: ''
       });
-      setGirisYapildi(true);
-      bildirimGoster('Hoş geldin! 🎉');
+      
+      if (result.success) {
+        setKullanici({
+          id: userId,
+          odUserId: userId,
+          isim: isim || 'Kullanıcı',
+          kullaniciAdi: kullaniciAdi ? `@${kullaniciAdi.replace('@', '')}` : `@kullanici${Date.now()}`,
+          avatar: seciliAvatar,
+          online: true,
+          bio: ''
+        });
+        setGirisYapildi(true);
+        bildirimGoster('Hoş geldin! 🎉');
+      } else {
+        bildirimGoster('Kayıt hatası!', 'hata');
+      }
+      setKayitYukleniyor(false);
     };
 
     return (
@@ -554,9 +596,10 @@ export default function BulusakApp() {
         <div className="p-6">
           <button
             onClick={tamamla}
-            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg"
+            disabled={kayitYukleniyor}
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg disabled:opacity-50"
           >
-            Başlayalım! 🎉
+            {kayitYukleniyor ? '⏳ Kaydediliyor...' : 'Başlayalım! 🎉'}
           </button>
         </div>
       </div>
@@ -564,30 +607,26 @@ export default function BulusakApp() {
   };
 
   // ============================================
-  // MODALLAR (Öncekiyle aynı - değişmedi)
+  // MODALLAR
   // ============================================
 
   const YeniGrupModal = () => {
     const [grupAdi, setGrupAdi] = useState('');
     const [secilenEmoji, setSecilenEmoji] = useState('🎉');
-    const [secilenUyeler, setSecilenUyeler] = useState([]);
 
     if (modalAcik !== 'yeniGrup') return null;
 
-    const uyeToggle = (id) => {
-      setSecilenUyeler(prev => 
-        prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]
-      );
-    };
-
-    const handleOlustur = () => {
+    const handleOlustur = async () => {
       if (!grupAdi.trim()) {
         bildirimGoster('Grup adı gerekli!', 'hata');
         return;
       }
-      yeniGrupOlustur(grupAdi, secilenEmoji, secilenUyeler);
-      bildirimGoster(`${secilenEmoji} ${grupAdi} oluşturuldu!`);
-      setModalAcik(null);
+      
+      const result = await yeniGrupOlustur(grupAdi, secilenEmoji, []);
+      if (result) {
+        setModalAcik(null);
+        setGrupAdi('');
+      }
     };
 
     return (
@@ -611,7 +650,7 @@ export default function BulusakApp() {
             />
           </div>
 
-          <div className="mb-4">
+          <div className="mb-6">
             <label className={`text-sm font-bold ${tema.textSecondary} mb-2 block`}>Grup İkonu</label>
             <div className="flex flex-wrap gap-2">
               {grupIkonlari.map((emoji, i) => (
@@ -630,43 +669,12 @@ export default function BulusakApp() {
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className={`text-sm font-bold ${tema.textSecondary} mb-2 block`}>Üyeler</label>
-            <div className="space-y-2">
-              {demoKullanicilar.filter(k => k.id !== (kullanici?.id || 1)).map(k => (
-                <button
-                  key={k.id}
-                  onClick={() => uyeToggle(k.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
-                    secilenUyeler.includes(k.id)
-                      ? 'bg-orange-100 border-2 border-orange-400'
-                      : `${tema.inputBg} border-2 border-transparent`
-                  }`}
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-amber-400 rounded-full flex items-center justify-center text-xl">
-                    {k.avatar}
-                  </div>
-                  <div className="flex-1 text-left">
-                    <div className={`font-bold ${tema.text}`}>{k.isim}</div>
-                    <div className={`text-sm ${tema.textSecondary}`}>{k.kullaniciAdi}</div>
-                  </div>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    secilenUyeler.includes(k.id)
-                      ? 'bg-orange-500 border-orange-500 text-white'
-                      : 'border-gray-300'
-                  }`}>
-                    {secilenUyeler.includes(k.id) && '✓'}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <button
             onClick={handleOlustur}
-            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg"
+            disabled={islemYukleniyor}
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg disabled:opacity-50"
           >
-            Grup Oluştur 🎉
+            {islemYukleniyor ? '⏳ Oluşturuluyor...' : 'Grup Oluştur 🎉'}
           </button>
         </div>
       </div>
@@ -678,26 +686,23 @@ export default function BulusakApp() {
     const [secilenIkon, setSecilenIkon] = useState('kahve');
     const [mekan, setMekan] = useState('');
     const [secilenGrupId, setSecilenGrupId] = useState(seciliGrup?.id || gruplar[0]?.id);
-    const [yeniGrupModu, setYeniGrupModu] = useState(false);
-    const [yeniGrupAdi, setYeniGrupAdi] = useState('');
-    const [yeniGrupEmoji, setYeniGrupEmoji] = useState('🎉');
 
     if (modalAcik !== 'yeniPlan' || !seciliZaman) return null;
 
-    const handleOlustur = () => {
+    const handleOlustur = async () => {
       if (!baslik.trim()) {
         bildirimGoster('Plan adı gerekli!', 'hata');
         return;
       }
 
-      let hedefGrup;
-      if (yeniGrupModu && yeniGrupAdi.trim()) {
-        hedefGrup = yeniGrupOlustur(yeniGrupAdi, yeniGrupEmoji, []);
-      } else {
-        hedefGrup = gruplar.find(g => g.id === secilenGrupId);
+      const hedefGrup = gruplar.find(g => g.id === secilenGrupId);
+      
+      if (!hedefGrup) {
+        bildirimGoster('Lütfen bir grup seç!', 'hata');
+        return;
       }
 
-      yeniEtkinlikOlustur({
+      await yeniEtkinlikOlustur({
         baslik,
         ikon: secilenIkon,
         tarih: seciliZaman.tarih,
@@ -756,60 +761,35 @@ export default function BulusakApp() {
           </div>
 
           <div className="mb-4">
-            <label className={`text-sm font-bold ${tema.textSecondary} mb-2 block`}>👥 Kimlerle?</label>
-            
-            {!yeniGrupModu ? (
-              <>
-                <div className="space-y-2 mb-3">
-                  {gruplar.map(g => (
-                    <button
-                      key={g.id}
-                      onClick={() => setSecilenGrupId(g.id)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
-                        secilenGrupId === g.id
-                          ? 'bg-orange-100 border-2 border-orange-400'
-                          : `${tema.inputBg} border-2 border-transparent`
-                      }`}
-                    >
-                      <span className="text-2xl">{g.emoji}</span>
-                      <span className={`font-medium ${tema.text}`}>{g.isim}</span>
-                      <span className={`text-sm ${tema.textSecondary} ml-auto`}>{g.uyeler.length} kişi</span>
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setYeniGrupModu(true)}
-                  className={`w-full p-3 rounded-xl border-2 border-dashed border-orange-300 ${tema.text} font-medium flex items-center justify-center gap-2 ${tema.bgHover}`}
-                >
-                  ➕ Yeni Grup Oluştur
-                </button>
-              </>
+            <label className={`text-sm font-bold ${tema.textSecondary} mb-2 block`}>👥 Grup Seç</label>
+            {gruplar.length > 0 ? (
+              <div className="space-y-2">
+                {gruplar.map(g => (
+                  <button
+                    key={g.id}
+                    onClick={() => setSecilenGrupId(g.id)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+                      secilenGrupId === g.id
+                        ? 'bg-orange-100 border-2 border-orange-400'
+                        : `${tema.inputBg} border-2 border-transparent`
+                    }`}
+                  >
+                    <span className="text-2xl">{g.emoji}</span>
+                    <span className={`font-medium ${tema.text}`}>{g.isim}</span>
+                  </button>
+                ))}
+              </div>
             ) : (
-              <div className={`${tema.inputBg} rounded-2xl p-4`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <button onClick={() => setYeniGrupModu(false)} className="text-orange-500">←</button>
-                  <span className={`font-bold ${tema.text}`}>Yeni Grup</span>
-                </div>
-                <input
-                  type="text"
-                  value={yeniGrupAdi}
-                  onChange={(e) => setYeniGrupAdi(e.target.value)}
-                  placeholder="Grup adı"
-                  className={`w-full ${tema.bgCard} ${tema.inputText} rounded-xl p-3 mb-3 border ${tema.border}`}
-                />
-                <div className="flex gap-2 flex-wrap">
-                  {grupIkonlari.slice(0, 10).map((emoji, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setYeniGrupEmoji(emoji)}
-                      className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center ${
-                        yeniGrupEmoji === emoji ? 'bg-orange-200' : tema.bgCard
-                      }`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
+              <div className={`${tema.inputBg} rounded-xl p-4 text-center`}>
+                <p className={tema.textSecondary}>Henüz grup yok!</p>
+                <button
+                  onClick={() => {
+                    setModalAcik('yeniGrup');
+                  }}
+                  className="text-orange-500 font-bold mt-2"
+                >
+                  + Önce Grup Oluştur
+                </button>
               </div>
             )}
           </div>
@@ -839,162 +819,11 @@ export default function BulusakApp() {
 
           <button
             onClick={handleOlustur}
-            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+            disabled={islemYukleniyor || gruplar.length === 0}
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg disabled:opacity-50"
           >
-            Plan Oluştur 🚀
+            {islemYukleniyor ? '⏳ Oluşturuluyor...' : 'Plan Oluştur 🚀'}
           </button>
-        </div>
-      </div>
-    );
-  };
-
-  const EtkinlikDetayModal = () => {
-    const [yeniMesaj, setYeniMesaj] = useState('');
-
-    if (modalAcik !== 'detay' || !seciliEtkinlik) return null;
-
-    const tarih = new Date(seciliEtkinlik.tarih);
-    const varimSayisi = seciliEtkinlik.katilimcilar.filter(k => k.durum === 'varim').length;
-    const kullanicininDurumu = seciliEtkinlik.katilimcilar.find(k => k.kullanici.id === (kullanici?.id || 1))?.durum;
-
-    const mesajGonder = () => {
-      if (!yeniMesaj.trim()) return;
-      setEtkinlikler(prev => prev.map(e => {
-        if (e.id === seciliEtkinlik.id) {
-          return {
-            ...e,
-            mesajlar: [...e.mesajlar, {
-              kullanici: kullanici || demoKullanicilar[0],
-              mesaj: yeniMesaj,
-              zaman: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-            }]
-          };
-        }
-        return e;
-      }));
-      setSeciliEtkinlik(prev => ({
-        ...prev,
-        mesajlar: [...prev.mesajlar, {
-          kullanici: kullanici || demoKullanicilar[0],
-          mesaj: yeniMesaj,
-          zaman: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-        }]
-      }));
-      setYeniMesaj('');
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end justify-center">
-        <div className={`${tema.bgCard} rounded-t-3xl w-full max-w-lg animate-slide-up border-t ${tema.border} max-h-[95vh] flex flex-col`}>
-          <div className="p-6 border-b border-gray-100">
-            <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
-            
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-400 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
-                  {etkinlikIkonlari[seciliEtkinlik.ikon]}
-                </div>
-                <div>
-                  <h3 className={`text-xl font-black ${tema.text}`}>{seciliEtkinlik.baslik}</h3>
-                  <p className={tema.textSecondary}>{seciliEtkinlik.grup.emoji} {seciliEtkinlik.grup.isim}</p>
-                </div>
-              </div>
-              <button onClick={() => { setModalAcik(null); setSeciliEtkinlik(null); }} className={`w-10 h-10 rounded-xl ${tema.inputBg} flex items-center justify-center ${tema.text}`}>✕</button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className={`${tema.inputBg} rounded-xl p-3`}>
-                <div className={`text-xs ${tema.textMuted} mb-1`}>📅 Tarih</div>
-                <div className={`font-bold ${tema.text}`}>{gunlerTam[tarih.getDay()]}</div>
-                <div className={`text-sm ${tema.textSecondary}`}>{tarih.getDate()} {aylar[tarih.getMonth()]}</div>
-              </div>
-              <div className={`${tema.inputBg} rounded-xl p-3`}>
-                <div className={`text-xs ${tema.textMuted} mb-1`}>⏰ Saat</div>
-                <div className={`font-bold ${tema.text}`}>{seciliEtkinlik.saat}</div>
-                <div className={`text-sm ${tema.textSecondary}`}>📍 {seciliEtkinlik.mekan}</div>
-              </div>
-            </div>
-
-            <div className="flex gap-2 mb-4">
-              {[
-                { durum: 'varim', label: '✓ Varım', color: 'from-green-500 to-emerald-500' },
-                { durum: 'bakariz', label: '🤔 Bakarız', color: 'from-yellow-500 to-orange-500' },
-                { durum: 'yokum', label: '✗ Yokum', color: 'from-red-500 to-rose-500' },
-              ].map(btn => (
-                <button
-                  key={btn.durum}
-                  onClick={() => katilimDurumuGuncelle(seciliEtkinlik.id, btn.durum)}
-                  className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
-                    kullanicininDurumu === btn.durum
-                      ? `bg-gradient-to-r ${btn.color} text-white shadow-lg scale-105`
-                      : `${tema.inputBg} ${tema.text} ${tema.bgHover}`
-                  }`}
-                >
-                  {btn.label}
-                </button>
-              ))}
-            </div>
-
-            <div>
-              <div className={`text-sm font-bold ${tema.textSecondary} mb-2`}>Katılımcılar ({varimSayisi}/{seciliEtkinlik.katilimcilar.length})</div>
-              <div className="flex flex-wrap gap-2">
-                {seciliEtkinlik.katilimcilar.map((k, i) => (
-                  <div 
-                    key={i}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm ${
-                      k.durum === 'varim' ? 'bg-green-100 text-green-700' :
-                      k.durum === 'bakariz' ? 'bg-yellow-100 text-yellow-700' :
-                      k.durum === 'yokum' ? 'bg-red-100 text-red-700' :
-                      `${tema.inputBg} ${tema.text}`
-                    }`}
-                  >
-                    <span className="text-lg">{k.kullanici.avatar}</span>
-                    <span className="font-medium">{k.kullanici.isim}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {seciliEtkinlik.mesajlar.map((m, i) => (
-              <div key={i} className={`flex gap-2 ${m.kullanici.id === (kullanici?.id || 1) ? 'flex-row-reverse' : ''}`}>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-sm">
-                  {m.kullanici.avatar}
-                </div>
-                <div className={`max-w-[70%] ${m.kullanici.id === (kullanici?.id || 1) ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white' : tema.inputBg} rounded-2xl px-4 py-2`}>
-                  <div className={`text-xs ${m.kullanici.id === (kullanici?.id || 1) ? 'text-white/70' : tema.textMuted}`}>{m.kullanici.isim}</div>
-                  <div className={m.kullanici.id === (kullanici?.id || 1) ? 'text-white' : tema.text}>{m.mesaj}</div>
-                  <div className={`text-xs ${m.kullanici.id === (kullanici?.id || 1) ? 'text-white/50' : tema.textMuted} text-right`}>{m.zaman}</div>
-                </div>
-              </div>
-            ))}
-            {seciliEtkinlik.mesajlar.length === 0 && (
-              <div className="text-center py-8">
-                <span className="text-4xl">💬</span>
-                <p className={`${tema.textSecondary} mt-2`}>Henüz mesaj yok</p>
-              </div>
-            )}
-          </div>
-
-          <div className={`p-4 border-t ${tema.border}`}>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={yeniMesaj}
-                onChange={(e) => setYeniMesaj(e.target.value)}
-                placeholder="Mesaj yaz..."
-                onKeyPress={(e) => e.key === 'Enter' && mesajGonder()}
-                className={`flex-1 ${tema.inputBg} ${tema.inputText} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400`}
-              />
-              <button
-                onClick={mesajGonder}
-                className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center text-white"
-              >
-                📤
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -1013,20 +842,27 @@ export default function BulusakApp() {
 
     if (modalAcik !== 'hizliPlan') return null;
 
-    const handleOlustur = () => {
+    const handleOlustur = async () => {
       if (!baslik.trim()) {
         bildirimGoster('Plan adı gerekli!', 'hata');
         return;
       }
       
       let hedefGrup;
+      
       if (yeniGrupModu && yeniGrupAdi.trim()) {
-        hedefGrup = yeniGrupOlustur(yeniGrupAdi, yeniGrupEmoji, []);
+        hedefGrup = await yeniGrupOlustur(yeniGrupAdi, yeniGrupEmoji, []);
+        if (!hedefGrup) return;
       } else {
         hedefGrup = gruplar.find(g => g.id === secilenGrupId);
       }
 
-      yeniEtkinlikOlustur({
+      if (!hedefGrup) {
+        bildirimGoster('Lütfen bir grup seç veya oluştur!', 'hata');
+        return;
+      }
+
+      await yeniEtkinlikOlustur({
         baslik,
         ikon: secilenIkon,
         tarih: seciliTarih,
@@ -1102,27 +938,31 @@ export default function BulusakApp() {
             <label className={`text-sm font-bold ${tema.textSecondary} mb-2 block`}>👥 Grup</label>
             {!yeniGrupModu ? (
               <>
-                <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
-                  {gruplar.map(g => (
-                    <button
-                      key={g.id}
-                      onClick={() => setSecilenGrupId(g.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
-                        secilenGrupId === g.id
-                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg'
-                          : `${tema.inputBg} ${tema.text}`
-                      }`}
-                    >
-                      <span>{g.emoji}</span>
-                      <span className="font-medium">{g.isim}</span>
-                    </button>
-                  ))}
-                </div>
+                {gruplar.length > 0 ? (
+                  <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
+                    {gruplar.map(g => (
+                      <button
+                        key={g.id}
+                        onClick={() => setSecilenGrupId(g.id)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
+                          secilenGrupId === g.id
+                            ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg'
+                            : `${tema.inputBg} ${tema.text}`
+                        }`}
+                      >
+                        <span>{g.emoji}</span>
+                        <span className="font-medium">{g.isim}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className={`${tema.textSecondary} text-sm mb-2`}>Henüz grup yok</p>
+                )}
                 <button
                   onClick={() => setYeniGrupModu(true)}
                   className={`w-full p-2 rounded-xl border-2 border-dashed border-orange-300 ${tema.text} text-sm font-medium flex items-center justify-center gap-2`}
                 >
-                  ➕ Yeni Grup
+                  ➕ Yeni Grup Oluştur
                 </button>
               </>
             ) : (
@@ -1168,10 +1008,154 @@ export default function BulusakApp() {
 
           <button
             onClick={handleOlustur}
-            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg"
+            disabled={islemYukleniyor}
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg disabled:opacity-50"
           >
-            Plan Oluştur 🚀
+            {islemYukleniyor ? '⏳ Oluşturuluyor...' : 'Plan Oluştur 🚀'}
           </button>
+        </div>
+      </div>
+    );
+  };
+
+  const EtkinlikDetayModal = () => {
+    const [yeniMesaj, setYeniMesaj] = useState('');
+
+    if (modalAcik !== 'detay' || !seciliEtkinlik) return null;
+
+    const tarih = new Date(seciliEtkinlik.tarih);
+    const katilimcilar = seciliEtkinlik.katilimcilar || [];
+    const varimSayisi = katilimcilar.filter(k => k.durum === 'varim').length;
+    const kullanicininDurumu = katilimcilar.find(k => k.odUserId === kullanici?.odUserId)?.durum;
+
+    const mesajGonder = () => {
+      if (!yeniMesaj.trim()) return;
+      setSeciliEtkinlik(prev => ({
+        ...prev,
+        mesajlar: [...(prev.mesajlar || []), {
+          odUserId: kullanici?.odUserId,
+          isim: kullanici?.isim,
+          avatar: kullanici?.avatar,
+          mesaj: yeniMesaj,
+          zaman: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+        }]
+      }));
+      setYeniMesaj('');
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end justify-center">
+        <div className={`${tema.bgCard} rounded-t-3xl w-full max-w-lg animate-slide-up border-t ${tema.border} max-h-[95vh] flex flex-col`}>
+          <div className="p-6 border-b border-gray-100">
+            <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-400 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
+                  {etkinlikIkonlari[seciliEtkinlik.ikon]}
+                </div>
+                <div>
+                  <h3 className={`text-xl font-black ${tema.text}`}>{seciliEtkinlik.baslik}</h3>
+                  <p className={tema.textSecondary}>{seciliEtkinlik.grup?.emoji} {seciliEtkinlik.grup?.isim}</p>
+                </div>
+              </div>
+              <button onClick={() => { setModalAcik(null); setSeciliEtkinlik(null); }} className={`w-10 h-10 rounded-xl ${tema.inputBg} flex items-center justify-center ${tema.text}`}>✕</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className={`${tema.inputBg} rounded-xl p-3`}>
+                <div className={`text-xs ${tema.textMuted} mb-1`}>📅 Tarih</div>
+                <div className={`font-bold ${tema.text}`}>{gunlerTam[tarih.getDay()]}</div>
+                <div className={`text-sm ${tema.textSecondary}`}>{tarih.getDate()} {aylar[tarih.getMonth()]}</div>
+              </div>
+              <div className={`${tema.inputBg} rounded-xl p-3`}>
+                <div className={`text-xs ${tema.textMuted} mb-1`}>⏰ Saat</div>
+                <div className={`font-bold ${tema.text}`}>{seciliEtkinlik.saat}</div>
+                <div className={`text-sm ${tema.textSecondary}`}>📍 {seciliEtkinlik.mekan}</div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              {[
+                { durum: 'varim', label: '✓ Varım', color: 'from-green-500 to-emerald-500' },
+                { durum: 'bakariz', label: '🤔 Bakarız', color: 'from-yellow-500 to-orange-500' },
+                { durum: 'yokum', label: '✗ Yokum', color: 'from-red-500 to-rose-500' },
+              ].map(btn => (
+                <button
+                  key={btn.durum}
+                  onClick={() => katilimDurumuGuncelle(seciliEtkinlik.id, btn.durum)}
+                  className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
+                    kullanicininDurumu === btn.durum
+                      ? `bg-gradient-to-r ${btn.color} text-white shadow-lg scale-105`
+                      : `${tema.inputBg} ${tema.text} ${tema.bgHover}`
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+
+            <div>
+              <div className={`text-sm font-bold ${tema.textSecondary} mb-2`}>Katılımcılar ({varimSayisi}/{katilimcilar.length})</div>
+              <div className="flex flex-wrap gap-2">
+                {katilimcilar.length > 0 ? katilimcilar.map((k, i) => (
+                  <div 
+                    key={i}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm ${
+                      k.durum === 'varim' ? 'bg-green-100 text-green-700' :
+                      k.durum === 'bakariz' ? 'bg-yellow-100 text-yellow-700' :
+                      k.durum === 'yokum' ? 'bg-red-100 text-red-700' :
+                      `${tema.inputBg} ${tema.text}`
+                    }`}
+                  >
+                    <span className="font-medium">{k.odUserId === kullanici?.odUserId ? 'Sen' : 'Katılımcı'}</span>
+                  </div>
+                )) : (
+                  <p className={tema.textSecondary}>Henüz katılımcı yok</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {(seciliEtkinlik.mesajlar || []).map((m, i) => (
+              <div key={i} className={`flex gap-2 ${m.odUserId === kullanici?.odUserId ? 'flex-row-reverse' : ''}`}>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-sm">
+                  {m.avatar || '👤'}
+                </div>
+                <div className={`max-w-[70%] ${m.odUserId === kullanici?.odUserId ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white' : tema.inputBg} rounded-2xl px-4 py-2`}>
+                  <div className={`text-xs ${m.odUserId === kullanici?.odUserId ? 'text-white/70' : tema.textMuted}`}>{m.isim || 'Kullanıcı'}</div>
+                  <div className={m.odUserId === kullanici?.odUserId ? 'text-white' : tema.text}>{m.mesaj}</div>
+                  <div className={`text-xs ${m.odUserId === kullanici?.odUserId ? 'text-white/50' : tema.textMuted} text-right`}>{m.zaman}</div>
+                </div>
+              </div>
+            ))}
+            {(!seciliEtkinlik.mesajlar || seciliEtkinlik.mesajlar.length === 0) && (
+              <div className="text-center py-8">
+                <span className="text-4xl">💬</span>
+                <p className={`${tema.textSecondary} mt-2`}>Henüz mesaj yok</p>
+              </div>
+            )}
+          </div>
+
+          <div className={`p-4 border-t ${tema.border}`}>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={yeniMesaj}
+                onChange={(e) => setYeniMesaj(e.target.value)}
+                placeholder="Mesaj yaz..."
+                onKeyPress={(e) => e.key === 'Enter' && mesajGonder()}
+                className={`flex-1 ${tema.inputBg} ${tema.inputText} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400`}
+              />
+              <button
+                onClick={mesajGonder}
+                className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center text-white"
+              >
+                📤
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1222,7 +1206,7 @@ export default function BulusakApp() {
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-2">
-            {bucketList.map(item => (
+            {bucketList.length > 0 ? bucketList.map(item => (
               <div 
                 key={item.id}
                 className={`flex items-center gap-3 p-4 rounded-2xl transition-all ${
@@ -1243,14 +1227,21 @@ export default function BulusakApp() {
                 </span>
                 <button onClick={() => setBucketList(prev => prev.filter(i => i.id !== item.id))} className={`${tema.textMuted} hover:text-red-500`}>🗑️</button>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8">
+                <span className="text-4xl">📝</span>
+                <p className={`${tema.textSecondary} mt-2`}>Henüz bir şey eklenmedi</p>
+              </div>
+            )}
           </div>
 
-          <div className={`mt-4 pt-4 border-t ${tema.border} text-center`}>
-            <span className={`${tema.textSecondary} text-sm`}>
-              {bucketList.filter(i => i.tamamlandi).length}/{bucketList.length} tamamlandı 🎉
-            </span>
-          </div>
+          {bucketList.length > 0 && (
+            <div className={`mt-4 pt-4 border-t ${tema.border} text-center`}>
+              <span className={`${tema.textSecondary} text-sm`}>
+                {bucketList.filter(i => i.tamamlandi).length}/{bucketList.length} tamamlandı 🎉
+              </span>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1270,7 +1261,7 @@ export default function BulusakApp() {
           </div>
 
           <div className="space-y-3 overflow-y-auto">
-            {bildirimler.map(b => (
+            {bildirimler.length > 0 ? bildirimler.map(b => (
               <div 
                 key={b.id}
                 className={`flex items-center gap-3 p-4 rounded-2xl ${b.okundu ? tema.inputBg : 'bg-orange-50'}`}
@@ -1281,7 +1272,12 @@ export default function BulusakApp() {
                   <p className={`text-sm ${tema.textMuted}`}>{b.zaman}</p>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8">
+                <span className="text-4xl">🔕</span>
+                <p className={`${tema.textSecondary} mt-2`}>Henüz bildirim yok</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1415,25 +1411,16 @@ export default function BulusakApp() {
     );
   };
 
-  // YENİ HEADER - Sola yaslı, daha büyük
   const Header = () => (
     <header className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 text-white shadow-2xl sticky top-0 z-40">
       <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Sol: İsim (Sola yaslı, büyük) */}
         <div>
-          <h1 
-            className="text-4xl font-black tracking-tight leading-none"
-            style={{ 
-              fontFamily: "'Nunito', sans-serif",
-              textShadow: '2px 2px 4px rgba(0,0,0,0.15)'
-            }}
-          >
+          <h1 className="text-4xl font-black tracking-tight leading-none">
             Buluşak
           </h1>
           <p className="text-sm text-white/80 font-medium">planla, buluş, yaşa</p>
         </div>
         
-        {/* Sağ: Butonlar */}
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setModalAcik('bildirimler')}
@@ -1590,116 +1577,6 @@ export default function BulusakApp() {
     </div>
   );
 
-  const ActivityPost = ({ aktivite }) => {
-    const [reactMenuAcik, setReactMenuAcik] = useState(false);
-    const animasyonAktif = animasyonluKart === aktivite.id;
-
-    return (
-      <div className={`${tema.bgCard} p-4 border-b ${tema.border} transition-all duration-500 ${
-        animasyonAktif ? 'animate-fly-away opacity-0 scale-75' : ''
-      }`}>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-amber-400 rounded-full flex items-center justify-center text-2xl">
-            {aktivite.kullanici.avatar}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className={`font-bold ${tema.text}`}>{aktivite.kullanici.isim}</span>
-              {aktivite.kullanici.online && <span className="w-2 h-2 bg-green-500 rounded-full"></span>}
-            </div>
-            <span className={`text-sm ${tema.textSecondary}`}>{aktivite.zaman}</span>
-          </div>
-        </div>
-
-        <div className={`${tema.inputBg} rounded-2xl p-4 mb-3`}>
-          {aktivite.tip === 'yeni_plan' && (
-            <div>
-              <p className={`${tema.textSecondary} text-sm mb-2`}>yeni bir plan oluşturdu 🎉</p>
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-400 rounded-2xl flex items-center justify-center text-3xl">
-                  {etkinlikIkonlari[aktivite.plan.ikon]}
-                </div>
-                <div>
-                  <h4 className={`font-bold ${tema.text}`}>{aktivite.plan.baslik}</h4>
-                  <p className={`text-sm ${tema.textSecondary}`}>{aktivite.plan.tarih}</p>
-                </div>
-              </div>
-              {aktivite.kullanici.id === (kullanici?.id || 1) ? (
-  <div className="w-full mt-3 bg-gray-100 text-gray-500 py-2.5 rounded-xl font-bold text-center">
-    📌 Senin Planın
-  </div>
-) : (
-  <button 
-    onClick={() => katilimIstegiGonder(aktivite.id, aktivite.plan)}
-    disabled={animasyonAktif}
-    className={`w-full mt-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-xl font-bold transition-all ${
-      animasyonAktif ? 'opacity-50' : 'hover:shadow-lg hover:scale-[1.02]'
-    }`}
-  >
-    {animasyonAktif ? '✓ Gönderildi!' : 'Katılmak İstiyorum! 🙋'}
-  </button>
-)}
-            </div>
-          )}
-
-          {aktivite.tip === 'katilim' && (
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">✅</span>
-              <p className={tema.text}>
-                <span className="font-bold">{aktivite.plan.baslik}</span> planına katılıyor
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {aktivite.reactler.length > 0 && (
-              <div className="flex items-center">
-                <div className="flex -space-x-1">
-                  {aktivite.reactler.slice(0, 3).map((r, i) => (
-                    <span key={i} className={`w-7 h-7 ${tema.inputBg} rounded-full flex items-center justify-center text-sm border-2 border-white`}>
-                      {r.emoji}
-                    </span>
-                  ))}
-                </div>
-                <span className={`text-sm ${tema.textSecondary} ml-2`}>
-                  {aktivite.reactler.reduce((acc, r) => acc + r.kullanicilar.length, 0)}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => setReactMenuAcik(!reactMenuAcik)}
-              className={`${tema.inputBg} px-4 py-2 rounded-full text-sm font-medium ${tema.text} ${tema.bgHover} transition-all`}
-            >
-              {reactMenuAcik ? '✕' : '😊 Tepki'}
-            </button>
-
-            {reactMenuAcik && (
-              <div className={`absolute bottom-full right-0 mb-2 ${tema.bgCard} rounded-2xl p-2 shadow-xl border ${tema.border} flex gap-1 animate-scale-in`}>
-                {reactEmojiler.map(emoji => (
-                  <button
-                    key={emoji}
-                    onClick={() => {
-                      reactEkle(aktivite.id, emoji);
-                      setReactMenuAcik(false);
-                    }}
-                    className={`w-10 h-10 rounded-xl text-xl ${tema.bgHover} transition-all hover:scale-125`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const CanSikildiModuBanner = () => (
     <div className="mx-4 mt-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 animate-gradient-x rounded-3xl"></div>
@@ -1709,21 +1586,8 @@ export default function BulusakApp() {
             <h3 className="font-black text-xl flex items-center gap-2">
               <span className="animate-bounce">🔥</span> Şu an müsaitsin!
             </h3>
-            <p className="text-sm opacity-90 mt-1">Yakınındaki arkadaşların bunu görüyor</p>
+            <p className="text-sm opacity-90 mt-1">Arkadaşların bunu görecek</p>
           </div>
-          <div className="text-right bg-white/20 rounded-2xl px-4 py-2">
-            <div className="text-3xl font-black">{demoKullanicilar.filter(k => k.online).length}</div>
-            <div className="text-xs">müsait</div>
-          </div>
-        </div>
-        <div className="flex gap-2 mt-4 flex-wrap">
-          {demoKullanicilar.filter(k => k.online).slice(0, 3).map(k => (
-            <div key={k.id} className="bg-white/20 backdrop-blur-lg rounded-full px-4 py-2 text-sm flex items-center gap-2 border border-white/30">
-              <span className="text-lg">{k.avatar}</span>
-              <span className="font-medium">{k.isim}</span>
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            </div>
-          ))}
         </div>
         <button 
           onClick={() => setModalAcik('hizliPlan')}
@@ -1741,10 +1605,8 @@ export default function BulusakApp() {
 
   const ActivityFeed = () => (
     <div className="pb-24">
-      {/* Stories - DÜZELTİLDİ (taşma yok, border yerine box-shadow) */}
       <div className={`${tema.bgCard} border-b ${tema.border} p-4 overflow-hidden`}>
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-          {/* Sen */}
           <div className="flex flex-col items-center flex-shrink-0">
             <div className="relative">
               <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-amber-400 rounded-full flex items-center justify-center text-3xl shadow-lg">
@@ -1756,26 +1618,11 @@ export default function BulusakApp() {
             </div>
             <span className={`text-xs mt-2 ${tema.text} font-semibold`}>Sen</span>
           </div>
-          
-          {/* Diğer Kullanıcılar - DÜZELTME: ring yerine border kullanıldı */}
-          {demoKullanicilar.slice(1).map(k => (
-            <div key={k.id} className="flex flex-col items-center flex-shrink-0">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl ${
-                k.online 
-                  ? 'border-[3px] border-orange-500 shadow-lg shadow-orange-200' 
-                  : `${tema.inputBg} border-2 border-gray-200`
-              }`}>
-                {k.avatar}
-              </div>
-              <span className={`text-xs mt-2 ${tema.textSecondary} truncate w-16 text-center font-medium`}>{k.isim}</span>
-            </div>
-          ))}
         </div>
       </div>
 
       {canSikildiModu && <CanSikildiModuBanner />}
 
-      {/* Faz 2 Butonları */}
       <div className="flex gap-2 p-4 overflow-x-auto scrollbar-hide">
         <button 
           onClick={() => setModalAcik('bucketList')}
@@ -1797,12 +1644,19 @@ export default function BulusakApp() {
         </button>
       </div>
 
-      {/* Activity Posts */}
-      <div>
-        {aktiviteler.map(aktivite => (
-          <ActivityPost key={aktivite.id} aktivite={aktivite} />
-        ))}
-      </div>
+      {aktiviteler.length === 0 && (
+        <div className={`${tema.bgCard} m-4 rounded-2xl p-8 text-center border ${tema.border}`}>
+          <span className="text-6xl">🎉</span>
+          <p className={`${tema.text} font-bold mt-4`}>Henüz aktivite yok</p>
+          <p className={`${tema.textSecondary} text-sm mt-1`}>İlk planını oluştur ve arkadaşlarını ekle!</p>
+          <button 
+            onClick={() => setModalAcik('hizliPlan')}
+            className="mt-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2 rounded-xl font-bold"
+          >
+            Plan Oluştur
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -1839,22 +1693,36 @@ export default function BulusakApp() {
               + Yeni Grup
             </button>
           </div>
-          <div className="space-y-2">
-            {gruplar.map(grup => (
-              <button
-                key={grup.id}
-                onClick={() => setSeciliGrup(grup)}
-                className={`w-full ${tema.bgCard} rounded-xl p-3 ${tema.cardShadow} border ${tema.border} flex items-center gap-3 text-left ${tema.bgHover} transition-all`}
+          
+          {gruplar.length > 0 ? (
+            <div className="space-y-2">
+              {gruplar.map(grup => (
+                <button
+                  key={grup.id}
+                  onClick={() => setSeciliGrup(grup)}
+                  className={`w-full ${tema.bgCard} rounded-xl p-3 ${tema.cardShadow} border ${tema.border} flex items-center gap-3 text-left ${tema.bgHover} transition-all`}
+                >
+                  <span className="text-2xl">{grup.emoji}</span>
+                  <div className="flex-1">
+                    <span className={`font-bold ${tema.text}`}>{grup.isim}</span>
+                    <span className={`text-sm ${tema.textSecondary} ml-2`}>{grup.uyeler?.length || 1} kişi</span>
+                  </div>
+                  <span className="text-orange-500">→</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className={`${tema.bgCard} rounded-xl p-6 text-center border ${tema.border}`}>
+              <span className="text-4xl">👥</span>
+              <p className={`${tema.textSecondary} mt-2`}>Henüz grup yok</p>
+              <button 
+                onClick={() => setModalAcik('yeniGrup')}
+                className="mt-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-xl font-bold text-sm"
               >
-                <span className="text-2xl">{grup.emoji}</span>
-                <div className="flex-1">
-                  <span className={`font-bold ${tema.text}`}>{grup.isim}</span>
-                  <span className={`text-sm ${tema.textSecondary} ml-2`}>{grup.uyeler.length} kişi</span>
-                </div>
-                <span className="text-orange-500">→</span>
+                İlk Grubunu Oluştur
               </button>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1878,10 +1746,10 @@ export default function BulusakApp() {
           {katilimIstekleri.map(istek => (
             <div key={istek.id} className={`${tema.bgCard} rounded-xl p-3 border ${tema.border} mb-2 flex items-center gap-3`}>
               <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center text-xl">
-                {etkinlikIkonlari[istek.plan.ikon]}
+                {etkinlikIkonlari[istek.plan?.ikon] || '📅'}
               </div>
               <div className="flex-1">
-                <div className={`font-bold ${tema.text}`}>{istek.plan.baslik}</div>
+                <div className={`font-bold ${tema.text}`}>{istek.plan?.baslik || 'Plan'}</div>
                 <div className={`text-sm text-yellow-600`}>⏳ Onay bekleniyor...</div>
               </div>
             </div>
@@ -1893,7 +1761,8 @@ export default function BulusakApp() {
         <div className="space-y-3">
           {etkinlikler.map(etkinlik => {
             const tarih = new Date(etkinlik.tarih);
-            const varimSayisi = etkinlik.katilimcilar.filter(k => k.durum === 'varim').length;
+            const katilimcilar = etkinlik.katilimcilar || [];
+            const varimSayisi = katilimcilar.filter(k => k.durum === 'varim').length;
             
             return (
               <button
@@ -1911,34 +1780,20 @@ export default function BulusakApp() {
                   <div className="flex-1">
                     <h4 className={`font-bold ${tema.text}`}>{etkinlik.baslik}</h4>
                     <p className={`text-sm ${tema.textSecondary}`}>
-                      {etkinlik.grup.emoji} {etkinlik.grup.isim}
+                      {etkinlik.grup?.emoji} {etkinlik.grup?.isim}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-bold text-orange-500">{etkinlik.saat}</div>
                     <div className={`text-xs ${tema.textSecondary}`}>
-                      {gunler[tarih.getDay()]}, {tarih.getDate()} {aylar[tarih.getMonth()].slice(0, 3)}
+                      {gunler[tarih.getDay()]}, {tarih.getDate()} {aylar[tarih.getMonth()]?.slice(0, 3)}
                     </div>
                   </div>
                 </div>
                 
                 <div className="mt-3 flex items-center justify-between">
-                  <div className="flex -space-x-2">
-                    {etkinlik.katilimcilar.slice(0, 4).map((k, i) => (
-                      <div 
-                        key={i}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 border-white ${
-                          k.durum === 'varim' ? 'bg-green-100' :
-                          k.durum === 'bakariz' ? 'bg-yellow-100' :
-                          tema.inputBg
-                        }`}
-                      >
-                        {k.kullanici.avatar}
-                      </div>
-                    ))}
-                  </div>
                   <div className={`text-sm font-medium ${tema.textSecondary}`}>
-                    <span className="text-green-500">{varimSayisi}</span>/{etkinlik.katilimcilar.length} katılıyor
+                    <span className="text-green-500">{varimSayisi}</span>/{katilimcilar.length} katılıyor
                   </div>
                 </div>
               </button>
@@ -1973,10 +1828,6 @@ export default function BulusakApp() {
             <div className="text-3xl font-black text-orange-500">{gruplar.length}</div>
             <div className={`text-xs ${tema.textSecondary}`}>Grup</div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-black text-green-500">89%</div>
-            <div className={`text-xs ${tema.textSecondary}`}>Güvenilirlik</div>
-          </div>
         </div>
 
         <button 
@@ -1985,15 +1836,6 @@ export default function BulusakApp() {
         >
           🎨 Avatarı Değiştir
         </button>
-      </div>
-
-      <div className={`${tema.bgCard} rounded-3xl p-5 ${tema.cardShadow} mb-4 border ${tema.border}`}>
-        <h3 className={`font-black ${tema.text} mb-3`}>🏆 Rozetlerin</h3>
-        <div className="flex flex-wrap gap-2">
-          <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-xl text-sm font-bold">🎯 Plan Adamı</span>
-          <span className="bg-green-100 text-green-600 px-4 py-2 rounded-xl text-sm font-bold">✓ Güvenilir</span>
-          <span className="bg-blue-100 text-blue-600 px-4 py-2 rounded-xl text-sm font-bold">🚀 Erken Kullanıcı</span>
-        </div>
       </div>
 
       <div className={`${tema.bgCard} rounded-3xl ${tema.cardShadow} overflow-hidden border ${tema.border}`}>
@@ -2016,10 +1858,7 @@ export default function BulusakApp() {
           </button>
         ))}
         <button 
-          onClick={() => {
-            setGirisYapildi(false);
-            setKayitAsamasi('giris');
-          }}
+          onClick={cikisYapFunc}
           className={`w-full p-4 flex items-center justify-between ${tema.bgHover} transition-all text-red-500`}
         >
           <span className="flex items-center gap-3">
