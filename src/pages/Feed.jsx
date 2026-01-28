@@ -1,84 +1,207 @@
 import React from 'react';
 import { useAuth, useData, useUI } from '../context';
 
+const etkinlikIkonlari = { 
+  kahve: '☕', yemek: '🍕', film: '🎬', spor: '⚽', 
+  oyun: '🎮', parti: '🎉', toplanti: '💼', gezi: '🏖️', 
+  alisveris: '🛍️', konser: '🎵', diger: '📅' 
+};
+
+const gunlerTam = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
 const Feed = () => {
   const { kullanici } = useAuth();
-  const { aktiviteler } = useData();
-  const { canSikildiModu, setModalAcik, tema } = useUI();
+  const { etkinlikler, arkadaslar } = useData();
+  const { setModalAcik, setSeciliEtkinlik, tema } = useUI();
 
-  const CanSikildiModuBanner = () => (
-    <div className="mx-4 mt-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 animate-gradient-x rounded-3xl"></div>
-      <div className="relative bg-black/20 backdrop-blur-sm text-white p-5 rounded-3xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-black text-xl flex items-center gap-2">
-              <span className="animate-bounce">🔥</span> Şu an müsaitsin!
-            </h3>
-            <p className="text-sm opacity-90 mt-1">Arkadaşların bunu görecek</p>
-          </div>
-        </div>
-        <button 
-          onClick={() => setModalAcik('hizliPlan')}
-          className="w-full mt-4 bg-white text-orange-600 font-black py-3 rounded-2xl hover:bg-orange-50 transition-all shadow-lg"
-        >
-          Hadi Buluşalım! 🚀
-        </button>
-      </div>
-    </div>
-  );
+  // Tarihi formatla
+  const tarihFormatla = (tarihStr) => {
+    try {
+      const tarih = new Date(tarihStr);
+      const bugun = new Date();
+      const yarin = new Date();
+      yarin.setDate(bugun.getDate() + 1);
+      
+      if (tarih.toDateString() === bugun.toDateString()) {
+        return 'Bugün';
+      } else if (tarih.toDateString() === yarin.toDateString()) {
+        return 'Yarın';
+      } else {
+        return `${tarih.getDate()} ${aylar[tarih.getMonth()]} ${gunlerTam[tarih.getDay()]}`;
+      }
+    } catch {
+      return 'Tarih belirtilmedi';
+    }
+  };
+
+  // Plan detayını aç
+  const handlePlanTikla = (etkinlik) => {
+    setSeciliEtkinlik(etkinlik);
+    setModalAcik('detay');
+  };
+
+  // Bu plan benim mi?
+  const benimPlanim = (etkinlik) => etkinlik.olusturanId === kullanici?.odUserId;
+
+  // Planı kim oluşturdu?
+  const planSahibi = (etkinlik) => {
+    if (benimPlanim(etkinlik)) return 'Sen';
+    
+    // Arkadaş listesinde bul
+    const arkadas = arkadaslar.find(a => a.odUserId === etkinlik.olusturanId);
+    if (arkadas) return arkadas.isim;
+    
+    return 'Kullanıcı';
+  };
 
   return (
-    <div className="pb-24">
-      <div className={`${tema.bgCard} border-b ${tema.border} p-4 overflow-hidden`}>
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-          <div className="flex flex-col items-center flex-shrink-0">
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-amber-400 rounded-full flex items-center justify-center text-3xl shadow-lg">
-                {kullanici?.avatar || '👨'}
+    <div className="pb-24 p-4">
+      {/* Hoşgeldin */}
+      <div className="mb-6">
+        <h2 className={`text-2xl font-black ${tema.text}`}>
+          Merhaba, {kullanici?.isim?.split(' ')[0] || 'Kullanıcı'} 👋
+        </h2>
+        <p className={tema.textSecondary}>
+          {etkinlikler.length > 0 
+            ? `${etkinlikler.length} aktif plan var` 
+            : 'Henüz plan yok, hemen oluştur!'
+          }
+        </p>
+      </div>
+
+      {/* Hızlı Plan Butonu */}
+      <button
+        onClick={() => setModalAcik('hizliPlan')}
+        className="w-full mb-6 bg-gradient-to-r from-orange-500 to-amber-500 text-white p-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+      >
+        ⚡ Hızlı Plan Oluştur
+      </button>
+
+      {/* Plan Listesi */}
+      {etkinlikler.length > 0 ? (
+        <div className="space-y-4">
+          {etkinlikler.map(etkinlik => {
+            const katilimci = etkinlik.katilimcilar?.find(k => k.odUserId === kullanici?.odUserId);
+            
+            return (
+              <div
+                key={etkinlik.id}
+                onClick={() => handlePlanTikla(etkinlik)}
+                className={`${tema.bgCard} rounded-2xl p-4 ${tema.cardShadow} border ${tema.border} cursor-pointer hover:scale-[1.02] transition-all active:scale-[0.98]`}
+              >
+                {/* Üst Kısım */}
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-400 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
+                    {etkinlikIkonlari[etkinlik.ikon] || '📅'}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className={`font-black text-lg ${tema.text}`}>{etkinlik.baslik}</h3>
+                    <p className={`text-sm ${tema.textSecondary}`}>
+                      {etkinlik.grup 
+                        ? `${etkinlik.grup.emoji} ${etkinlik.grup.isim}` 
+                        : `👥 ${planSahibi(etkinlik)} davet etti`
+                      }
+                    </p>
+                  </div>
+                  
+                  {/* Benim planim badge */}
+                  {benimPlanim(etkinlik) && (
+                    <span className="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-lg">
+                      👑 Senin
+                    </span>
+                  )}
+                </div>
+
+                {/* Tarih ve Saat */}
+                <div className="flex items-center gap-4 mb-3">
+                  <div className={`flex items-center gap-2 ${tema.textSecondary}`}>
+                    <span>📅</span>
+                    <span className="text-sm font-medium">{tarihFormatla(etkinlik.tarih)}</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${tema.textSecondary}`}>
+                    <span>⏰</span>
+                    <span className="text-sm font-medium">{etkinlik.saat}</span>
+                  </div>
+                  {etkinlik.mekan && etkinlik.mekan !== 'Belirtilmedi' && (
+                    <div className={`flex items-center gap-2 ${tema.textSecondary}`}>
+                      <span>📍</span>
+                      <span className="text-sm font-medium truncate max-w-[100px]">{etkinlik.mekan}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Davetliler (Grupsuz plan için) */}
+                {etkinlik.davetliDetaylar && etkinlik.davetliDetaylar.length > 0 && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex -space-x-2">
+                      {etkinlik.davetliDetaylar.slice(0, 5).map((d, i) => (
+                        <div 
+                          key={i} 
+                          className="w-8 h-8 bg-gradient-to-br from-orange-400 to-amber-400 rounded-full flex items-center justify-center text-sm border-2 border-white"
+                          title={d.isim}
+                        >
+                          {d.avatar || '👤'}
+                        </div>
+                      ))}
+                      {etkinlik.davetliDetaylar.length > 5 && (
+                        <div className={`w-8 h-8 ${tema.inputBg} rounded-full flex items-center justify-center text-xs font-bold border-2 border-white ${tema.text}`}>
+                          +{etkinlik.davetliDetaylar.length - 5}
+                        </div>
+                      )}
+                    </div>
+                    <span className={`text-xs ${tema.textMuted}`}>
+                      {etkinlik.davetliDetaylar.length} kişi davetli
+                    </span>
+                  </div>
+                )}
+
+                {/* Katılım Durumu (Benim planim değilse) */}
+                {!benimPlanim(etkinlik) && (
+                  <div className="flex gap-2">
+                    <span className={`text-xs font-bold px-3 py-1 rounded-lg ${
+                      katilimci?.durum === 'varim' 
+                        ? 'bg-green-100 text-green-600'
+                        : katilimci?.durum === 'bakariz'
+                        ? 'bg-yellow-100 text-yellow-600'
+                        : katilimci?.durum === 'yokum'
+                        ? 'bg-red-100 text-red-600'
+                        : `${tema.inputBg} ${tema.textSecondary}`
+                    }`}>
+                      {katilimci?.durum === 'varim' 
+                        ? '✓ Katılıyorsun'
+                        : katilimci?.durum === 'bakariz'
+                        ? '🤔 Bakarız'
+                        : katilimci?.durum === 'yokum'
+                        ? '✗ Katılmıyorsun'
+                        : '⏳ Yanıt bekliyor'
+                      }
+                    </span>
+                  </div>
+                )}
+
+                {/* Mesaj sayısı */}
+                {etkinlik.mesajlar && etkinlik.mesajlar.length > 0 && (
+                  <div className={`mt-2 text-xs ${tema.textMuted} flex items-center gap-1`}>
+                    💬 {etkinlik.mesajlar.length} mesaj
+                  </div>
+                )}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm border-2 border-white shadow">
-                +
-              </div>
-            </div>
-            <span className={`text-xs mt-2 ${tema.text} font-semibold`}>Sen</span>
-          </div>
+            );
+          })}
         </div>
-      </div>
-
-      {canSikildiModu && <CanSikildiModuBanner />}
-
-      <div className="flex gap-2 p-4 overflow-x-auto scrollbar-hide">
-        <button 
-          onClick={() => setModalAcik('bucketList')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl ${tema.bgCard} ${tema.text} ${tema.cardShadow} whitespace-nowrap border ${tema.border}`}
-        >
-          📋 Bucket List
-        </button>
-        <button 
-          onClick={() => setModalAcik('galeri')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl ${tema.bgCard} ${tema.text} ${tema.cardShadow} whitespace-nowrap border ${tema.border}`}
-        >
-          📸 Anılar
-        </button>
-        <button 
-          onClick={() => setModalAcik('yeniGrup')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl ${tema.bgCard} ${tema.text} ${tema.cardShadow} whitespace-nowrap border ${tema.border}`}
-        >
-          👥 Yeni Grup
-        </button>
-      </div>
-
-      {aktiviteler.length === 0 && (
-        <div className={`${tema.bgCard} m-4 rounded-2xl p-8 text-center border ${tema.border}`}>
-          <span className="text-6xl">🎉</span>
-          <p className={`${tema.text} font-bold mt-4`}>Henüz aktivite yok</p>
-          <p className={`${tema.textSecondary} text-sm mt-1`}>İlk planını oluştur ve arkadaşlarını ekle!</p>
-          <button 
+      ) : (
+        <div className={`${tema.bgCard} rounded-3xl p-8 ${tema.cardShadow} text-center`}>
+          <span className="text-6xl">📅</span>
+          <h3 className={`${tema.text} font-bold text-xl mt-4`}>Henüz plan yok</h3>
+          <p className={`${tema.textSecondary} mt-2`}>
+            Arkadaşlarınla buluşmak için hemen bir plan oluştur!
+          </p>
+          <button
             onClick={() => setModalAcik('hizliPlan')}
-            className="mt-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2 rounded-xl font-bold"
+            className="mt-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-xl font-bold"
           >
-            Plan Oluştur
+            ⚡ İlk Planı Oluştur
           </button>
         </div>
       )}

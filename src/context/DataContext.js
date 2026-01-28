@@ -5,6 +5,7 @@ import {
   etkinlikleriDinle,
   etkinlikOlustur
 } from '../services';
+import { arkadaslariDinle } from '../services/arkadasService';
 import { useAuth } from './AuthContext';
 
 // Context oluştur
@@ -21,13 +22,13 @@ export const useData = () => {
 
 // Provider component
 export const DataProvider = ({ children }) => {
-  const { kullanici } = useAuth();
+  const { kullanici, setKullanici } = useAuth();
   
   // Data State
   const [gruplar, setGruplar] = useState([]);
   const [etkinlikler, setEtkinlikler] = useState([]);
   const [aktiviteler, setAktiviteler] = useState([]);
-  const [arkadaslar, setArkadaslar] = useState([]); // İleride kullanılacak
+  const [arkadaslar, setArkadaslar] = useState([]);
   
   // Extra Data
   const [bucketList, setBucketList] = useState([]);
@@ -44,16 +45,30 @@ export const DataProvider = ({ children }) => {
     }
   }, [kullanici?.odUserId]);
 
-  // Etkinlikleri dinle
+  // Etkinlikleri dinle (Grup + Davetli olduklarım + Kendi oluşturduklarım)
   useEffect(() => {
-    if (gruplar.length > 0) {
+    if (kullanici?.odUserId) {
       const grupIds = gruplar.map(g => g.id);
-      const unsubscribe = etkinlikleriDinle(grupIds, setEtkinlikler);
+      
+      // userId'yi de gönder - davetli olduğum planları görmek için
+      const unsubscribe = etkinlikleriDinle(grupIds, setEtkinlikler, kullanici.odUserId);
       return () => unsubscribe();
     } else {
       setEtkinlikler([]);
     }
-  }, [gruplar]);
+  }, [gruplar, kullanici?.odUserId]);
+
+  // Arkadaşları dinle (Realtime)
+  useEffect(() => {
+    if (kullanici?.odUserId) {
+      const unsubscribe = arkadaslariDinle(kullanici.odUserId, (arkadaslarDetay) => {
+        setArkadaslar(arkadaslarDetay);
+        // Kullanıcı nesnesine de ekle
+        setKullanici(prev => prev ? { ...prev, arkadaslarDetay } : prev);
+      });
+      return () => unsubscribe();
+    }
+  }, [kullanici?.odUserId, setKullanici]);
 
   // Yeni grup oluştur
   const yeniGrupOlustur = async (isim, emoji) => {
@@ -74,25 +89,42 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  // Yeni etkinlik oluştur
+  // Yeni etkinlik oluştur (Grup VEYA Arkadaş bazlı)
   const yeniEtkinlikOlustur = async (data) => {
     if (!kullanici?.odUserId) {
       return { success: false, error: 'Önce giriş yapmalısın!' };
     }
     
-    if (!data.grup || !data.grup.id) {
-      return { success: false, error: 'Lütfen bir grup seç!' };
+    // Grup VEYA Arkadaş seçilmiş olmalı
+    const grupVar = data.grup && data.grup.id;
+    const arkadasVar = data.davetliler && data.davetliler.length > 0;
+    
+    if (!grupVar && !arkadasVar) {
+      return { success: false, error: 'Lütfen bir grup veya arkadaş seç!' };
     }
     
-    const result = await etkinlikOlustur({
+    const etkinlikData = {
       baslik: data.baslik,
       ikon: data.ikon,
-      grupId: data.grup.id,
-      grup: data.grup,
       tarih: data.tarih.toISOString(),
       saat: data.saat,
-      mekan: data.mekan
-    }, kullanici.odUserId);
+      mekan: data.mekan || 'Belirtilmedi',
+      tip: data.tip || (grupVar ? 'grup' : 'arkadas')
+    };
+
+    // Grup varsa ekle
+    if (grupVar) {
+      etkinlikData.grupId = data.grup.id;
+      etkinlikData.grup = data.grup;
+    }
+
+    // Davetli arkadaşlar varsa ekle (ID listesi)
+    if (arkadasVar) {
+      etkinlikData.davetliler = data.davetliler;
+      etkinlikData.davetliDetaylar = data.davetliDetaylar || [];
+    }
+    
+    const result = await etkinlikOlustur(etkinlikData, kullanici.odUserId);
     
     if (result.success) {
       return { success: true, message: 'Plan oluşturuldu! 🎉' };

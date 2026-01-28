@@ -30,9 +30,6 @@ export const tema = {
 
 // Provider component
 export const UIProvider = ({ children }) => {
-  // Navigation State
-  const [aktifSayfa, setAktifSayfa] = useState('feed');
-  
   // Modal State
   const [modalAcik, setModalAcik] = useState(null);
   const [seciliZaman, setSeciliZaman] = useState(null);
@@ -69,15 +66,6 @@ export const UIProvider = ({ children }) => {
     setSeciliEtkinlik(null);
   };
 
-  // Sayfa değiştir
-  const sayfaDegistir = (sayfa) => {
-    if (sayfa === 'yeni') {
-      setModalAcik('hizliPlan');
-    } else {
-      setAktifSayfa(sayfa);
-    }
-  };
-
   // Bildirim ekle (kalıcı bildirimler için)
   const bildirimEkle = (mesaj) => {
     setBildirimler(prev => [...prev, {
@@ -109,11 +97,6 @@ export const UIProvider = ({ children }) => {
   const value = {
     // Theme
     tema,
-    
-    // Navigation
-    aktifSayfa,
-    setAktifSayfa,
-    sayfaDegistir,
     
     // Modals
     modalAcik,

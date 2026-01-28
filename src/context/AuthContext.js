@@ -6,6 +6,7 @@ import {
   profilGuncelle,
   auth
 } from '../services';
+import { arkadasIstekleriniDinle } from '../services/arkadasService';
 
 // Context oluştur
 const AuthContext = createContext(null);
@@ -54,6 +55,16 @@ export const AuthProvider = ({ children }) => {
     });
     return () => unsubscribeAuth();
   }, []);
+
+  // Arkadaşlık isteklerini dinle
+  useEffect(() => {
+    if (kullanici?.odUserId) {
+      const unsubscribe = arkadasIstekleriniDinle(kullanici.odUserId, (istekler) => {
+        setKullanici(prev => prev ? { ...prev, arkadasIstekleri: istekler } : prev);
+      });
+      return () => unsubscribe();
+    }
+  }, [kullanici?.odUserId]);
 
   // Google ile giriş
   const googleIleGirisYap = async () => {
@@ -106,13 +117,17 @@ export const AuthProvider = ({ children }) => {
     
     setIslemYukleniyor(true);
     const userId = auth.currentUser.uid;
+    const kucukHarfKullaniciAdi = kullaniciAdi ? kullaniciAdi.toLowerCase().replace('@', '') : `kullanici${Date.now()}`;
     
     const result = await profilGuncelle(userId, {
       isim: isim || 'Kullanıcı',
-      kullaniciAdi: kullaniciAdi ? `@${kullaniciAdi.replace('@', '')}` : `@kullanici${Date.now()}`,
+      kullaniciAdi: `@${kucukHarfKullaniciAdi}`,
+      kullaniciAdiKucuk: kucukHarfKullaniciAdi, // Arama için küçük harf versiyon
       avatar: seciliAvatar,
       online: true,
-      bio: ''
+      bio: '',
+      arkadaslar: [],
+      arkadasIstekleri: []
     });
     
     setIslemYukleniyor(false);
@@ -122,10 +137,13 @@ export const AuthProvider = ({ children }) => {
         id: userId,
         odUserId: userId,
         isim: isim || 'Kullanıcı',
-        kullaniciAdi: kullaniciAdi ? `@${kullaniciAdi.replace('@', '')}` : `@kullanici${Date.now()}`,
+        kullaniciAdi: `@${kucukHarfKullaniciAdi}`,
+        kullaniciAdiKucuk: kucukHarfKullaniciAdi,
         avatar: seciliAvatar,
         online: true,
-        bio: ''
+        bio: '',
+        arkadaslar: [],
+        arkadasIstekleri: []
       });
       setGirisYapildi(true);
       return { success: true, message: 'Hoş geldin! 🎉' };

@@ -1,2 +1,1 @@
-export { useGruplar } from './useGruplar';
-export { useEtkinlikler } from './useEtkinlikler';
+export { default as useKullaniciAdiKontrol } from './useKullaniciAdiKontrol';

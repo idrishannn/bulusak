@@ -1,9 +1,7 @@
 import React from 'react';
-import { useUI } from '../context';
+import { tema } from '../context';
 
 const YuklemeEkrani = () => {
-  const { tema } = useUI();
-
   return (
     <div className={`min-h-screen ${tema.bg} flex items-center justify-center`}>
       <div className="text-center">
