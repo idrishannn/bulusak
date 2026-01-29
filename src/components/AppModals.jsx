@@ -1,0 +1,489 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth, useData, useUI } from '../context';
+import { mesajEkle } from '../services/etkinlikService';
+import { kullaniciAra, arkadasIstegiGonder, arkadasSil, arkadasIstegiKabulEt, arkadasIstegiReddet } from '../services/arkadasService';
+
+const grupIkonlari = ['🎓', '💼', '⚽', '🎮', '🎵', '🍕', '☕', '🎬', '🏖️', '🎉'];
+const etkinlikIkonlari = { kahve: '☕', yemek: '🍕', film: '🎬', spor: '⚽', oyun: '🎮', parti: '🎉', toplanti: '💼', gezi: '🏖️', alisveris: '🛍️', konser: '🎵', diger: '📅' };
+const saatler = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
+const gunlerTam = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const avatarlar = {
+  erkek: ['👨', '👨‍🦱', '👨‍🦰', '👨‍🦳', '👨‍🦲', '🧔', '🧔‍♂️', '👱‍♂️', '👨‍🎓', '👨‍💼'],
+  kadin: ['👩', '👩‍🦱', '👩‍🦰', '👩‍🦳', '👱‍♀️', '👩‍🎓', '👩‍💼', '👩‍🔧', '👩‍🍳', '👩‍🎨'],
+  fantastik: ['🤖', '👽', '👻', '🎃', '😺', '🦊', '🐶', '🐱', '🦁', '🦄']
+};
+
+const HizliPlanModal = () => {
+  const { kullanici } = useAuth();
+  const { gruplar, arkadaslar, yeniGrupOlustur, yeniEtkinlikOlustur } = useData();
+  const { modalAcik, setModalAcik, bildirimGoster } = useUI();
+  const [baslik, setBaslik] = useState('');
+  const [secilenIkon, setSecilenIkon] = useState('kahve');
+  const [seciliTarih, setSeciliTarih] = useState(new Date());
+  const [seciliSaat, setSeciliSaat] = useState('15:00');
+  const [mekan, setMekan] = useState('');
+  const [secimModu, setSecimModu] = useState('arkadas');
+  const [secilenArkadaslar, setSecilenArkadaslar] = useState([]);
+  const [secilenGrupId, setSecilenGrupId] = useState(null);
+  const [yeniGrupModu, setYeniGrupModu] = useState(false);
+  const [yeniGrupAdi, setYeniGrupAdi] = useState('');
+  const [yeniGrupEmoji, setYeniGrupEmoji] = useState('🎉');
+  const [yukleniyor, setYukleniyor] = useState(false);
+
+  if (modalAcik !== 'hizliPlan') return null;
+
+  const arkadasToggle = (arkadasId) => {
+    setSecilenArkadaslar(prev => prev.includes(arkadasId) ? prev.filter(id => id !== arkadasId) : [...prev, arkadasId]);
+  };
+
+  const handleOlustur = async () => {
+    if (!baslik.trim()) { bildirimGoster('Plan adı gerekli!', 'hata'); return; }
+    if (secimModu === 'arkadas' && secilenArkadaslar.length === 0) { bildirimGoster('En az bir arkadaş seç!', 'hata'); return; }
+    if (secimModu === 'grup' && !secilenGrupId && !yeniGrupModu) { bildirimGoster('Bir grup seç veya oluştur!', 'hata'); return; }
+    setYukleniyor(true);
+    let hedefGrup = null;
+    if (secimModu === 'grup') {
+      if (yeniGrupModu && yeniGrupAdi.trim()) {
+        const grupResult = await yeniGrupOlustur(yeniGrupAdi, yeniGrupEmoji);
+        if (!grupResult.success) { setYukleniyor(false); return; }
+        hedefGrup = grupResult.grup;
+      } else { hedefGrup = gruplar.find(g => g.id === secilenGrupId); }
+    }
+    const planData = { baslik, ikon: secilenIkon, tarih: seciliTarih, saat: seciliSaat, mekan: mekan || 'Belirtilmedi', tip: secimModu };
+    if (secimModu === 'arkadas') {
+      planData.davetliler = secilenArkadaslar;
+      planData.davetliDetaylar = arkadaslar.filter(a => secilenArkadaslar.includes(a.odUserId)).map(a => ({ odUserId: a.odUserId, isim: a.isim, avatar: a.avatar, kullaniciAdi: a.kullaniciAdi }));
+    }
+    if (secimModu === 'grup' && hedefGrup) { planData.grup = hedefGrup; }
+    const result = await yeniEtkinlikOlustur(planData);
+    setYukleniyor(false);
+    if (result.success) { bildirimGoster(result.message); setModalAcik(null); setBaslik(''); setMekan(''); setSecilenArkadaslar([]); setSecilenGrupId(null); }
+    else { bildirimGoster(result.error, 'hata'); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div className="glass-modal rounded-t-3xl w-full max-w-lg p-6 animate-slide-up max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-white">⚡ Hızlı Plan</h3>
+          <button onClick={() => setModalAcik(null)} className="w-10 h-10 rounded-xl glass-input flex items-center justify-center text-white hover:bg-white/20 transition">✕</button>
+        </div>
+        <div className="mb-4">
+          <label className="text-sm font-bold text-white/60 mb-2 block">Plan Adı</label>
+          <input type="text" value={baslik} onChange={(e) => setBaslik(e.target.value)} placeholder="Ne yapalım?" className="w-full glass-input text-white rounded-2xl p-4 placeholder-white/40" />
+        </div>
+        <div className="mb-4">
+          <label className="text-sm font-bold text-white/60 mb-2 block">Kategori</label>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(etkinlikIkonlari).slice(0, 6).map(([key, icon]) => (
+              <button key={key} onClick={() => setSecilenIkon(key)} className={`w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all ${secilenIkon === key ? 'bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg scale-110' : 'glass-input hover:bg-white/20'}`}>{icon}</button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label className="text-sm font-bold text-white/60 mb-2 block">📅 Tarih</label>
+            <input type="date" value={seciliTarih.toISOString().split('T')[0]} onChange={(e) => setSeciliTarih(new Date(e.target.value))} className="w-full glass-input text-white rounded-xl p-3" />
+          </div>
+          <div>
+            <label className="text-sm font-bold text-white/60 mb-2 block">⏰ Saat</label>
+            <select value={seciliSaat} onChange={(e) => setSeciliSaat(e.target.value)} className="w-full glass-input text-white rounded-xl p-3 bg-transparent">
+              {saatler.map(s => <option key={s} value={s} className="bg-gray-900">{s}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="text-sm font-bold text-white/60 mb-2 block">📍 Mekan (Opsiyonel)</label>
+          <input type="text" value={mekan} onChange={(e) => setMekan(e.target.value)} placeholder="Nerede buluşalım?" className="w-full glass-input text-white rounded-xl p-3 placeholder-white/40" />
+        </div>
+        <div className="mb-4">
+          <label className="text-sm font-bold text-white/60 mb-2 block">Kimlerle?</label>
+          <div className="flex gap-2">
+            <button onClick={() => setSecimModu('arkadas')} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${secimModu === 'arkadas' ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg' : 'glass-input text-white'}`}>👥 Arkadaşlar</button>
+            <button onClick={() => setSecimModu('grup')} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${secimModu === 'grup' ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg' : 'glass-input text-white'}`}>🏠 Grup</button>
+          </div>
+        </div>
+        {secimModu === 'arkadas' && (
+          <div className="mb-6">
+            {arkadaslar.length > 0 ? (
+              <>
+                <div className="text-xs text-white/50 mb-2">{secilenArkadaslar.length} arkadaş seçildi</div>
+                <div className="glass-input rounded-2xl p-3 max-h-48 overflow-y-auto space-y-2 custom-scrollbar">
+                  {arkadaslar.map(arkadas => (
+                    <button key={arkadas.odUserId} onClick={() => arkadasToggle(arkadas.odUserId)} className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenArkadaslar.includes(arkadas.odUserId) ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white' : 'hover:bg-white/10 text-white'}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${secilenArkadaslar.includes(arkadas.odUserId) ? 'bg-white/20' : 'bg-gradient-to-br from-orange-400 to-amber-400'}`}>{arkadas.avatar || '👤'}</div>
+                      <div className="flex-1 text-left"><div className="font-bold">{arkadas.isim || 'Kullanıcı'}</div><div className={`text-xs ${secilenArkadaslar.includes(arkadas.odUserId) ? 'text-white/70' : 'text-white/50'}`}>{arkadas.kullaniciAdi}</div></div>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${secilenArkadaslar.includes(arkadas.odUserId) ? 'bg-white text-orange-500 border-white' : 'border-white/30'}`}>{secilenArkadaslar.includes(arkadas.odUserId) && '✔'}</div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="glass-input rounded-2xl p-6 text-center">
+                <span className="text-4xl">👥</span>
+                <p className="text-white font-bold mt-2">Henüz arkadaşın yok</p>
+                <p className="text-white/50 text-sm mt-1">Profil sayfasından arkadaş ekleyebilirsin</p>
+              </div>
+            )}
+          </div>
+        )}
+        {secimModu === 'grup' && (
+          <div className="mb-6">
+            {!yeniGrupModu ? (
+              <>
+                {gruplar.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto pb-2 mb-2 hide-scrollbar">
+                    {gruplar.map(g => (
+                      <button key={g.id} onClick={() => setSecilenGrupId(g.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all ${secilenGrupId === g.id ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg' : 'glass-input text-white'}`}>
+                        <span>{g.emoji}</span><span className="font-medium">{g.isim}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <button onClick={() => setYeniGrupModu(true)} className="w-full p-3 rounded-xl border-2 border-dashed border-orange-500/50 text-white text-sm font-medium hover:bg-orange-500/10 transition-all">➕ Yeni Grup Oluştur</button>
+              </>
+            ) : (
+              <div className="glass-input rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <button onClick={() => setYeniGrupModu(false)} className="text-orange-400 font-bold">←</button>
+                  <span className="font-bold text-white">Yeni Grup</span>
+                </div>
+                <input type="text" value={yeniGrupAdi} onChange={(e) => setYeniGrupAdi(e.target.value)} placeholder="Grup adı" className="w-full glass-input text-white rounded-xl p-3 mb-3 placeholder-white/40" />
+                <div className="flex gap-2 flex-wrap">
+                  {grupIkonlari.map((emoji, i) => (
+                    <button key={i} onClick={() => setYeniGrupEmoji(emoji)} className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${yeniGrupEmoji === emoji ? 'bg-orange-500/30 scale-110' : 'glass-input'}`}>{emoji}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        <button onClick={handleOlustur} disabled={yukleniyor} className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-orange-500/30 disabled:opacity-50 hover:shadow-xl transition-all active:scale-[0.98]">
+          {yukleniyor ? '⏳ Oluşturuluyor...' : 'Plan Oluştur 🚀'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ArkadaslarModal = () => {
+  const { kullanici } = useAuth();
+  const { arkadaslar } = useData();
+  const { modalAcik, setModalAcik, bildirimGoster } = useUI();
+  const [aktifTab, setAktifTab] = useState('liste');
+  const [aramaMetni, setAramaMetni] = useState('');
+  const [aramaYukleniyor, setAramaYukleniyor] = useState(false);
+  const [aramaSonuclari, setAramaSonuclari] = useState([]);
+  const [yukleniyor, setYukleniyor] = useState(false);
+
+  useEffect(() => {
+    if (!aramaMetni || aramaMetni.length < 1) { setAramaSonuclari([]); return; }
+    const timeoutId = setTimeout(async () => {
+      setAramaYukleniyor(true);
+      const result = await kullaniciAra(aramaMetni);
+      if (result.success) { setAramaSonuclari(result.kullanicilar.filter(k => k.odUserId !== kullanici?.odUserId)); }
+      setAramaYukleniyor(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [aramaMetni, kullanici]);
+
+  if (modalAcik !== 'arkadaslar') return null;
+
+  const handleIstekGonder = async (alici) => {
+    setYukleniyor(true);
+    const result = await arkadasIstegiGonder(kullanici, alici.odUserId);
+    setYukleniyor(false);
+    if (result.success) { bildirimGoster(result.message); setAramaSonuclari(prev => prev.map(k => k.odUserId === alici.odUserId ? { ...k, istekGonderildi: true } : k)); }
+    else bildirimGoster(result.error, 'hata');
+  };
+
+  const handleArkadasSil = async (arkadasId) => {
+    if (!window.confirm('Arkadaşlıktan çıkarmak istediğine emin misin?')) return;
+    setYukleniyor(true);
+    const result = await arkadasSil(kullanici, arkadasId);
+    setYukleniyor(false);
+    if (result.success) bildirimGoster(result.message);
+    else bildirimGoster(result.error, 'hata');
+  };
+
+  const arkadasMi = (userId) => kullanici?.arkadaslar?.includes(userId);
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div className="glass-modal rounded-t-3xl w-full max-w-lg animate-slide-up max-h-[85vh] flex flex-col">
+        <div className="p-6 border-b border-white/10">
+          <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-white">👥 Arkadaşlar</h3>
+            <button onClick={() => setModalAcik(null)} className="w-10 h-10 rounded-xl glass-input flex items-center justify-center text-white hover:bg-white/20 transition">✕</button>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setAktifTab('liste')} className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all ${aktifTab === 'liste' ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg' : 'glass-input text-white'}`}>📋 Arkadaşlarım</button>
+            <button onClick={() => setAktifTab('ara')} className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all ${aktifTab === 'ara' ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg' : 'glass-input text-white'}`}>🔍 Kişi Ara</button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          {aktifTab === 'ara' && (
+            <>
+              <div className="mb-4 relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">@</span>
+                <input type="text" value={aramaMetni} onChange={(e) => setAramaMetni(e.target.value.replace('@', ''))} placeholder="kullanıcı adı ara..." className="w-full glass-input text-white rounded-xl p-3 pl-9 placeholder-white/40" />
+                {aramaYukleniyor && <span className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin">⏳</span>}
+              </div>
+              {aramaSonuclari.length > 0 ? (
+                <div className="space-y-2">
+                  {aramaSonuclari.map(kisi => (
+                    <div key={kisi.odUserId} className="flex items-center gap-3 p-3 rounded-2xl glass-input">
+                      <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-amber-400 rounded-xl flex items-center justify-center text-2xl">{kisi.avatar || '👤'}</div>
+                      <div className="flex-1"><div className="font-bold text-white">{kisi.isim || 'Kullanıcı'}</div><div className="text-sm text-white/50">{kisi.kullaniciAdi || '@kullanici'}</div></div>
+                      {arkadasMi(kisi.odUserId) ? <span className="text-green-400 text-sm font-bold">✔ Arkadaş</span>
+                       : kisi.istekGonderildi ? <span className="text-orange-400 text-sm font-bold">⏳ Gönderildi</span>
+                       : <button onClick={() => handleIstekGonder(kisi)} disabled={yukleniyor} className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50 active:scale-95 transition">+ Ekle</button>}
+                    </div>
+                  ))}
+                </div>
+              ) : aramaMetni.length >= 1 && !aramaYukleniyor ? (
+                <div className="text-center py-8"><span className="text-4xl">🔍</span><p className="text-white/50 mt-2">Kullanıcı bulunamadı</p></div>
+              ) : (
+                <div className="text-center py-8"><span className="text-4xl">👋</span><p className="text-white/50 mt-2">Kullanıcı adı yazarak ara</p></div>
+              )}
+            </>
+          )}
+          {aktifTab === 'liste' && (
+            arkadaslar.length > 0 ? (
+              <div className="space-y-2">
+                {arkadaslar.map(arkadas => (
+                  <div key={arkadas.odUserId} className="flex items-center gap-3 p-3 rounded-2xl glass-input">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-amber-400 rounded-xl flex items-center justify-center text-2xl">{arkadas.avatar || '👤'}</div>
+                    <div className="flex-1"><div className="font-bold text-white">{arkadas.isim || 'Kullanıcı'}</div><div className="text-sm text-white/50">{arkadas.kullaniciAdi || '@kullanici'}</div></div>
+                    <button onClick={() => handleArkadasSil(arkadas.odUserId)} className="text-white/40 hover:text-red-400 transition-colors p-2">🗑️</button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8"><span className="text-6xl">👥</span><p className="text-white font-bold mt-4">Henüz arkadaşın yok</p><button onClick={() => setAktifTab('ara')} className="mt-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2 rounded-xl font-bold active:scale-95 transition">🔍 Kişi Ara</button></div>
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ArkadasIstekleriModal = () => {
+  const { kullanici } = useAuth();
+  const { modalAcik, setModalAcik, bildirimGoster } = useUI();
+  const [yukleniyor, setYukleniyor] = useState(null);
+
+  if (modalAcik !== 'arkadasIstekleri') return null;
+
+  const bekleyenIstekler = kullanici?.arkadasIstekleri?.filter(i => i.durum === 'bekliyor') || [];
+
+  const handleKabulEt = async (id) => { setYukleniyor(id); const r = await arkadasIstegiKabulEt(kullanici, id); setYukleniyor(null); r.success ? bildirimGoster(r.message) : bildirimGoster(r.error, 'hata'); };
+  const handleReddet = async (id) => { setYukleniyor(id); const r = await arkadasIstegiReddet(kullanici, id); setYukleniyor(null); r.success ? bildirimGoster(r.message) : bildirimGoster(r.error, 'hata'); };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div className="glass-modal rounded-t-3xl w-full max-w-lg animate-slide-up max-h-[70vh] flex flex-col">
+        <div className="p-6 border-b border-white/10">
+          <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+          <div className="flex items-center justify-between">
+            <div><h3 className="text-xl font-bold text-white">📬 İstekler</h3>{bekleyenIstekler.length > 0 && <p className="text-sm text-white/50">{bekleyenIstekler.length} bekleyen</p>}</div>
+            <button onClick={() => setModalAcik(null)} className="w-10 h-10 rounded-xl glass-input flex items-center justify-center text-white hover:bg-white/20 transition">✕</button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          {bekleyenIstekler.length > 0 ? bekleyenIstekler.map((i, idx) => (
+            <div key={i.kimden + idx} className="glass-input rounded-2xl p-4 mb-3">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-400 rounded-xl flex items-center justify-center text-3xl">{i.kimdenAvatar || '👤'}</div>
+                <div className="flex-1"><div className="font-bold text-white">{i.kimdenIsim}</div><div className="text-sm text-white/50">{i.kimdenKullaniciAdi}</div></div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handleKabulEt(i.kimden)} disabled={yukleniyor === i.kimden} className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white py-2 rounded-xl font-bold text-sm disabled:opacity-50 active:scale-95 transition">{yukleniyor === i.kimden ? '⏳' : '✔ Kabul'}</button>
+                <button onClick={() => handleReddet(i.kimden)} disabled={yukleniyor === i.kimden} className="flex-1 glass-input text-white py-2 rounded-xl font-bold text-sm active:scale-95 transition">✕ Reddet</button>
+              </div>
+            </div>
+          )) : <div className="text-center py-12"><span className="text-6xl">📭</span><p className="text-white font-bold mt-4">İstek yok</p></div>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EtkinlikDetayModal = () => {
+  const { kullanici } = useAuth();
+  const { katilimDurumuGuncelle } = useData();
+  const { modalAcik, setModalAcik, seciliEtkinlik, setSeciliEtkinlik, bildirimGoster } = useUI();
+  const [yeniMesaj, setYeniMesaj] = useState('');
+
+  if (modalAcik !== 'detay' || !seciliEtkinlik) return null;
+
+  const tarih = new Date(seciliEtkinlik.tarih);
+  const katilimcilar = seciliEtkinlik.katilimcilar || [];
+  const varimSayisi = katilimcilar.filter(k => k.durum === 'varim').length;
+  const kullanicininDurumu = katilimcilar.find(k => k.odUserId === kullanici?.odUserId)?.durum;
+  const benimPlanim = seciliEtkinlik.olusturanId === kullanici?.odUserId;
+
+  const mesajGonder = async (e) => {
+    if (e) e.preventDefault();
+    if (!yeniMesaj.trim() || !seciliEtkinlik?.id) return;
+    const sonuc = await mesajEkle(seciliEtkinlik.id, { odUserId: kullanici?.odUserId, isim: kullanici?.isim, avatar: kullanici?.avatar, mesaj: yeniMesaj });
+    if (sonuc.success) { setSeciliEtkinlik(prev => ({ ...prev, mesajlar: [...(prev.mesajlar || []), sonuc.mesaj] })); setYeniMesaj(''); }
+  };
+
+  const handleKatilim = (durum) => { const r = katilimDurumuGuncelle(seciliEtkinlik.id, durum); bildirimGoster(r.message); };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div className="glass-modal rounded-t-3xl w-full max-w-lg animate-slide-up max-h-[95vh] flex flex-col">
+        <div className="p-6 border-b border-white/10">
+          <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-orange-500/30">{etkinlikIkonlari[seciliEtkinlik.ikon]}</div>
+              <div><h3 className="text-xl font-bold text-white">{seciliEtkinlik.baslik}</h3><p className="text-white/50">{seciliEtkinlik.grup ? `${seciliEtkinlik.grup.emoji} ${seciliEtkinlik.grup.isim}` : `👥 ${seciliEtkinlik.davetliDetaylar?.length || 0} kişi davetli`}</p></div>
+            </div>
+            <button onClick={() => { setModalAcik(null); setSeciliEtkinlik(null); }} className="w-10 h-10 rounded-xl glass-input flex items-center justify-center text-white hover:bg-white/20 transition">✕</button>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="glass-input rounded-xl p-3"><div className="text-xs text-white/40">📅 Tarih</div><div className="font-bold text-white">{gunlerTam[tarih.getDay()]}</div><div className="text-sm text-white/50">{tarih.getDate()} {aylar[tarih.getMonth()]}</div></div>
+            <div className="glass-input rounded-xl p-3"><div className="text-xs text-white/40">⏰ Saat</div><div className="font-bold text-white">{seciliEtkinlik.saat}</div><div className="text-sm text-white/50">📍 {seciliEtkinlik.mekan}</div></div>
+          </div>
+          {!benimPlanim && (
+            <div className="flex gap-2 mb-4">
+              {[{ d: 'varim', l: '✔ Varım', c: 'from-green-500 to-emerald-500' }, { d: 'bakariz', l: '🤔 Bakarız', c: 'from-yellow-500 to-orange-500' }, { d: 'yokum', l: '✗ Yokum', c: 'from-red-500 to-rose-500' }].map(b => (
+                <button key={b.d} onClick={() => handleKatilim(b.d)} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${kullanicininDurumu === b.d ? `bg-gradient-to-r ${b.c} text-white shadow-lg` : 'glass-input text-white'}`}>{b.l}</button>
+              ))}
+            </div>
+          )}
+          {benimPlanim && <div className="glass-input rounded-xl p-3 mb-4 text-center"><span className="text-orange-400 font-bold">👑 Senin planın</span></div>}
+          <div><div className="text-sm font-bold text-white/50 mb-2">Katılımcılar ({varimSayisi})</div><div className="flex flex-wrap gap-2">{katilimcilar.length > 0 ? katilimcilar.map((k, i) => <div key={i} className={`px-3 py-2 rounded-xl text-sm ${k.durum === 'varim' ? 'bg-green-500/20 text-green-400' : k.durum === 'bakariz' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>{k.odUserId === kullanici?.odUserId ? 'Sen' : 'Katılımcı'}</div>) : <p className="text-white/50">Henüz yanıt yok</p>}</div></div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+          {(seciliEtkinlik.mesajlar || []).map((m, i) => (
+            <div key={i} className={`flex gap-2 ${m.odUserId === kullanici?.odUserId ? 'flex-row-reverse' : ''}`}>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-sm flex-shrink-0">{m.avatar || '👤'}</div>
+              <div className={`max-w-[70%] ${m.odUserId === kullanici?.odUserId ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white' : 'glass-input text-white'} rounded-2xl px-4 py-2`}>
+                <div className={`text-xs ${m.odUserId === kullanici?.odUserId ? 'text-white/70' : 'text-white/40'}`}>{m.isim}</div>
+                <div>{m.mesaj}</div>
+                <div className={`text-xs ${m.odUserId === kullanici?.odUserId ? 'text-white/50' : 'text-white/30'} text-right`}>{m.zaman}</div>
+              </div>
+            </div>
+          ))}
+          {(!seciliEtkinlik.mesajlar || seciliEtkinlik.mesajlar.length === 0) && <div className="text-center py-8"><span className="text-4xl">💬</span><p className="text-white/50 mt-2">Henüz mesaj yok</p></div>}
+        </div>
+        <div className="p-4 border-t border-white/10">
+          <div className="flex gap-2">
+            <input type="text" value={yeniMesaj} onChange={(e) => setYeniMesaj(e.target.value)} placeholder="Mesaj yaz..." onKeyPress={(e) => e.key === 'Enter' && mesajGonder(e)} className="flex-1 glass-input text-white rounded-xl px-4 py-3 placeholder-white/40" />
+            <button onClick={mesajGonder} className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-500/30 active:scale-95 transition">📤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const YeniGrupModal = () => {
+  const { yeniGrupOlustur } = useData();
+  const { modalAcik, setModalAcik, bildirimGoster } = useUI();
+  const [grupAdi, setGrupAdi] = useState('');
+  const [secilenEmoji, setSecilenEmoji] = useState('🎉');
+  const [yukleniyor, setYukleniyor] = useState(false);
+  if (modalAcik !== 'yeniGrup') return null;
+  const handleOlustur = async () => { if (!grupAdi.trim()) return; setYukleniyor(true); const r = await yeniGrupOlustur(grupAdi, secilenEmoji); setYukleniyor(false); if (r.success) { bildirimGoster(r.message); setModalAcik(null); setGrupAdi(''); } };
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div className="glass-modal rounded-t-3xl w-full max-w-lg p-6 animate-slide-up">
+        <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+        <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-bold text-white">👥 Yeni Grup</h3><button onClick={() => setModalAcik(null)} className="w-10 h-10 rounded-xl glass-input flex items-center justify-center text-white hover:bg-white/20 transition">✕</button></div>
+        <input type="text" value={grupAdi} onChange={(e) => setGrupAdi(e.target.value)} placeholder="Grup adı" className="w-full glass-input text-white rounded-2xl p-4 mb-4 placeholder-white/40" />
+        <div className="flex flex-wrap gap-2 mb-6">{grupIkonlari.map((e, i) => <button key={i} onClick={() => setSecilenEmoji(e)} className={`w-11 h-11 rounded-xl text-xl ${secilenEmoji === e ? 'bg-gradient-to-br from-orange-500 to-amber-500 scale-110 shadow-lg' : 'glass-input'} transition-all`}>{e}</button>)}</div>
+        <button onClick={handleOlustur} disabled={yukleniyor} className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold shadow-lg shadow-orange-500/30 disabled:opacity-50 active:scale-[0.98] transition">{yukleniyor ? '⏳' : 'Oluştur 🎉'}</button>
+      </div>
+    </div>
+  );
+};
+
+const BucketListModal = () => { 
+  const { bucketList, bucketListEkle, bucketListToggle, bucketListSil } = useData(); 
+  const { modalAcik, setModalAcik, bildirimGoster } = useUI(); 
+  const [yeniItem, setYeniItem] = useState(''); 
+  if (modalAcik !== 'bucketList') return null; 
+  const ekle = () => { if (!yeniItem.trim()) return; bucketListEkle({ baslik: yeniItem, emoji: '🎯' }); setYeniItem(''); bildirimGoster('Eklendi! ✨'); }; 
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div className="glass-modal rounded-t-3xl w-full max-w-lg p-6 animate-slide-up max-h-[85vh] flex flex-col">
+        <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+        <div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold text-white">📋 Bucket List</h3><button onClick={() => setModalAcik(null)} className="w-10 h-10 rounded-xl glass-input flex items-center justify-center text-white hover:bg-white/20 transition">✕</button></div>
+        <div className="flex gap-2 mb-4"><input type="text" value={yeniItem} onChange={(e) => setYeniItem(e.target.value)} placeholder="Ekle..." onKeyPress={(e) => e.key === 'Enter' && ekle()} className="flex-1 glass-input text-white rounded-xl px-4 py-3 placeholder-white/40" /><button onClick={ekle} className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white text-xl active:scale-95 transition">+</button></div>
+        <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">{bucketList.map(i => <div key={i.id} className={`flex items-center gap-3 p-4 rounded-2xl ${i.tamamlandi ? 'bg-green-500/10' : 'glass-input'}`}><button onClick={() => bucketListToggle(i.id)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${i.tamamlandi ? 'bg-green-500 border-green-500 text-white' : 'border-white/30'}`}>{i.tamamlandi && '✔'}</button><span className={`flex-1 ${i.tamamlandi ? 'line-through text-white/40' : 'text-white'}`}>{i.baslik}</span><button onClick={() => bucketListSil(i.id)} className="text-red-400">🗑️</button></div>)}</div>
+      </div>
+    </div>
+  ); 
+};
+
+const BildirimlerModal = () => { 
+  const { modalAcik, setModalAcik, bildirimler } = useUI(); 
+  if (modalAcik !== 'bildirimler') return null; 
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div className="glass-modal rounded-t-3xl w-full max-w-lg p-6 animate-slide-up max-h-[70vh]">
+        <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+        <div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold text-white">🔔 Bildirimler</h3><button onClick={() => setModalAcik(null)} className="w-10 h-10 rounded-xl glass-input flex items-center justify-center text-white hover:bg-white/20 transition">✕</button></div>
+        {bildirimler.length > 0 ? bildirimler.map(b => <div key={b.id} className={`p-4 rounded-2xl mb-2 ${b.okundu ? 'glass-input' : 'bg-orange-500/10'}`}><p className="text-white">{b.mesaj}</p></div>) : <div className="text-center py-8"><span className="text-4xl">🔕</span><p className="text-white/50">Bildirim yok</p></div>}
+      </div>
+    </div>
+  ); 
+};
+
+const GaleriModal = () => { 
+  const { galeri, galeriyeEkle } = useData(); 
+  const { modalAcik, setModalAcik, bildirimGoster } = useUI(); 
+  if (modalAcik !== 'galeri') return null; 
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div className="glass-modal rounded-t-3xl w-full max-w-lg p-6 animate-slide-up max-h-[85vh] flex flex-col">
+        <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+        <div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold text-white">📸 Anılar</h3><button onClick={() => setModalAcik(null)} className="w-10 h-10 rounded-xl glass-input flex items-center justify-center text-white hover:bg-white/20 transition">✕</button></div>
+        <button onClick={() => { galeriyeEkle(); bildirimGoster('Eklendi! 📸'); }} className="w-full glass-input border-2 border-dashed border-white/20 rounded-2xl p-6 mb-4 flex flex-col items-center hover:bg-white/10 transition"><span className="text-4xl">📷</span><span className="text-white">Fotoğraf Ekle</span></button>
+        <div className="flex-1 overflow-y-auto grid grid-cols-2 gap-3 custom-scrollbar">{galeri.map(f => <div key={f.id} className="aspect-square bg-gradient-to-br from-orange-500/20 to-amber-500/20 rounded-2xl flex items-center justify-center text-6xl">📸</div>)}</div>
+      </div>
+    </div>
+  ); 
+};
+
+const AvatarDegistirModal = () => { 
+  const { seciliAvatar, setSeciliAvatar, avatarKategori, setAvatarKategori, avatarGuncelle } = useAuth(); 
+  const { modalAcik, setModalAcik, bildirimGoster } = useUI(); 
+  if (modalAcik !== 'avatarDegistir') return null; 
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div className="glass-modal rounded-t-3xl w-full max-w-lg p-6 animate-slide-up">
+        <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+        <div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold text-white">🎨 Avatar</h3><button onClick={() => setModalAcik(null)} className="w-10 h-10 rounded-xl glass-input flex items-center justify-center text-white hover:bg-white/20 transition">✕</button></div>
+        <div className="flex justify-center gap-2 mb-4">{['erkek', 'kadin', 'fantastik'].map(k => <button key={k} onClick={() => setAvatarKategori(k)} className={`w-12 h-12 rounded-xl text-2xl ${avatarKategori === k ? 'bg-gradient-to-r from-orange-500 to-amber-500 scale-110 shadow-lg' : 'glass-input'} transition-all`}>{k === 'erkek' ? '👨' : k === 'kadin' ? '👩' : '🦄'}</button>)}</div>
+        <div className="grid grid-cols-5 gap-3 max-h-48 overflow-y-auto mb-4 custom-scrollbar">{avatarlar[avatarKategori].map((a, i) => <button key={i} onClick={() => setSeciliAvatar(a)} className={`w-14 h-14 rounded-2xl text-3xl ${seciliAvatar === a ? 'bg-gradient-to-br from-orange-500 to-amber-500 scale-110 ring-4 ring-orange-400/50 shadow-lg' : 'glass-input'} transition-all`}>{a}</button>)}</div>
+        <button onClick={() => { avatarGuncelle(seciliAvatar); setModalAcik(null); bildirimGoster('Avatar güncellendi! ✨'); }} className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold shadow-lg shadow-orange-500/30 active:scale-[0.98] transition">Kaydet</button>
+      </div>
+    </div>
+  ); 
+};
+
+const AppModals = () => (
+  <>
+    <HizliPlanModal />
+    <ArkadaslarModal />
+    <ArkadasIstekleriModal />
+    <EtkinlikDetayModal />
+    <YeniGrupModal />
+    <BucketListModal />
+    <BildirimlerModal />
+    <GaleriModal />
+    <AvatarDegistirModal />
+  </>
+);
+
+export default AppModals;

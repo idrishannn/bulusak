@@ -1,16 +1,20 @@
+// ============================================
+// BULUŞAK - Firebase Yapılandırması
+// ============================================
+
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyDHG-f1PQzxs5de1G95AJdPtrNAvelalAg",
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "bulusak-821d7.firebaseapp.com",
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "bulusak-821d7",
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "bulusak-821d7.firebasestorage.app",
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "960564405077",
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:960564405077:web:729361eab970c3cf7005dc",
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "G-JJBF3JHESK"
+  apiKey: "AIzaSyDHG-f1PQzxs5de1G95AJdPtrNAvelalAg",
+  authDomain: "bulusak-821d7.firebaseapp.com",
+  projectId: "bulusak-821d7",
+  storageBucket: "bulusak-821d7.firebasestorage.app",
+  messagingSenderId: "960564405077",
+  appId: "1:960564405077:web:729361eab970c3cf7005dc",
+  measurementId: "G-JJBF3JHESK"
 };
 
 const app = initializeApp(firebaseConfig);

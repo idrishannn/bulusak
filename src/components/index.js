@@ -1,4 +1,11 @@
+export { default as AnimatedBackground } from './AnimatedBackground';
 export { default as Header } from './Header';
 export { default as AltNav } from './AltNav';
 export { default as Bildirim } from './Bildirim';
 export { default as YuklemeEkrani } from './YuklemeEkrani';
+export { default as Feed } from './Feed';
+export { default as Planlar } from './Planlar';
+export { default as Takvim } from './Takvim';
+export { default as Profil } from './Profil';
+export { default as AuthScreens } from './AuthScreens';
+export { default as AppModals } from './AppModals';

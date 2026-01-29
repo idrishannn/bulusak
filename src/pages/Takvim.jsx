@@ -1,180 +1,222 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData, useUI } from '../context';
 
-const gunler = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
-const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-const saatler = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
-const etkinlikIkonlari = { kahve: '☕', yemek: '🍕', film: '🎬', spor: '⚽', oyun: '🎮', parti: '🎉', toplanti: '💼', gezi: '🏖️', alisveris: '🛍️', konser: '🎵', diger: '📅' };
-
 const Takvim = () => {
-  const { gruplar, etkinlikler, musaitlikler, musaitlikToggle } = useData();
-  const { seciliGrup, setSeciliGrup, setSeciliZaman, setSeciliEtkinlik, setModalAcik, tema } = useUI();
+  const { etkinlikler } = useData();
+  const { setSeciliEtkinlik, setModalAcik } = useUI();
+  const [aktifAy, setAktifAy] = useState(new Date());
+
+  const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  const gunler = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+
+  const takvimGunleri = useMemo(() => {
+    const yil = aktifAy.getFullYear();
+    const ay = aktifAy.getMonth();
+    
+    const ilkGun = new Date(yil, ay, 1);
+    const sonGun = new Date(yil, ay + 1, 0);
+    
+    const basla = ilkGun.getDay() === 0 ? 6 : ilkGun.getDay() - 1;
+    const gunler = [];
+    
+    // Önceki ayın günleri
+    for (let i = basla - 1; i >= 0; i--) {
+      const gun = new Date(yil, ay, -i);
+      gunler.push({ tarih: gun, aktifAy: false });
+    }
+    
+    // Bu ayın günleri
+    for (let i = 1; i <= sonGun.getDate(); i++) {
+      const gun = new Date(yil, ay, i);
+      gunler.push({ tarih: gun, aktifAy: true });
+    }
+    
+    // Sonraki ayın günleri
+    const kalan = 42 - gunler.length;
+    for (let i = 1; i <= kalan; i++) {
+      const gun = new Date(yil, ay + 1, i);
+      gunler.push({ tarih: gun, aktifAy: false });
+    }
+    
+    return gunler;
+  }, [aktifAy]);
+
+  const gunEtkinlikleri = (tarih) => {
+    const tarihStr = `${String(tarih.getDate()).padStart(2, '0')}/${String(tarih.getMonth() + 1).padStart(2, '0')}/${tarih.getFullYear()}`;
+    return etkinlikler.filter(e => e.tarih === tarihStr);
+  };
+
+  const oncekiAy = () => {
+    setAktifAy(new Date(aktifAy.getFullYear(), aktifAy.getMonth() - 1));
+  };
+
+  const sonrakiAy = () => {
+    setAktifAy(new Date(aktifAy.getFullYear(), aktifAy.getMonth() + 1));
+  };
 
   const bugun = new Date();
-  
-  const haftaninGunleri = [];
-  const haftaninBaslangici = new Date(bugun);
-  haftaninBaslangici.setDate(bugun.getDate() - bugun.getDay() + 1);
-  
-  for (let i = 0; i < 7; i++) {
-    const gun = new Date(haftaninBaslangici);
-    gun.setDate(haftaninBaslangici.getDate() + i);
-    haftaninGunleri.push(gun);
-  }
-
-  const etkinlikBul = (tarih, saat) => {
-    return etkinlikler.filter(e => {
-      const eTarih = new Date(e.tarih);
-      return eTarih.toDateString() === tarih.toDateString() && e.saat === saat;
-    });
+  const bugunMu = (tarih) => {
+    return tarih.getDate() === bugun.getDate() &&
+           tarih.getMonth() === bugun.getMonth() &&
+           tarih.getFullYear() === bugun.getFullYear();
   };
 
-  const TakvimHucresi = ({ gun, saat }) => {
-    const key = `${gun.toDateString()}-${saat}`;
-    const musait = musaitlikler[key];
-    const gecmisMi = gun < bugun && gun.toDateString() !== bugun.toDateString();
-    const etkinliklerBurada = etkinlikBul(gun, saat);
-    const etkinlikVar = etkinliklerBurada.length > 0;
-
-    return (
-      <button
-        onClick={() => {
-          if (!gecmisMi) {
-            if (etkinlikVar) {
-              setSeciliEtkinlik(etkinliklerBurada[0]);
-              setModalAcik('detay');
-            } else if (seciliGrup) {
-              setSeciliZaman({ tarih: gun, saat });
-              setModalAcik('yeniPlan');
-            } else {
-              musaitlikToggle(gun, saat);
-            }
-          }
-        }}
-        disabled={gecmisMi}
-        className={`relative h-12 rounded-xl transition-all duration-300 text-xs font-medium overflow-hidden ${
-          gecmisMi 
-            ? 'bg-gray-100 cursor-not-allowed opacity-40' 
-            : etkinlikVar
-              ? 'bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-lg hover:shadow-xl hover:scale-105'
-              : musait 
-                ? 'bg-gradient-to-br from-green-400 to-emerald-500 text-white shadow-md hover:shadow-lg hover:scale-105' 
-                : 'bg-white hover:bg-orange-50 border border-orange-100'
-        }`}
-      >
-        {etkinlikVar && <span className="text-lg">{etkinlikIkonlari[etkinliklerBurada[0].ikon]}</span>}
-        {!etkinlikVar && musait && <span>✓</span>}
-      </button>
-    );
+  const etkinlikIkonlari = {
+    kahve: '☕', yemek: '🍕', film: '🎬', spor: '⚽', oyun: '🎮',
+    parti: '🎉', toplanti: '💼', gezi: '🏖️', alisveris: '🛍️',
+    konser: '🎵', diger: '📅'
   };
-
-  const HaftalikTakvim = () => (
-    <div className={`${tema.bgCard} rounded-3xl p-4 ${tema.cardShadow} mx-4 mt-4 border ${tema.border}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className={`font-black text-lg ${tema.text}`}>
-            {seciliGrup ? `${seciliGrup.emoji} ${seciliGrup.isim}` : '📅 Takvimin'}
-          </h3>
-          <p className={`text-sm ${tema.textSecondary}`}>{aylar[bugun.getMonth()]} {bugun.getFullYear()}</p>
-        </div>
-        {seciliGrup && (
-          <button 
-            onClick={() => setSeciliGrup(null)}
-            className={`${tema.inputBg} ${tema.text} px-3 py-1.5 rounded-lg text-sm font-medium`}
-          >
-            ✕ Kapat
-          </button>
-        )}
-      </div>
-      
-      <div className="grid grid-cols-8 gap-2 mb-3">
-        <div className={`text-xs ${tema.textMuted} text-center py-2 font-bold`}>⏰</div>
-        {haftaninGunleri.map((gun, i) => {
-          const bugunMu = gun.toDateString() === bugun.toDateString();
-          return (
-            <div key={i} className={`text-center py-2 rounded-xl transition-all ${bugunMu ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg scale-105' : ''}`}>
-              <div className={`text-xs font-bold ${bugunMu ? 'text-white' : tema.textSecondary}`}>{gunler[gun.getDay()]}</div>
-              <div className={`text-lg font-black ${bugunMu ? 'text-white' : tema.text}`}>{gun.getDate()}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="max-h-80 overflow-y-auto custom-scrollbar">
-        {saatler.map(saat => (
-          <div key={saat} className="grid grid-cols-8 gap-2 mb-2">
-            <div className={`text-xs ${tema.textMuted} text-center py-3 font-medium`}>{saat}</div>
-            {haftaninGunleri.map((gun, i) => (
-              <TakvimHucresi key={i} gun={gun} saat={saat} />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 
   return (
-    <div className="pb-24">
-      {seciliGrup && (
-        <div className="bg-orange-50 p-4 flex items-center justify-between">
-          <span className={`flex items-center gap-2 ${tema.text} font-bold`}>
-            {seciliGrup.emoji} {seciliGrup.isim}
-          </span>
-          <span className={`text-sm ${tema.textSecondary}`}>Bir zaman seçerek plan oluştur</span>
-        </div>
-      )}
-      
-      <HaftalikTakvim />
+    <div className="pb-24 p-4 min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-black text-white">📅 Takvim</h2>
+        <button
+          onClick={() => setModalAcik('hizliPlan')}
+          className="glass-button px-4 py-2 text-sm font-bold"
+        >
+          + Yeni Plan
+        </button>
+      </div>
 
-      {!seciliGrup && (
-        <div className="p-4 space-y-3">
-          <div className={`${tema.bgCard} rounded-2xl p-4 border ${tema.border}`}>
-            <h4 className={`font-bold ${tema.text} mb-2`}>💡 Nasıl Kullanılır?</h4>
-            <ul className={`text-sm ${tema.textSecondary} space-y-1`}>
-              <li>• Müsait olduğun zamanlara tıkla ✓</li>
-              <li>• Turuncu = mevcut planlar</li>
-              <li>• Aşağıdan grup seç, takvimden plan oluştur</li>
-            </ul>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <h4 className={`font-bold ${tema.text}`}>👥 Gruplarını Seç</h4>
-            <button onClick={() => setModalAcik('yeniGrup')} className="text-orange-500 text-sm font-bold">
-              + Yeni Grup
-            </button>
+      {/* Ay Seçici */}
+      <div className="glass-card mb-6">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={oncekiAy}
+            className="w-10 h-10 glass-panel-hover rounded-xl flex items-center justify-center hover:bg-white/15"
+          >
+            <span className="text-white text-xl">←</span>
+          </button>
+          
+          <div className="text-center">
+            <h3 className="text-xl font-bold text-white">
+              {aylar[aktifAy.getMonth()]} {aktifAy.getFullYear()}
+            </h3>
           </div>
           
-          {gruplar.length > 0 ? (
-            <div className="space-y-2">
-              {gruplar.map(grup => (
-                <button
-                  key={grup.id}
-                  onClick={() => setSeciliGrup(grup)}
-                  className={`w-full ${tema.bgCard} rounded-xl p-3 ${tema.cardShadow} border ${tema.border} flex items-center gap-3 text-left ${tema.bgHover} transition-all`}
-                >
-                  <span className="text-2xl">{grup.emoji}</span>
-                  <div className="flex-1">
-                    <span className={`font-bold ${tema.text}`}>{grup.isim}</span>
-                    <span className={`text-sm ${tema.textSecondary} ml-2`}>{grup.uyeler?.length || 1} kişi</span>
-                  </div>
-                  <span className="text-orange-500">→</span>
-                </button>
-              ))}
+          <button
+            onClick={sonrakiAy}
+            className="w-10 h-10 glass-panel-hover rounded-xl flex items-center justify-center hover:bg-white/15"
+          >
+            <span className="text-white text-xl">→</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Takvim */}
+      <div className="glass-card">
+        {/* Gün Başlıkları */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {gunler.map(gun => (
+            <div key={gun} className="text-center text-white/60 text-xs font-bold py-2">
+              {gun}
             </div>
-          ) : (
-            <div className={`${tema.bgCard} rounded-xl p-6 text-center border ${tema.border}`}>
-              <span className="text-4xl">👥</span>
-              <p className={`${tema.textSecondary} mt-2`}>Henüz grup yok</p>
-              <button 
-                onClick={() => setModalAcik('yeniGrup')}
-                className="mt-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-xl font-bold text-sm"
+          ))}
+        </div>
+
+        {/* Günler */}
+        <div className="grid grid-cols-7 gap-1">
+          {takvimGunleri.map((gun, index) => {
+            const gunEtk = gunEtkinlikleri(gun.tarih);
+            const bugunMi = bugun(gun.tarih);
+
+            return (
+              <div
+                key={index}
+                className={`aspect-square p-1 rounded-xl transition-all ${
+                  gun.aktifAy
+                    ? 'glass-panel-hover hover:bg-white/15 cursor-pointer'
+                    : 'opacity-30'
+                } ${bugunMi ? 'ring-2 ring-orange-500' : ''}`}
+                onClick={() => {
+                  if (gunEtk.length === 1) {
+                    setSeciliEtkinlik(gunEtk[0]);
+                    setModalAcik('detay');
+                  }
+                }}
               >
-                İlk Grubunu Oluştur
+                <div className={`text-sm font-semibold mb-1 ${
+                  bugunMi ? 'text-orange-400' : 'text-white'
+                }`}>
+                  {gun.tarih.getDate()}
+                </div>
+                
+                {gunEtk.length > 0 && (
+                  <div className="flex flex-col gap-0.5">
+                    {gunEtk.slice(0, 2).map(etk => (
+                      <div
+                        key={etk.id}
+                        className="text-xs bg-orange-500/20 rounded px-1 flex items-center gap-1 truncate"
+                      >
+                        <span className="text-[10px]">{etkinlikIkonlari[etk.ikon] || '📅'}</span>
+                        <span className="text-white/80 text-[10px] truncate">{etk.baslik}</span>
+                      </div>
+                    ))}
+                    {gunEtk.length > 2 && (
+                      <div className="text-[10px] text-orange-400 font-bold">
+                        +{gunEtk.length - 2}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Yaklaşan Etkinlikler */}
+      <div className="mt-6">
+        <h3 className="text-white/70 font-bold mb-3 text-sm">📌 YAKLASAN ETKİNLİKLER</h3>
+        <div className="space-y-3">
+          {etkinlikler
+            .filter(e => {
+              const [gun, ay, yil] = e.tarih.split('/');
+              const [saat, dakika] = e.saat.split(':');
+              const etkinlikTarihi = new Date(yil, ay - 1, gun, saat, dakika);
+              return etkinlikTarihi >= new Date();
+            })
+            .sort((a, b) => {
+              const [gunA, ayA, yilA] = a.tarih.split('/');
+              const [gunB, ayB, yilB] = b.tarih.split('/');
+              const tarihA = new Date(yilA, ayA - 1, gunA);
+              const tarihB = new Date(yilB, ayB - 1, gunB);
+              return tarihA - tarihB;
+            })
+            .slice(0, 5)
+            .map(etk => (
+              <button
+                key={etk.id}
+                onClick={() => {
+                  setSeciliEtkinlik(etk);
+                  setModalAcik('detay');
+                }}
+                className="w-full glass-card hover:scale-[1.02] transition-transform text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-400 rounded-2xl flex items-center justify-center text-2xl">
+                    {etkinlikIkonlari[etk.ikon] || '📅'}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-white">{etk.baslik}</h4>
+                    <p className="text-sm text-white/60">
+                      {etk.tarih} • {etk.saat}
+                    </p>
+                  </div>
+                </div>
               </button>
+            ))}
+          
+          {etkinlikler.length === 0 && (
+            <div className="glass-panel rounded-2xl p-8 text-center">
+              <span className="text-5xl mb-4 block">📅</span>
+              <p className="text-white/60">Henüz plan yok</p>
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

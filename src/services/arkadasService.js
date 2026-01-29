@@ -10,7 +10,6 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 
-// KULLANICI ARAMA
 export const kullaniciAra = async (aramaMetni) => {
   if (!aramaMetni || aramaMetni.length < 1) {
     return { success: false, kullanicilar: [] };
@@ -25,8 +24,6 @@ export const kullaniciAra = async (aramaMetni) => {
     
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
-      
-      // HER İKİ ALANI DA KONTROL ET
       const lower = data.kullaniciAdiLower || data.kullaniciAdiKucuk || '';
       const kullaniciAdi = (data.kullaniciAdi || '').toLowerCase().replace('@', '');
       const isim = (data.isim || '').toLowerCase();
@@ -40,7 +37,6 @@ export const kullaniciAra = async (aramaMetni) => {
       }
     });
 
-    console.log('Arama sonucu:', kullanicilar); // DEBUG
     return { success: true, kullanicilar };
   } catch (error) {
     console.error('Arama hatası:', error);
@@ -48,7 +44,6 @@ export const kullaniciAra = async (aramaMetni) => {
   }
 };
 
-// ARKADAŞ İSTEĞİ GÖNDER
 export const arkadasIstegiGonder = async (gonderen, aliciId) => {
   if (!gonderen?.odUserId || !aliciId) {
     return { success: false, error: 'Geçersiz kullanıcı' };
@@ -99,7 +94,6 @@ export const arkadasIstegiGonder = async (gonderen, aliciId) => {
   }
 };
 
-// ARKADAŞ İSTEĞİ KABUL ET
 export const arkadasIstegiKabulEt = async (kullanici, istekGonderenId) => {
   if (!kullanici?.odUserId || !istekGonderenId) {
     return { success: false, error: 'Geçersiz kullanıcı' };
@@ -131,7 +125,6 @@ export const arkadasIstegiKabulEt = async (kullanici, istekGonderenId) => {
   }
 };
 
-// ARKADAŞ İSTEĞİ REDDET
 export const arkadasIstegiReddet = async (kullanici, istekGonderenId) => {
   if (!kullanici?.odUserId || !istekGonderenId) {
     return { success: false, error: 'Geçersiz kullanıcı' };
@@ -157,7 +150,6 @@ export const arkadasIstegiReddet = async (kullanici, istekGonderenId) => {
   }
 };
 
-// ARKADAŞ SİL
 export const arkadasSil = async (kullanici, arkadasId) => {
   if (!kullanici?.odUserId || !arkadasId) {
     return { success: false, error: 'Geçersiz kullanıcı' };
@@ -182,7 +174,6 @@ export const arkadasSil = async (kullanici, arkadasId) => {
   }
 };
 
-// ARKADAŞ LİSTESİ GETİR
 export const arkadasListesiGetir = async (arkadasIds) => {
   if (!arkadasIds || arkadasIds.length === 0) {
     return { success: true, arkadaslar: [] };
@@ -204,7 +195,6 @@ export const arkadasListesiGetir = async (arkadasIds) => {
   }
 };
 
-// ARKADAŞ İSTEKLERİNİ DİNLE
 export const arkadasIstekleriniDinle = (userId, callback) => {
   if (!userId) return () => {};
   const userRef = doc(db, 'users', userId);
@@ -217,7 +207,6 @@ export const arkadasIstekleriniDinle = (userId, callback) => {
   });
 };
 
-// ARKADAŞLARI DİNLE
 export const arkadaslariDinle = (userId, callback) => {
   if (!userId) return () => {};
   const userRef = doc(db, 'users', userId);
@@ -235,7 +224,6 @@ export const arkadaslariDinle = (userId, callback) => {
   });
 };
 
-// KULLANICI ADI KONTROL
 export const kullaniciAdiKontrol = async (kullaniciAdi) => {
   return { musait: true };
 };

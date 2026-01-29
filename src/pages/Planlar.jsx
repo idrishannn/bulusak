@@ -1,91 +1,211 @@
-import React from 'react';
-import { useData, useUI } from '../context';
+import React, { useState, useEffect } from 'react';
+import { useAuth, useData, useUI } from '../context';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
-const gunler = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
-const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-const etkinlikIkonlari = { kahve: '☕', yemek: '🍕', film: '🎬', spor: '⚽', oyun: '🎮', parti: '🎉', toplanti: '💼', gezi: '🏖️', alisveris: '🛍️', konser: '🎵', diger: '📅' };
+const etkinlikIkonlari = { 
+  kahve: '☕', yemek: '🍕', film: '🎬', spor: '⚽', oyun: '🎮', 
+  parti: '🎉', toplanti: '💼', gezi: '🏖️', alisveris: '🛍️', 
+  konser: '🎵', diger: '📅' 
+};
 
 const Planlar = () => {
-  const { etkinlikler } = useData();
-  const { katilimIstekleri, setSeciliEtkinlik, setModalAcik, tema } = useUI();
+  const { kullanici } = useAuth();
+  const { etkinlikler, setEtkinlikler } = useData();
+  const { setSeciliEtkinlik, setModalAcik, bildirimGoster } = useUI();
+  const [aktifMenu, setAktifMenu] = useState(null);
+
+  // ============================================
+  // ESKİ PLANLARI OTOMATİK SİL
+  // ============================================
+  useEffect(() => {
+    const eskiPlanlariSil = async () => {
+      const simdi = new Date();
+      
+      for (const etkinlik of etkinlikler) {
+        try {
+          // Tarih ve saat kontrolü
+          const [gun, ay, yil] = etkinlik.tarih.split('/');
+          const [saat, dakika] = etkinlik.saat.split(':');
+          const planTarihi = new Date(yil, ay - 1, gun, saat, dakika);
+          
+          // Eğer plan geçmişse sil
+          if (planTarihi < simdi) {
+            await deleteDoc(doc(db, 'events', etkinlik.id));
+            console.log(`Eski plan silindi: ${etkinlik.baslik}`);
+          }
+        } catch (error) {
+          console.error('Plan silme hatası:', error);
+        }
+      }
+    };
+
+    if (etkinlikler.length > 0) {
+      eskiPlanlariSil();
+    }
+  }, [etkinlikler]);
+
+  // Kendi planları
+  const benimPlanlarim = etkinlikler.filter(e => e.olusturanId === kullanici?.odUserId);
+  
+  // Davet edildiği planlar
+  const davetEdilenPlanlar = etkinlikler.filter(e => 
+    e.olusturanId !== kullanici?.odUserId && 
+    (e.davetliler?.includes(kullanici?.odUserId) || 
+     e.katilimcilar?.some(k => k.odUserId === kullanici?.odUserId))
+  );
+
+  const handlePlanSil = async (etkinlikId) => {
+    if (!window.confirm('Bu planı silmek istediğine emin misin?')) return;
+    
+    try {
+      await deleteDoc(doc(db, 'events', etkinlikId));
+      bildirimGoster('Plan silindi! 🗑️');
+      setAktifMenu(null);
+    } catch (error) {
+      console.error('Plan silme hatası:', error);
+      bildirimGoster('Plan silinemedi!', 'hata');
+    }
+  };
+
+  const PlanKarti = ({ etkinlik, benimPlanim }) => {
+    const katilimci = etkinlik.katilimcilar?.find(k => k.odUserId === kullanici?.odUserId);
+    const durum = katilimci?.durum;
+
+    return (
+      <div className="glass-card relative hover:scale-[1.02] transition-transform">
+        {benimPlanim && (
+          <div className="absolute top-4 right-4 z-10">
+            <button 
+              onClick={() => setAktifMenu(aktifMenu === etkinlik.id ? null : etkinlik.id)} 
+              className="w-8 h-8 rounded-lg glass-panel-hover flex items-center justify-center hover:bg-white/20"
+            >
+              <span className="text-white text-lg">⋮</span>
+            </button>
+            {aktifMenu === etkinlik.id && (
+              <div className="absolute right-0 top-10 glass-panel rounded-xl py-2 z-20 w-40 shadow-xl border border-white/20 animate-slide-down">
+                <button 
+                  onClick={() => { 
+                    setSeciliEtkinlik(etkinlik); 
+                    setModalAcik('detay'); 
+                    setAktifMenu(null); 
+                  }} 
+                  className="w-full px-4 py-2 text-left hover:bg-white/10 text-white flex items-center gap-2 transition-colors"
+                >
+                  <span>👁️</span> Detay
+                </button>
+                <button 
+                  onClick={() => handlePlanSil(etkinlik.id)} 
+                  className="w-full px-4 py-2 text-left hover:bg-red-500/20 text-red-400 flex items-center gap-2 transition-colors"
+                >
+                  <span>🗑️</span> Sil
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        
+        <button 
+          onClick={() => { 
+            setSeciliEtkinlik(etkinlik); 
+            setModalAcik('detay'); 
+          }} 
+          className="w-full text-left"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-400 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
+              {etkinlikIkonlari[etkinlik.ikon] || '📅'}
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold text-white">{etkinlik.baslik}</h4>
+              <p className="text-sm text-white/70">
+                {etkinlik.grup?.emoji} {etkinlik.grup?.isim || 'Arkadaş Planı'}
+              </p>
+            </div>
+            {benimPlanim ? (
+              <span className="bg-orange-500/20 text-orange-400 text-xs font-bold px-2 py-1 rounded-lg border border-orange-500/40">
+                👑 Senin
+              </span>
+            ) : durum ? (
+              <span className={`text-xs font-bold px-3 py-1 rounded-lg ${
+                durum === 'varim' ? 'badge-varim' :
+                durum === 'bakariz' ? 'badge-bakariz' :
+                'badge-yokum'
+              }`}>
+                {durum === 'varim' ? '✓ Katılıyorsun' : 
+                 durum === 'bakariz' ? '🤔 Bakarız' : 
+                 '✗ Katılmıyorsun'}
+              </span>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-4 text-sm text-white/60">
+            <span>📅 {etkinlik.tarih}</span>
+            <span>⏰ {etkinlik.saat}</span>
+            {etkinlik.konum && <span>📍 {etkinlik.konum}</span>}
+          </div>
+        </button>
+      </div>
+    );
+  };
 
   return (
-    <div className="pb-24 p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className={`text-2xl font-black ${tema.text}`}>📋 Planların</h2>
+    <div className="pb-24 p-4 min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-black text-white">📋 Planlarım</h2>
+          <p className="text-sm text-white/60">
+            {benimPlanlarim.length + davetEdilenPlanlar.length} aktif plan
+          </p>
+        </div>
         <button 
-          onClick={() => setModalAcik('hizliPlan')}
-          className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg"
+          onClick={() => setModalAcik('hizliPlan')} 
+          className="glass-button px-4 py-2 text-sm font-bold hover:scale-105 transition-transform"
         >
           + Yeni Plan
         </button>
       </div>
 
-      {katilimIstekleri.length > 0 && (
-        <div className="mb-4">
-          <h3 className={`font-bold ${tema.textSecondary} mb-2`}>⏳ Onay Bekleyenler</h3>
-          {katilimIstekleri.map(istek => (
-            <div key={istek.id} className={`${tema.bgCard} rounded-xl p-3 border ${tema.border} mb-2 flex items-center gap-3`}>
-              <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center text-xl">
-                {etkinlikIkonlari[istek.plan?.ikon] || '📅'}
-              </div>
-              <div className="flex-1">
-                <div className={`font-bold ${tema.text}`}>{istek.plan?.baslik || 'Plan'}</div>
-                <div className="text-sm text-yellow-600">⏳ Onay bekleniyor...</div>
-              </div>
-            </div>
-          ))}
+      {/* Oluşturduklarım */}
+      {benimPlanlarim.length > 0 && (
+        <div className="mb-6 animate-slide-up">
+          <h3 className="text-white/70 font-bold mb-3 text-sm flex items-center gap-2">
+            <span>🎯</span> OLUŞTURDUKLARIM
+          </h3>
+          <div className="space-y-3">
+            {benimPlanlarim.map(e => (
+              <PlanKarti key={e.id} etkinlik={e} benimPlanim={true} />
+            ))}
+          </div>
         </div>
       )}
-      
-      {etkinlikler.length > 0 ? (
-        <div className="space-y-3">
-          {etkinlikler.map(etkinlik => {
-            const tarih = new Date(etkinlik.tarih);
-            const katilimcilar = etkinlik.katilimcilar || [];
-            const varimSayisi = katilimcilar.filter(k => k.durum === 'varim').length;
-            
-            return (
-              <button
-                key={etkinlik.id}
-                onClick={() => {
-                  setSeciliEtkinlik(etkinlik);
-                  setModalAcik('detay');
-                }}
-                className={`w-full ${tema.bgCard} rounded-2xl p-4 ${tema.cardShadow} border ${tema.border} text-left ${tema.bgHover} transition-all`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-400 rounded-2xl flex items-center justify-center text-3xl shadow-md">
-                    {etkinlikIkonlari[etkinlik.ikon]}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className={`font-bold ${tema.text}`}>{etkinlik.baslik}</h4>
-                    <p className={`text-sm ${tema.textSecondary}`}>
-                      {etkinlik.grup?.emoji} {etkinlik.grup?.isim}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-orange-500">{etkinlik.saat}</div>
-                    <div className={`text-xs ${tema.textSecondary}`}>
-                      {gunler[tarih.getDay()]}, {tarih.getDate()} {aylar[tarih.getMonth()]?.slice(0, 3)}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-3 flex items-center justify-between">
-                  <div className={`text-sm font-medium ${tema.textSecondary}`}>
-                    <span className="text-green-500">{varimSayisi}</span>/{katilimcilar.length} katılıyor
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+
+      {/* Davet Edildiğim */}
+      {davetEdilenPlanlar.length > 0 && (
+        <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <h3 className="text-white/70 font-bold mb-3 text-sm flex items-center gap-2">
+            <span>📬</span> DAVET EDİLDİĞİM
+          </h3>
+          <div className="space-y-3">
+            {davetEdilenPlanlar.map(e => (
+              <PlanKarti key={e.id} etkinlik={e} benimPlanim={false} />
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className={`${tema.bgCard} rounded-2xl p-8 text-center border ${tema.border}`}>
-          <span className="text-6xl">📅</span>
-          <p className={`${tema.text} font-bold mt-4`}>Henüz plan yok</p>
-          <p className={`${tema.textSecondary} text-sm mt-1`}>İlk planını oluşturmak için + butonuna tıkla!</p>
+      )}
+
+      {/* Boş Durum */}
+      {benimPlanlarim.length === 0 && davetEdilenPlanlar.length === 0 && (
+        <div className="glass-panel rounded-3xl p-12 text-center animate-scale-in">
+          <span className="text-7xl mb-6 block">📅</span>
+          <h3 className="text-white font-bold text-xl mb-2">Henüz Plan Yok</h3>
+          <p className="text-white/60 mb-6">İlk planını oluşturarak başla!</p>
+          <button 
+            onClick={() => setModalAcik('hizliPlan')} 
+            className="glass-button px-8 py-3 text-base"
+          >
+            ⚡ İlk Planı Oluştur
+          </button>
         </div>
       )}
     </div>

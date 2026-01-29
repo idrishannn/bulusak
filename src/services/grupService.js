@@ -1,7 +1,3 @@
-// ============================================
-// BULUŞAK - Grup Servisi
-// ============================================
-
 import { doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, collection, onSnapshot, arrayUnion, arrayRemove, serverTimestamp } from "firebase/firestore";
 import { db, COLLECTIONS } from "./firebase";
 

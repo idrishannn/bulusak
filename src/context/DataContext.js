@@ -8,10 +8,8 @@ import {
 import { arkadaslariDinle } from '../services/arkadasService';
 import { useAuth } from './AuthContext';
 
-// Context oluştur
 const DataContext = createContext(null);
 
-// Custom hook
 export const useData = () => {
   const context = useContext(DataContext);
   if (!context) {
@@ -20,24 +18,17 @@ export const useData = () => {
   return context;
 };
 
-// Provider component
 export const DataProvider = ({ children }) => {
   const { kullanici, setKullanici } = useAuth();
   
-  // Data State
   const [gruplar, setGruplar] = useState([]);
   const [etkinlikler, setEtkinlikler] = useState([]);
   const [aktiviteler, setAktiviteler] = useState([]);
   const [arkadaslar, setArkadaslar] = useState([]);
-  
-  // Extra Data
   const [bucketList, setBucketList] = useState([]);
   const [galeri, setGaleri] = useState([]);
-  
-  // Takvim State
   const [musaitlikler, setMusaitlikler] = useState({});
 
-  // Grupları dinle
   useEffect(() => {
     if (kullanici?.odUserId) {
       const unsubscribe = gruplariDinle(kullanici.odUserId, setGruplar);
@@ -45,12 +36,9 @@ export const DataProvider = ({ children }) => {
     }
   }, [kullanici?.odUserId]);
 
-  // Etkinlikleri dinle (Grup + Davetli olduklarım + Kendi oluşturduklarım)
   useEffect(() => {
     if (kullanici?.odUserId) {
       const grupIds = gruplar.map(g => g.id);
-      
-      // userId'yi de gönder - davetli olduğum planları görmek için
       const unsubscribe = etkinlikleriDinle(grupIds, setEtkinlikler, kullanici.odUserId);
       return () => unsubscribe();
     } else {
@@ -58,19 +46,16 @@ export const DataProvider = ({ children }) => {
     }
   }, [gruplar, kullanici?.odUserId]);
 
-  // Arkadaşları dinle (Realtime)
   useEffect(() => {
     if (kullanici?.odUserId) {
       const unsubscribe = arkadaslariDinle(kullanici.odUserId, (arkadaslarDetay) => {
         setArkadaslar(arkadaslarDetay);
-        // Kullanıcı nesnesine de ekle
         setKullanici(prev => prev ? { ...prev, arkadaslarDetay } : prev);
       });
       return () => unsubscribe();
     }
   }, [kullanici?.odUserId, setKullanici]);
 
-  // Yeni grup oluştur
   const yeniGrupOlustur = async (isim, emoji) => {
     if (!kullanici?.odUserId) {
       return { success: false, error: 'Önce giriş yapmalısın!' };
@@ -89,13 +74,11 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  // Yeni etkinlik oluştur (Grup VEYA Arkadaş bazlı)
   const yeniEtkinlikOlustur = async (data) => {
     if (!kullanici?.odUserId) {
       return { success: false, error: 'Önce giriş yapmalısın!' };
     }
     
-    // Grup VEYA Arkadaş seçilmiş olmalı
     const grupVar = data.grup && data.grup.id;
     const arkadasVar = data.davetliler && data.davetliler.length > 0;
     
@@ -112,13 +95,11 @@ export const DataProvider = ({ children }) => {
       tip: data.tip || (grupVar ? 'grup' : 'arkadas')
     };
 
-    // Grup varsa ekle
     if (grupVar) {
       etkinlikData.grupId = data.grup.id;
       etkinlikData.grup = data.grup;
     }
 
-    // Davetli arkadaşlar varsa ekle (ID listesi)
     if (arkadasVar) {
       etkinlikData.davetliler = data.davetliler;
       etkinlikData.davetliDetaylar = data.davetliDetaylar || [];
@@ -133,7 +114,6 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  // Katılım durumu güncelle
   const katilimDurumuGuncelle = (etkinlikId, durum) => {
     setEtkinlikler(prev => prev.map(e => {
       if (e.id === etkinlikId) {
@@ -156,7 +136,7 @@ export const DataProvider = ({ children }) => {
     }));
     
     const mesajlar = {
-      'varim': 'Katılım onaylandı! ✓',
+      'varim': 'Katılım onaylandı! ✔',
       'bakariz': 'Belki katılacaksın 🤔',
       'yokum': 'Katılmıyorsun ✗'
     };
@@ -164,13 +144,11 @@ export const DataProvider = ({ children }) => {
     return { success: true, message: mesajlar[durum] };
   };
 
-  // Müsaitlik toggle
   const musaitlikToggle = (tarih, saat) => {
     const key = `${tarih.toDateString()}-${saat}`;
     setMusaitlikler(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Bucket list işlemleri
   const bucketListEkle = (item) => {
     setBucketList(prev => [...prev, { id: Date.now(), ...item, tamamlandi: false }]);
   };
@@ -183,14 +161,11 @@ export const DataProvider = ({ children }) => {
     setBucketList(prev => prev.filter(i => i.id !== id));
   };
 
-  // Galeri işlemleri
   const galeriyeEkle = () => {
     setGaleri(prev => [...prev, { id: Date.now(), tarih: new Date().toLocaleDateString('tr-TR') }]);
   };
 
-  // Context value
   const value = {
-    // State
     gruplar,
     etkinlikler,
     aktiviteler,
@@ -198,16 +173,12 @@ export const DataProvider = ({ children }) => {
     bucketList,
     galeri,
     musaitlikler,
-    
-    // Setters (gerekirse direkt erişim için)
     setGruplar,
     setEtkinlikler,
     setAktiviteler,
     setArkadaslar,
     setBucketList,
     setGaleri,
-    
-    // Actions
     yeniGrupOlustur,
     yeniEtkinlikOlustur,
     katilimDurumuGuncelle,

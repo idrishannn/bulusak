@@ -5,12 +5,10 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  deleteDoc,
   arrayUnion
 } from 'firebase/firestore';
 
-// ============================================
-// ETKİNLİK OLUŞTUR (Grup VEYA Arkadaş bazlı)
-// ============================================
 export const etkinlikOlustur = async (data, odUserId) => {
   try {
     const etkinlikData = {
@@ -19,27 +17,24 @@ export const etkinlikOlustur = async (data, odUserId) => {
       tarih: data.tarih,
       saat: data.saat,
       mekan: data.mekan || 'Belirtilmedi',
-      tip: data.tip || 'arkadas', // 'arkadas' veya 'grup'
+      tip: data.tip || 'arkadas',
       olusturanId: odUserId,
       olusturmaTarihi: new Date().toISOString(),
       katilimcilar: [{ odUserId, durum: 'varim' }],
       mesajlar: []
     };
 
-    // Grup bazlı plan
     if (data.grup && data.grup.id) {
       etkinlikData.grupId = data.grup.id;
       etkinlikData.grup = data.grup;
     }
 
-    // Arkadaş bazlı plan (GRUPSUZ)
     if (data.davetliler && data.davetliler.length > 0) {
       etkinlikData.davetliler = data.davetliler;
       etkinlikData.davetliDetaylar = data.davetliDetaylar || [];
     }
 
     const docRef = await addDoc(collection(db, 'events'), etkinlikData);
-    console.log('Etkinlik oluşturuldu:', docRef.id);
     
     return { success: true, id: docRef.id };
   } catch (error) {
@@ -48,9 +43,6 @@ export const etkinlikOlustur = async (data, odUserId) => {
   }
 };
 
-// ============================================
-// ETKİNLİKLERİ DİNLE (Grup + Davetli olduklarım + Kendi oluşturduklarım)
-// ============================================
 export const etkinlikleriDinle = (grupIds = [], callback, userId = null) => {
   try {
     const eventsRef = collection(db, 'events');
@@ -60,20 +52,16 @@ export const etkinlikleriDinle = (grupIds = [], callback, userId = null) => {
       
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        
         let eklenecekMi = false;
 
-        // 1. Kullanıcının oluşturduğu planlar
         if (userId && data.olusturanId === userId) {
           eklenecekMi = true;
         }
 
-        // 2. Kullanıcının dahil olduğu grup planları
         if (grupIds.length > 0 && data.grupId && grupIds.includes(data.grupId)) {
           eklenecekMi = true;
         }
 
-        // 3. Kullanıcının davet edildiği arkadaş planları (GRUPSUZ)
         if (userId && data.davetliler && data.davetliler.includes(userId)) {
           eklenecekMi = true;
         }
@@ -86,10 +74,7 @@ export const etkinlikleriDinle = (grupIds = [], callback, userId = null) => {
         }
       });
 
-      // Tarihe göre sırala (yakın olan önce)
       etkinlikler.sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
-      
-      console.log('Etkinlikler yüklendi:', etkinlikler.length);
       callback(etkinlikler);
     });
   } catch (error) {
@@ -99,9 +84,26 @@ export const etkinlikleriDinle = (grupIds = [], callback, userId = null) => {
   }
 };
 
-// ============================================
-// MESAJ EKLE
-// ============================================
+export const etkinlikSil = async (etkinlikId) => {
+  try {
+    await deleteDoc(doc(db, 'events', etkinlikId));
+    return { success: true };
+  } catch (error) {
+    console.error('Etkinlik silme hatası:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const etkinlikGuncelle = async (etkinlikId, data) => {
+  try {
+    await updateDoc(doc(db, 'events', etkinlikId), data);
+    return { success: true };
+  } catch (error) {
+    console.error('Etkinlik güncelleme hatası:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 export const mesajEkle = async (etkinlikId, mesajData) => {
   try {
     const etkinlikRef = doc(db, 'events', etkinlikId);
@@ -126,9 +128,6 @@ export const mesajEkle = async (etkinlikId, mesajData) => {
   }
 };
 
-// ============================================
-// KATILIM DURUMU GÜNCELLE
-// ============================================
 export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciData, durum) => {
   try {
     const etkinlikRef = doc(db, 'events', etkinlikId);

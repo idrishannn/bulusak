@@ -8,10 +8,8 @@ import {
 } from '../services';
 import { arkadasIstekleriniDinle } from '../services/arkadasService';
 
-// Context oluştur
 const AuthContext = createContext(null);
 
-// Custom hook - kolay erişim için
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -20,20 +18,15 @@ export const useAuth = () => {
   return context;
 };
 
-// Provider component
 export const AuthProvider = ({ children }) => {
-  // Auth State
   const [kullanici, setKullanici] = useState(null);
   const [girisYapildi, setGirisYapildi] = useState(false);
-  const [kayitAsamasi, setKayitAsamasi] = useState('giris'); // 'giris', 'avatar', 'bilgi'
+  const [kayitAsamasi, setKayitAsamasi] = useState('giris');
   const [yukleniyor, setYukleniyor] = useState(true);
   const [islemYukleniyor, setIslemYukleniyor] = useState(false);
-  
-  // Avatar seçimi (kayıt aşamasında kullanılıyor)
   const [seciliAvatar, setSeciliAvatar] = useState('👨');
   const [avatarKategori, setAvatarKategori] = useState('erkek');
 
-  // Firebase Auth Listener
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
       if (user) {
@@ -56,7 +49,6 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribeAuth();
   }, []);
 
-  // Arkadaşlık isteklerini dinle
   useEffect(() => {
     if (kullanici?.odUserId) {
       const unsubscribe = arkadasIstekleriniDinle(kullanici.odUserId, (istekler) => {
@@ -66,7 +58,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, [kullanici?.odUserId]);
 
-  // Google ile giriş
   const googleIleGirisYap = async () => {
     setIslemYukleniyor(true);
     try {
@@ -95,7 +86,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Çıkış yap
   const cikisYapFunc = async () => {
     try {
       await cikisYap();
@@ -109,7 +99,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Profil tamamla (kayıt son adım)
   const profilTamamla = async (isim, kullaniciAdi) => {
     if (!auth.currentUser) {
       return { success: false, error: 'Önce giriş yapmalısın!' };
@@ -122,7 +111,8 @@ export const AuthProvider = ({ children }) => {
     const result = await profilGuncelle(userId, {
       isim: isim || 'Kullanıcı',
       kullaniciAdi: `@${kucukHarfKullaniciAdi}`,
-      kullaniciAdiKucuk: kucukHarfKullaniciAdi, // Arama için küçük harf versiyon
+      kullaniciAdiLower: kucukHarfKullaniciAdi,
+      kullaniciAdiKucuk: kucukHarfKullaniciAdi,
       avatar: seciliAvatar,
       online: true,
       bio: '',
@@ -138,6 +128,7 @@ export const AuthProvider = ({ children }) => {
         odUserId: userId,
         isim: isim || 'Kullanıcı',
         kullaniciAdi: `@${kucukHarfKullaniciAdi}`,
+        kullaniciAdiLower: kucukHarfKullaniciAdi,
         kullaniciAdiKucuk: kucukHarfKullaniciAdi,
         avatar: seciliAvatar,
         online: true,
@@ -152,7 +143,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Avatar güncelle
   const avatarGuncelle = (yeniAvatar) => {
     setSeciliAvatar(yeniAvatar);
     if (kullanici) {
@@ -160,9 +150,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Context value
   const value = {
-    // State
     kullanici,
     girisYapildi,
     kayitAsamasi,
@@ -170,14 +158,11 @@ export const AuthProvider = ({ children }) => {
     islemYukleniyor,
     seciliAvatar,
     avatarKategori,
-    
-    // Setters
     setKullanici,
     setKayitAsamasi,
     setSeciliAvatar,
     setAvatarKategori,
-    
-    // Actions
+    setIslemYukleniyor,
     googleIleGirisYap,
     cikisYapFunc,
     profilTamamla,
