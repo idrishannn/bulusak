@@ -27,7 +27,10 @@ export const COLLECTIONS = {
   NOTIFICATIONS: 'notifications',
   MESSAGES: 'messages',
   FRIENDSHIPS: 'friendships',
-  FRIEND_REQUESTS: 'friendRequests'
+  FRIEND_REQUESTS: 'friendRequests',
+  KONUSMALAR: 'konusmalar',
+  HIKAYELER: 'hikayeler',
+  BILDIRIMLER: 'bildirimler'
 };
 
 export default app;

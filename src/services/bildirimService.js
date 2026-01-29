@@ -1,74 +1,115 @@
-import { collection, addDoc, query, where, orderBy, onSnapshot, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, COLLECTIONS } from './firebase';
+import { 
+  collection, doc, addDoc, updateDoc, query, where, orderBy, 
+  onSnapshot, serverTimestamp, getDocs, writeBatch, limit
+} from 'firebase/firestore';
 
-// ============================================
-// BİLDİRİM OLUŞTUR
-// ============================================
-export const bildirimOlustur = async (aliciId, tip, icerik) => {
+export const bildirimOlustur = async (aliciId, tip, veri) => {
   try {
-    await addDoc(collection(db, 'notifications'), {
-      alici: aliciId,
-      tip, // 'plan_daveti', 'katilim_degisiklik', 'mesaj', 'arkadas_istegi'
-      icerik, // { baslik, mesaj, etkinlikId, gonderenId, gonderenIsim }
+    const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
+    const bildirim = {
+      aliciId,
+      tip,
+      ...veri,
       okundu: false,
-      tarih: serverTimestamp()
-    });
+      olusturulma: serverTimestamp()
+    };
+    
+    await addDoc(bildirimRef, bildirim);
     return { success: true };
   } catch (error) {
-    console.error('Bildirim oluşturma hatası:', error);
     return { success: false, error: error.message };
   }
 };
 
-// ============================================
-// BİLDİRİMLERİ DİNLE (REALTIME)
-// ============================================
-export const bildirimleriDinle = (userId, callback) => {
+export const bildirimleriDinle = (kullaniciId, callback) => {
+  const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
   const q = query(
-    collection(db, 'notifications'),
-    where('alici', '==', userId),
-    orderBy('tarih', 'desc')
+    bildirimRef,
+    where('aliciId', '==', kullaniciId),
+    orderBy('olusturulma', 'desc'),
+    limit(50)
   );
   
   return onSnapshot(q, (snapshot) => {
     const bildirimler = snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
+      olusturulma: doc.data().olusturulma?.toDate?.() || new Date()
     }));
     callback(bildirimler);
-  }, (error) => {
-    console.error('Bildirim dinleme hatası:', error);
-    callback([]);
   });
 };
 
-// ============================================
-// BİLDİRİMİ OKUNDU YAP
-// ============================================
-export const bildirimOkundu = async (bildirimId) => {
+export const bildirimOkunduIsaretle = async (bildirimId) => {
   try {
-    await updateDoc(doc(db, 'notifications', bildirimId), {
-      okundu: true
-    });
+    const bildirimRef = doc(db, COLLECTIONS.BILDIRIMLER, bildirimId);
+    await updateDoc(bildirimRef, { okundu: true });
     return { success: true };
   } catch (error) {
-    console.error('Bildirim güncelleme hatası:', error);
     return { success: false, error: error.message };
   }
 };
 
-// ============================================
-// TÜM BİLDİRİMLERİ OKUNDU YAP
-// ============================================
-export const tumBildirimleriOkundu = async (bildirimIds) => {
+export const tumBildirimleriOkunduIsaretle = async (kullaniciId) => {
   try {
-    const promises = bildirimIds.map(id => 
-      updateDoc(doc(db, 'notifications', id), { okundu: true })
-    );
-    await Promise.all(promises);
+    const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
+    const q = query(bildirimRef, where('aliciId', '==', kullaniciId), where('okundu', '==', false));
+    const snapshot = await getDocs(q);
+    
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(doc => {
+      batch.update(doc.ref, { okundu: true });
+    });
+    await batch.commit();
+    
     return { success: true };
   } catch (error) {
-    console.error('Toplu bildirim güncelleme hatası:', error);
     return { success: false, error: error.message };
+  }
+};
+
+export const okunmamisBildirimSayisi = async (kullaniciId) => {
+  try {
+    const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
+    const q = query(bildirimRef, where('aliciId', '==', kullaniciId), where('okundu', '==', false));
+    const snapshot = await getDocs(q);
+    return { success: true, sayi: snapshot.size };
+  } catch (error) {
+    return { success: false, error: error.message, sayi: 0 };
+  }
+};
+
+export const BILDIRIM_TIPLERI = {
+  ARKADAS_ISTEGI: 'arkadas_istegi',
+  ARKADAS_KABUL: 'arkadas_kabul',
+  YENI_MESAJ: 'yeni_mesaj',
+  HIKAYE_IZLENDI: 'hikaye_izlendi',
+  HIKAYE_TEPKI: 'hikaye_tepki',
+  PLAN_DAVET: 'plan_davet',
+  PLAN_GUNCELLEME: 'plan_guncelleme',
+  PLAN_YORUM: 'plan_yorum'
+};
+
+export const bildirimMesaji = (tip, veri) => {
+  switch (tip) {
+    case BILDIRIM_TIPLERI.ARKADAS_ISTEGI:
+      return `${veri.kimdenIsim} sana arkadaşlık isteği gönderdi`;
+    case BILDIRIM_TIPLERI.ARKADAS_KABUL:
+      return `${veri.kimIsim} arkadaşlık isteğini kabul etti`;
+    case BILDIRIM_TIPLERI.YENI_MESAJ:
+      return `${veri.kimdenIsim}: ${veri.mesajOnizleme}`;
+    case BILDIRIM_TIPLERI.HIKAYE_IZLENDI:
+      return `${veri.kimIsim} hikayeni izledi`;
+    case BILDIRIM_TIPLERI.HIKAYE_TEPKI:
+      return `${veri.kimIsim} hikayene ${veri.emoji} tepki verdi`;
+    case BILDIRIM_TIPLERI.PLAN_DAVET:
+      return `${veri.kimdenIsim} seni "${veri.planBaslik}" planına davet etti`;
+    case BILDIRIM_TIPLERI.PLAN_GUNCELLEME:
+      return `"${veri.planBaslik}" planı güncellendi`;
+    case BILDIRIM_TIPLERI.PLAN_YORUM:
+      return `${veri.kimdenIsim} "${veri.planBaslik}" planına yorum yaptı`;
+    default:
+      return 'Yeni bildirim';
   }
 };
