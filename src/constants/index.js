@@ -131,6 +131,60 @@ export const AVATAR_CATEGORIES = {
 // Grup İkonları
 export const GROUP_ICONS = ['🎓', '💼', '⚽', '🎮', '🎵', '🍕', '☕', '🎬', '🏖️', '🎉'];
 
+// FAZ 1 - Plan Kategorileri
+export const PLAN_CATEGORIES = [
+  { id: 'tumu', label: 'Tümü', emoji: '✨', color: 'gold' },
+  { id: 'kahve', label: 'Kahve', emoji: '☕', color: 'amber' },
+  { id: 'yemek', label: 'Yemek', emoji: '🍽️', color: 'orange' },
+  { id: 'sinema', label: 'Sinema', emoji: '🎬', color: 'purple' },
+  { id: 'spor', label: 'Spor', emoji: '⚽', color: 'green' },
+  { id: 'oyun', label: 'Oyun', emoji: '🎮', color: 'blue' },
+  { id: 'konser', label: 'Konser', emoji: '🎵', color: 'pink' },
+  { id: 'outdoor', label: 'Outdoor', emoji: '🏃', color: 'emerald' },
+  { id: 'kultur', label: 'Kültür', emoji: '🎨', color: 'violet' },
+  { id: 'seyahat', label: 'Seyahat', emoji: '✈️', color: 'sky' },
+  { id: 'parti', label: 'Parti', emoji: '🎉', color: 'rose' }
+];
+
+// FAZ 1 - Kategori Renkleri (Tailwind class'ları)
+export const CATEGORY_COLORS = {
+  gold: { bg: 'bg-gold-500/10', text: 'text-gold-500', border: 'border-gold-500/30' },
+  amber: { bg: 'bg-amber-500/10', text: 'text-amber-500', border: 'border-amber-500/30' },
+  orange: { bg: 'bg-orange-500/10', text: 'text-orange-500', border: 'border-orange-500/30' },
+  purple: { bg: 'bg-purple-500/10', text: 'text-purple-500', border: 'border-purple-500/30' },
+  green: { bg: 'bg-green-500/10', text: 'text-green-500', border: 'border-green-500/30' },
+  blue: { bg: 'bg-blue-500/10', text: 'text-blue-500', border: 'border-blue-500/30' },
+  pink: { bg: 'bg-pink-500/10', text: 'text-pink-500', border: 'border-pink-500/30' },
+  emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/30' },
+  violet: { bg: 'bg-violet-500/10', text: 'text-violet-500', border: 'border-violet-500/30' },
+  sky: { bg: 'bg-sky-500/10', text: 'text-sky-500', border: 'border-sky-500/30' },
+  rose: { bg: 'bg-rose-500/10', text: 'text-rose-500', border: 'border-rose-500/30' }
+};
+
+// FAZ 1 - Bütçe Aralıkları
+export const BUDGET_RANGES = [
+  { id: 'free', label: 'Ücretsiz', emoji: '🆓', value: 0 },
+  { id: 'low', label: '₺', emoji: '💵', value: 1 },
+  { id: 'medium', label: '₺₺', emoji: '💵💵', value: 2 },
+  { id: 'high', label: '₺₺₺', emoji: '💰', value: 3 },
+  { id: 'premium', label: '₺₺₺₺', emoji: '💎', value: 4 }
+];
+
+// FAZ 1 - Varsayılan Kategori Resimleri (Kapak fotoğrafı yoksa kullanılacak)
+export const DEFAULT_CATEGORY_IMAGES = {
+  kahve: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop',
+  yemek: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop',
+  sinema: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=300&fit=crop',
+  spor: 'https://images.unsplash.com/photo-1461896836934- voices8ad91cd?w=400&h=300&fit=crop',
+  oyun: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop',
+  konser: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400&h=300&fit=crop',
+  outdoor: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=300&fit=crop',
+  kultur: 'https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=400&h=300&fit=crop',
+  seyahat: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&h=300&fit=crop',
+  parti: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&h=300&fit=crop',
+  default: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop'
+};
+
 // Saat Seçenekleri
 export const HOUR_OPTIONS = [
   '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',

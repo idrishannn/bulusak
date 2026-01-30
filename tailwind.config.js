@@ -48,6 +48,12 @@ module.exports = {
         'pulse-gold': 'pulseGold 2s infinite',
         'shimmer': 'shimmer 1.5s infinite',
         'spin-slow': 'spin 3s linear infinite',
+        // FAZ 1 - Yeni animasyonlar (Mevcut kodlar korundu)
+        'logo-glow': 'logoGlow 3s ease-in-out infinite',
+        'story-ring-rotate': 'storyRingRotate 4s linear infinite',
+        'input-focus-glow': 'inputFocusGlow 0.3s ease-out forwards',
+        'bounce-subtle': 'bounceSubtle 0.6s ease-in-out',
+        'shake': 'shake 0.5s ease-in-out',
       },
       keyframes: {
         fadeIn: {
@@ -81,6 +87,29 @@ module.exports = {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        // FAZ 1 - Yeni keyframes (Mevcut kodlar korundu)
+        logoGlow: {
+          '0%, 100%': { filter: 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.3))' },
+          '50%': { filter: 'drop-shadow(0 0 20px rgba(212, 175, 55, 0.6))' },
+        },
+        storyRingRotate: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
+        inputFocusGlow: {
+          '0%': { boxShadow: '0 0 0 0 rgba(212, 175, 55, 0)' },
+          '100%': { boxShadow: '0 0 0 4px rgba(212, 175, 55, 0.15)' },
+        },
+        bounceSubtle: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
+          '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' },
         },
       },
       backdropBlur: {

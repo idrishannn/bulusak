@@ -1,19 +1,57 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useAuth, useData, useUI, useTheme } from '../context';
 import Stories from './Stories';
 import EmptyState from './EmptyState';
 import { SkeletonCard } from './Skeleton';
-import { ClockIcon, LocationIcon, UsersIcon, ChevronRightIcon } from './Icons';
-import { KATILIM_DURUMLARI, LOCATION_RADIUS_OPTIONS, POPULAR_LOCATIONS } from '../constants';
+import { ClockIcon, LocationIcon, UsersIcon, ChevronRightIcon, BookmarkIcon } from './Icons';
+import { KATILIM_DURUMLARI, LOCATION_RADIUS_OPTIONS, POPULAR_LOCATIONS, PLAN_CATEGORIES, CATEGORY_COLORS, DEFAULT_CATEGORY_IMAGES } from '../constants';
 
 const FEED_TABS = [
   { id: 'arkadaslar', label: 'Arkadaşlar' },
   { id: 'kesfet', label: 'Keşfet' }
 ];
 
-const PlanKarti = ({ plan, onClick }) => {
+// FAZ 1 - Kategori Chip Bileşeni
+const CategoryChip = ({ category, isActive, onClick }) => {
+  const colors = CATEGORY_COLORS[category.color] || CATEGORY_COLORS.gold;
+
+  return (
+    <button
+      onClick={onClick}
+      className={`category-chip ${
+        isActive
+          ? 'category-chip-active'
+          : 'category-chip-inactive'
+      }`}
+    >
+      <span>{category.emoji}</span>
+      <span>{category.label}</span>
+    </button>
+  );
+};
+
+// FAZ 1 - Kategori Filtreleri Bileşeni
+const CategoryFilters = ({ selectedCategory, onSelectCategory }) => {
+  return (
+    <div className="flex gap-2 overflow-x-auto hide-scrollbar py-2 px-4 -mx-4">
+      {PLAN_CATEGORIES.map(category => (
+        <CategoryChip
+          key={category.id}
+          category={category}
+          isActive={selectedCategory === category.id}
+          onClick={() => onSelectCategory(category.id)}
+        />
+      ))}
+    </div>
+  );
+};
+
+// FAZ 1 - Geliştirilmiş Plan Kartı Bileşeni
+const PlanKarti = ({ plan, onClick, showCover = false }) => {
   const { kullanici } = useAuth();
   const { themeClasses, isDark } = useTheme();
+  const [bookmarked, setBookmarked] = useState(false);
+
   const tarih = new Date(plan.startAt || plan.tarih);
   const bugun = new Date();
   const yarin = new Date();
@@ -27,11 +65,117 @@ const PlanKarti = ({ plan, onClick }) => {
 
   const katilimci = plan.katilimcilar?.find(k => k.odUserId === kullanici?.odUserId);
   const varimSayisi = plan.katilimcilar?.filter(k => k.durum === KATILIM_DURUMLARI.VARIM).length || 0;
+  const katilimcilar = plan.katilimcilar?.filter(k => k.durum === KATILIM_DURUMLARI.VARIM) || [];
 
   // Plan sahibinin avatar bilgisini bul
   const olusturan = plan.katilimcilar?.find(k => k.odUserId === plan.olusturanId);
   const olusturanAvatar = olusturan?.avatar || plan.olusturanAvatar;
 
+  // FAZ 1 - Kategori bilgisi
+  const kategori = PLAN_CATEGORIES.find(c => c.id === plan.kategori) || PLAN_CATEGORIES.find(c => c.id === 'tumu');
+  const kategoriColors = CATEGORY_COLORS[kategori?.color] || CATEGORY_COLORS.gold;
+
+  // FAZ 1 - Kapak fotoğrafı (yoksa kategori varsayılan görseli)
+  const coverImage = plan.kapaKFotografi || plan.coverImage || DEFAULT_CATEGORY_IMAGES[plan.kategori] || DEFAULT_CATEGORY_IMAGES.default;
+
+  // Bookmark toggle
+  const handleBookmark = (e) => {
+    e.stopPropagation();
+    setBookmarked(!bookmarked);
+    // TODO: Bookmark servisine kaydet
+  };
+
+  // FAZ 1 - Kapak fotoğraflı kart görünümü (Keşfet için)
+  if (showCover) {
+    return (
+      <button
+        onClick={onClick}
+        className="w-full card-hover overflow-hidden text-left group"
+      >
+        {/* Kapak Fotoğrafı Alanı */}
+        <div className="relative aspect-[16/10] overflow-hidden">
+          <img
+            src={coverImage}
+            alt={plan.baslik}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              e.target.src = DEFAULT_CATEGORY_IMAGES.default;
+            }}
+          />
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/30 to-transparent" />
+
+          {/* Kategori Badge */}
+          {kategori && kategori.id !== 'tumu' && (
+            <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-semibold bg-dark-900/80 backdrop-blur-sm text-white border border-dark-700/50 flex items-center gap-1`}>
+              <span>{kategori.emoji}</span>
+              <span>{kategori.label}</span>
+            </div>
+          )}
+
+          {/* Bookmark Butonu */}
+          <button
+            onClick={handleBookmark}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-dark-900/80 backdrop-blur-sm flex items-center justify-center text-white hover:text-gold-500 transition-colors"
+          >
+            <BookmarkIcon className="w-4 h-4" filled={bookmarked} />
+          </button>
+
+          {/* Alt Bilgiler (overlay üstünde) */}
+          <div className="absolute bottom-0 left-0 right-0 p-3">
+            <h3 className="font-semibold text-white text-base mb-1 line-clamp-1">{plan.baslik}</h3>
+            <div className="flex items-center gap-3 text-xs text-dark-300">
+              <span className="flex items-center gap-1">
+                <ClockIcon className="w-3.5 h-3.5" />
+                {tarihStr} · {plan.saat}
+              </span>
+              {plan.mekan && plan.mekan !== 'Belirtilmedi' && (
+                <span className="flex items-center gap-1 truncate">
+                  <LocationIcon className="w-3.5 h-3.5" />
+                  {plan.mekan}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Alt Bilgi Alanı */}
+        <div className="p-3 flex items-center justify-between">
+          {/* Katılımcı Avatarları */}
+          <div className="flex items-center gap-2">
+            <div className="avatar-stack">
+              {katilimcilar.slice(0, 3).map((k, i) => (
+                <div key={i} className="avatar-stack-item">
+                  {k.avatar || k.isim?.charAt(0)}
+                </div>
+              ))}
+              {varimSayisi > 3 && (
+                <div className="avatar-stack-more">
+                  +{varimSayisi - 3}
+                </div>
+              )}
+            </div>
+            <span className={`text-xs ${themeClasses.textMuted}`}>
+              {varimSayisi} katılımcı
+            </span>
+          </div>
+
+          {/* Katılım Durumu */}
+          {katilimci && (
+            <span className={`text-xs font-medium px-2 py-1 rounded-lg ${
+              katilimci.durum === KATILIM_DURUMLARI.VARIM
+                ? 'bg-emerald-500/10 text-emerald-400'
+                : 'bg-red-500/10 text-red-400'
+            }`}>
+              {katilimci.durum === KATILIM_DURUMLARI.VARIM ? 'Katılıyorsun' : 'Katılmıyorsun'}
+            </span>
+          )}
+        </div>
+      </button>
+    );
+  }
+
+  // Orijinal kompakt kart görünümü (Arkadaşlar için - mevcut kod korundu)
   return (
     <button
       onClick={onClick}
@@ -56,7 +200,13 @@ const PlanKarti = ({ plan, onClick }) => {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className={`font-semibold ${themeClasses.text} truncate`}>{plan.baslik}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className={`font-semibold ${themeClasses.text} truncate`}>{plan.baslik}</h3>
+            {/* FAZ 1 - Kategori emoji */}
+            {kategori && kategori.id !== 'tumu' && (
+              <span className="text-sm">{kategori.emoji}</span>
+            )}
+          </div>
           <p className={`${themeClasses.textMuted} text-sm truncate`}>
             {plan.grup?.isim || 'Arkadaş planı'}
           </p>
@@ -208,6 +358,8 @@ const Feed = () => {
   const { themeClasses, isDark } = useTheme();
   const loaderRef = useRef();
   const [konumSeciciAcik, setKonumSeciciAcik] = useState(false);
+  // FAZ 1 - Kategori filtresi state
+  const [selectedCategory, setSelectedCategory] = useState('tumu');
 
   const handlePlanTikla = (plan) => {
     setSeciliEtkinlik(plan);
@@ -232,7 +384,14 @@ const Feed = () => {
 
   const aktivPlanlar = feedKaynagi === 'arkadaslar' ? arkadasPlanlar : kesfetPlanlar;
 
-  const siralananPlanlar = [...(aktivPlanlar || [])].sort((a, b) => {
+  // FAZ 1 - Kategori filtresi uygula
+  const filteredPlanlar = useMemo(() => {
+    if (!aktivPlanlar) return [];
+    if (selectedCategory === 'tumu') return aktivPlanlar;
+    return aktivPlanlar.filter(plan => plan.kategori === selectedCategory);
+  }, [aktivPlanlar, selectedCategory]);
+
+  const siralananPlanlar = [...(filteredPlanlar || [])].sort((a, b) => {
     const aKatilimci = a.katilimcilar?.find(k => k.odUserId === kullanici?.odUserId);
     const bKatilimci = b.katilimcilar?.find(k => k.odUserId === kullanici?.odUserId);
     if (aKatilimci && !bKatilimci) return -1;
@@ -297,6 +456,12 @@ const Feed = () => {
             <ChevronRightIcon className={`w-4 h-4 ${kesfetMerkezKonum ? 'text-gold-500' : themeClasses.textMuted}`} />
           </button>
         )}
+
+        {/* FAZ 1 - Kategori Filtreleri */}
+        <CategoryFilters
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
       </div>
 
       {/* Konum Seçici Modal */}
@@ -315,6 +480,12 @@ const Feed = () => {
         <div className="px-4">
           <h2 className={`text-sm font-semibold ${themeClasses.text} mb-3`}>
             {feedKaynagi === 'arkadaslar' ? 'Planlar' : 'Keşfet'}
+            {/* FAZ 1 - Filtrelenen kategori sayısını göster */}
+            {selectedCategory !== 'tumu' && (
+              <span className={`ml-2 text-xs ${themeClasses.textMuted}`}>
+                ({digerPlanlar.length} plan)
+              </span>
+            )}
           </h2>
           <div className="space-y-3">
             {digerPlanlar.map(plan => (
@@ -322,6 +493,7 @@ const Feed = () => {
                 key={plan.id}
                 plan={plan}
                 onClick={() => handlePlanTikla(plan)}
+                showCover={feedKaynagi === 'kesfet'} // FAZ 1 - Keşfet'te kapak fotoğraflı kart
               />
             ))}
           </div>
