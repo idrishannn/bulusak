@@ -22,9 +22,12 @@ const Takvim = () => {
     haftaninGunleri.push(gun);
   }
 
+  // startAt (veya tarih) alanını kullanarak planı takvimde bul
   const etkinlikBul = (tarih, saat) => {
     return etkinlikler?.filter(e => {
-      const eTarih = new Date(e.tarih);
+      // startAt varsa onu kullan, yoksa tarih alanını kullan
+      const planTarih = e.startAt || e.tarih;
+      const eTarih = new Date(planTarih);
       return eTarih.toDateString() === tarih.toDateString() && e.saat === saat;
     }) || [];
   };

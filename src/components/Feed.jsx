@@ -1,9 +1,9 @@
-import React, { useCallback, useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useAuth, useData, useUI } from '../context';
 import Stories from './Stories';
 import EmptyState from './EmptyState';
 import { SkeletonCard } from './Skeleton';
-import { ClockIcon, LocationIcon, UsersIcon, ChevronRightIcon } from './Icons';
+import { ClockIcon, LocationIcon, UsersIcon } from './Icons';
 import Logo from './Logo';
 
 const FEED_TABS = [
@@ -11,23 +11,9 @@ const FEED_TABS = [
   { id: 'kesfet', label: 'Keşfet' }
 ];
 
-const KATEGORI_IKONLARI = {
-  kahve: '/icons/coffee.png',
-  yemek: '/icons/food.png',
-  film: '/icons/film.png',
-  spor: '/icons/sport.png',
-  oyun: '/icons/game.png',
-  parti: '/icons/party.png',
-  toplanti: '/icons/meeting.png',
-  gezi: '/icons/travel.png',
-  alisveris: '/icons/shopping.png',
-  konser: '/icons/music.png',
-  diger: '/icons/other.png'
-};
-
 const PlanKarti = ({ plan, onClick }) => {
   const { kullanici } = useAuth();
-  const tarih = new Date(plan.tarih);
+  const tarih = new Date(plan.startAt || plan.tarih);
   const bugun = new Date();
   const yarin = new Date();
   yarin.setDate(bugun.getDate() + 1);
@@ -95,43 +81,14 @@ const PlanKarti = ({ plan, onClick }) => {
   );
 };
 
-const ArkadasKarti = ({ arkadas }) => {
-  return (
-    <div className="flex flex-col items-center gap-2 flex-shrink-0 w-16">
-      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-        arkadas.online 
-          ? 'bg-gradient-to-br from-gold-500/30 to-gold-600/20 border-2 border-gold-500/30' 
-          : 'bg-dark-700'
-      }`}>
-        {arkadas.avatar ? (
-          <span className="text-2xl">{arkadas.avatar}</span>
-        ) : (
-          <Logo size="xs" className="opacity-50" />
-        )}
-      </div>
-      <div className="text-center">
-        <p className={`text-xs font-medium truncate w-full ${
-          arkadas.online ? 'text-white' : 'text-dark-400'
-        }`}>
-          {arkadas.isim?.split(' ')[0]}
-        </p>
-        {arkadas.online && (
-          <p className="text-[10px] text-emerald-400">Müsait</p>
-        )}
-      </div>
-    </div>
-  );
-};
-
 const Feed = () => {
   const { kullanici } = useAuth();
   const {
-    arkadaslar, yukleniyor,
+    yukleniyor,
     feedKaynagi, arkadasPlanlar, kesfetPlanlar,
     kesfetDahaVar, kesfetYukleniyor, feedDegistir, kesfetYukle
   } = useData();
   const { setModalAcik, setSeciliEtkinlik } = useUI();
-  const observerRef = useRef();
   const loaderRef = useRef();
 
   const handlePlanTikla = (plan) => {
@@ -162,11 +119,11 @@ const Feed = () => {
     const bKatilimci = b.katilimcilar?.find(k => k.odUserId === kullanici?.odUserId);
     if (aKatilimci && !bKatilimci) return -1;
     if (!aKatilimci && bKatilimci) return 1;
-    return new Date(a.tarih) - new Date(b.tarih);
+    return new Date(a.startAt || a.tarih) - new Date(b.startAt || b.tarih);
   });
 
   const siradakiPlan = feedKaynagi === 'arkadaslar'
-    ? siralananPlanlar.find(p => new Date(p.tarih) >= new Date())
+    ? siralananPlanlar.find(p => new Date(p.startAt || p.tarih) >= new Date())
     : null;
   const digerPlanlar = siralananPlanlar.filter(p => p.id !== siradakiPlan?.id);
 
@@ -203,25 +160,6 @@ const Feed = () => {
           ))}
         </div>
       </div>
-
-      {feedKaynagi === 'arkadaslar' && arkadaslar?.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between px-4 mb-3">
-            <h2 className="text-sm font-semibold text-white">Arkadaşlar</h2>
-            <button
-              onClick={() => setModalAcik('arkadaslar')}
-              className="text-xs text-gold-500 font-medium flex items-center gap-1"
-            >
-              Tümü <ChevronRightIcon className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="flex gap-3 px-4 overflow-x-auto hide-scrollbar">
-            {arkadaslar.slice(0, 8).map(arkadas => (
-              <ArkadasKarti key={arkadas.odUserId} arkadas={arkadas} />
-            ))}
-          </div>
-        </div>
-      )}
 
       {siradakiPlan && (
         <div className="px-4 mb-6">

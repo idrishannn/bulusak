@@ -15,33 +15,73 @@ import {
   getDocs
 } from 'firebase/firestore';
 
-export const etkinlikOlustur = async (data, odUserId) => {
+export const etkinlikOlustur = async (kullanici, data) => {
   try {
+    // Zorunlu alanları kontrol et
+    if (!data || !data.baslik || !data.baslik.trim()) {
+      return { success: false, error: 'Plan adı zorunludur' };
+    }
+
+    const odUserId = kullanici?.odUserId || '';
+
+    // Tarih ve saat'i birleştirerek startAt oluştur
+    let startAt;
+    if (data.tarih instanceof Date) {
+      startAt = data.tarih.toISOString();
+    } else if (data.tarih) {
+      startAt = new Date(data.tarih).toISOString();
+    } else {
+      startAt = new Date().toISOString();
+    }
+
+    // participantIds: plan sahibi + davetliler
+    const participantIds = [odUserId];
+    if (data.davetliler && Array.isArray(data.davetliler)) {
+      data.davetliler.forEach(id => {
+        if (!participantIds.includes(id)) {
+          participantIds.push(id);
+        }
+      });
+    }
+
+    // Firestore'a gönderilecek obje - undefined değerler yerine boş string veya varsayılan değer kullan
     const etkinlikData = {
-      baslik: data.baslik,
+      baslik: data.baslik.trim(),
+      aciklama: data.aciklama || '',
       ikon: data.ikon || 'diger',
-      tarih: data.tarih,
-      saat: data.saat,
+      tarih: startAt,
+      startAt: startAt,
+      saat: data.saat || '12:00',
       mekan: data.mekan || 'Belirtilmedi',
       tip: data.tip || 'arkadas',
       olusturanId: odUserId,
       olusturmaTarihi: new Date().toISOString(),
-      katilimcilar: [{ odUserId, durum: 'varim' }],
+      createdAt: new Date().toISOString(),
+      katilimcilar: [{ odUserId, isim: kullanici?.isim || '', avatar: kullanici?.avatar || '👤', durum: 'varim' }],
+      participantIds: participantIds,
+      visibility: data.visibility || 'public',
+      status: 'active',
       mesajlar: []
     };
 
+    // Grup bilgisi varsa ekle
     if (data.grup && data.grup.id) {
       etkinlikData.grupId = data.grup.id;
-      etkinlikData.grup = data.grup;
+      etkinlikData.grup = {
+        id: data.grup.id,
+        isim: data.grup.isim || '',
+        emoji: data.grup.emoji || '🎉'
+      };
     }
 
-    if (data.davetliler && data.davetliler.length > 0) {
+    // Davetliler varsa ekle
+    if (data.davetliler && Array.isArray(data.davetliler) && data.davetliler.length > 0) {
       etkinlikData.davetliler = data.davetliler;
-      etkinlikData.davetliDetaylar = data.davetliDetaylar || [];
+      etkinlikData.davetliDetaylar = Array.isArray(data.davetliDetaylar) ? data.davetliDetaylar : [];
     }
 
     const docRef = await addDoc(collection(db, 'events'), etkinlikData);
-    
+
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error('Etkinlik oluşturma hatası:', error);
@@ -49,26 +89,34 @@ export const etkinlikOlustur = async (data, odUserId) => {
   }
 };
 
-export const etkinlikleriDinle = (grupIds = [], callback, userId = null) => {
+export const etkinlikleriDinle = (userId, callback) => {
   try {
+    if (!userId) {
+      callback([]);
+      return () => {};
+    }
+
     const eventsRef = collection(db, 'events');
-    
+
     return onSnapshot(eventsRef, (snapshot) => {
       const etkinlikler = [];
-      
+
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         let eklenecekMi = false;
 
-        if (userId && data.olusturanId === userId) {
+        // Benim oluşturduğum planlar
+        if (data.olusturanId === userId) {
           eklenecekMi = true;
         }
 
-        if (grupIds.length > 0 && data.grupId && grupIds.includes(data.grupId)) {
+        // Davet edildiğim planlar
+        if (data.davetliler && data.davetliler.includes(userId)) {
           eklenecekMi = true;
         }
 
-        if (userId && data.davetliler && data.davetliler.includes(userId)) {
+        // Katılımcı olduğum planlar (participantIds array'inde varsa)
+        if (data.participantIds && data.participantIds.includes(userId)) {
           eklenecekMi = true;
         }
 
@@ -159,27 +207,27 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
 
 const PAGE_SIZE = 10;
 
+// Keşfet: Sadece visibility='public' olan, benim olmayan planlar
 export const kesfetPlanlariGetir = async (userId, arkadasIds = [], sonDoc = null) => {
   try {
     const eventsRef = collection(db, 'events');
-    const bugun = new Date().toISOString().split('T')[0];
+    const bugun = new Date().toISOString();
 
+    // Basit query - client-side filtreleme yapacağız
     let q = query(
       eventsRef,
-      where('tarih', '>=', bugun),
-      where('gizlilik', '==', 'acik'),
-      orderBy('tarih', 'asc'),
-      limit(PAGE_SIZE)
+      where('visibility', '==', 'public'),
+      orderBy('startAt', 'asc'),
+      limit(PAGE_SIZE * 2) // Daha fazla çek, filtreleyeceğiz
     );
 
     if (sonDoc) {
       q = query(
         eventsRef,
-        where('tarih', '>=', bugun),
-        where('gizlilik', '==', 'acik'),
-        orderBy('tarih', 'asc'),
+        where('visibility', '==', 'public'),
+        orderBy('startAt', 'asc'),
         startAfter(sonDoc),
-        limit(PAGE_SIZE)
+        limit(PAGE_SIZE * 2)
       );
     }
 
@@ -188,37 +236,73 @@ export const kesfetPlanlariGetir = async (userId, arkadasIds = [], sonDoc = null
 
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
-      if (data.olusturanId !== userId && !arkadasIds.includes(data.olusturanId)) {
-        planlar.push({ id: docSnap.id, ...data, _doc: docSnap });
-      }
+      const tarih = data.startAt || data.tarih;
+
+      // Keşfet'te kendi planlarım ASLA görünmesin
+      if (data.olusturanId === userId) return;
+
+      // Geçmiş planları gösterme
+      if (new Date(tarih) < new Date(bugun.split('T')[0])) return;
+
+      planlar.push({ id: docSnap.id, ...data, _doc: docSnap });
     });
 
     const sonDocYeni = snapshot.docs[snapshot.docs.length - 1] || null;
-    const dahaVar = snapshot.docs.length === PAGE_SIZE;
+    const dahaVar = snapshot.docs.length >= PAGE_SIZE;
 
-    return { success: true, planlar, sonDoc: sonDocYeni, dahaVar };
+    return { success: true, planlar: planlar.slice(0, PAGE_SIZE), sonDoc: sonDocYeni, dahaVar };
   } catch (error) {
     console.error('Keşfet planları hatası:', error);
     return { success: false, planlar: [], sonDoc: null, dahaVar: false };
   }
 };
 
+// Arkadaşlar sekmesi: Arkadaşların planları (benim planlarım hariç)
 export const arkadasPlanlariFiltrele = (etkinlikler, arkadasIds = [], userId) => {
   const bugun = new Date();
   bugun.setHours(0, 0, 0, 0);
 
   return etkinlikler.filter(e => {
-    const tarih = new Date(e.tarih);
+    const tarih = new Date(e.startAt || e.tarih);
+    // Geçmiş planları gösterme
     if (tarih < bugun) return false;
-    if (e.olusturanId === userId) return true;
+
+    // Arkadaşların planları
     if (arkadasIds.includes(e.olusturanId)) return true;
+
+    // Davet edildiğim planlar
     if (e.davetliler?.includes(userId)) return true;
+
+    // participantIds içinde varsa (katıldığım planlar)
+    if (e.participantIds?.includes(userId) && e.olusturanId !== userId) return true;
+
     return false;
   });
 };
 
+// Geçmiş planları filtrele
 export const gecmisPlanlariFiltrele = (etkinlikler) => {
   const bugun = new Date();
   bugun.setHours(0, 0, 0, 0);
-  return etkinlikler.filter(e => new Date(e.tarih) >= bugun);
+  return etkinlikler.filter(e => new Date(e.startAt || e.tarih) >= bugun);
+};
+
+// Katıldığım planlar: Benim oluşturmadığım ama participantIds içinde olduğum planlar
+export const katildigimPlanlariFiltrele = (etkinlikler, userId) => {
+  const bugun = new Date();
+  bugun.setHours(0, 0, 0, 0);
+
+  return etkinlikler.filter(e => {
+    const tarih = new Date(e.startAt || e.tarih);
+    if (tarih < bugun) return false;
+
+    // Benim oluşturmadığım
+    if (e.olusturanId === userId) return false;
+
+    // Ama katılımcı olduğum
+    if (e.participantIds?.includes(userId)) return true;
+    if (e.davetliler?.includes(userId)) return true;
+
+    return false;
+  });
 };
