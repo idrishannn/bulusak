@@ -47,9 +47,11 @@ const GirisEkrani = ({ setEkran }) => {
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
-        <Logo size="xl" className="mb-6" />
-        <Wordmark size="xl" className="mb-1" />
-        <p className="text-dark-400 text-sm mb-12">planla, buluş, yaşa</p>
+        <div className="flex flex-col items-center w-full">
+          <Logo size="xl" className="mb-6" />
+          <Wordmark size="xl" className="mb-1" />
+          <p className="text-dark-400 text-sm mb-12 text-center">planla, buluş, yaşa</p>
+        </div>
 
         <form onSubmit={handleGiris} className="w-full max-w-sm space-y-4">
           <input

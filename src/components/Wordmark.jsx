@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReactComponent as WordmarkSvg } from '../assets/brand/wordmark.svg';
+import wordmarkPng from '../assets/brand/wordmark.png';
 
 const Wordmark = ({ size = 'md', className = '' }) => {
   const sizes = {
@@ -11,9 +11,11 @@ const Wordmark = ({ size = 'md', className = '' }) => {
   };
 
   return (
-    <div className={`${sizes[size]} ${className}`}>
-      <WordmarkSvg className="h-full w-auto" />
-    </div>
+    <img
+      src={wordmarkPng}
+      alt="bulusaq"
+      className={`${sizes[size]} w-auto ${className}`}
+    />
   );
 };
 

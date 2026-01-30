@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReactComponent as LogoSvg } from '../assets/brand/logo.svg';
+import logoPng from '../assets/brand/logo.png';
 
 const Logo = ({ size = 'md', className = '' }) => {
   const sizes = {
@@ -12,7 +12,7 @@ const Logo = ({ size = 'md', className = '' }) => {
 
   return (
     <div className={`${sizes[size]} ${className} relative`}>
-      <LogoSvg className="w-full h-full" />
+      <img src={logoPng} alt="bulusaq" className="w-full h-full object-contain" />
     </div>
   );
 };
