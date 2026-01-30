@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth, useUI } from '../context';
 import { emailIleGiris, emailIleKayitOl, sifreSifirlamaMailiGonder } from '../services/authService';
+import { Logo, Wordmark } from '../components';
 
 const avatarlar = {
   erkek: ['👨', '👨‍🦱', '👨‍🦰', '👨‍🦳', '👨‍🦲', '🧔', '🧔‍♂️', '👱‍♂️', '👨‍🎓', '👨‍💼', '👨‍🔧', '👨‍🍳', '👨‍🎨', '👨‍🚀', '🕵️‍♂️', '👨‍⚕️', '👨‍🏫', '🤴', '🦸‍♂️', '🧙‍♂️'],
@@ -60,10 +61,12 @@ const GirisEkrani = ({ setEkran }) => {
         <div className="relative glass-panel rounded-3xl p-8 shadow-2xl">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 shadow-lg mb-4 hover:rotate-180 transition-all duration-500">
-              <span className="text-4xl">✨</span>
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Buluşak</h1>
+            <div className="flex justify-center mb-2">
+              <Wordmark size="lg" />
+            </div>
             <p className="text-white/60">Hesabınıza giriş yapın</p>
           </div>
 
@@ -199,7 +202,7 @@ const KayitOlEkrani = ({ setEkran }) => {
           
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">Hesap Oluştur</h2>
-            <p className="text-white/60">Buluşak'a katıl!</p>
+            <p className="text-white/60">bulusaq'a katıl!</p>
           </div>
 
           <form onSubmit={handleKayitOl} className="space-y-4">

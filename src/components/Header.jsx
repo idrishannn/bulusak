@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BellIcon, ChatIcon } from './Icons';
 import { useAuth, useUI, useData } from '../context';
 import Logo from './Logo';
+import Wordmark from './Wordmark';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const Header = () => {
           <div className="flex items-center gap-3">
             <Logo size="sm" />
             <div>
-              <p className="text-dark-400 text-xs font-medium">Merhaba,</p>
+              <Wordmark size="sm" className="mb-0.5" />
               <h1 className="text-white font-semibold">
                 {kullanici?.isim?.split(' ')[0] || 'Kullanıcı'}
               </h1>

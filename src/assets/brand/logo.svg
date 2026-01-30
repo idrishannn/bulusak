@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="borderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4a84a"/>
+      <stop offset="100%" stop-color="#5eb285"/>
+    </linearGradient>
+    <linearGradient id="bGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d4a84a"/>
+      <stop offset="100%" stop-color="#c9a64c"/>
+    </linearGradient>
+    <linearGradient id="qGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6db57a"/>
+      <stop offset="100%" stop-color="#5eb285"/>
+    </linearGradient>
+    <linearGradient id="loopGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d4a84a"/>
+      <stop offset="100%" stop-color="#5eb285"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="92" height="92" rx="20" ry="20" stroke="url(#borderGradient)" stroke-width="3" fill="none"/>
+  <g transform="translate(18, 28)">
+    <path d="M6 0 L6 44" stroke="url(#bGradient)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M6 11 Q6 6 11 6 L16 6 Q21 6 21 11 L21 16 Q21 21 16 21 L11 21" stroke="url(#bGradient)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M58 0 L58 52" stroke="url(#qGradient)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M58 33 Q58 38 53 38 L48 38 Q43 38 43 33 L43 28 Q43 23 48 23 L53 23" stroke="url(#qGradient)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M21 21 Q32 14 43 21" stroke="url(#loopGradient)" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M21 23 Q32 30 43 23" stroke="url(#loopGradient)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>
