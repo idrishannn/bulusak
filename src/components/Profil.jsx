@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, useData, useUI } from '../context';
-import { ChevronRightIcon, BellIcon, UsersIcon, LogoutIcon, EditIcon, ClipboardIcon } from './Icons';
+import { useAuth, useData, useUI, useTheme } from '../context';
+import { ChevronRightIcon, BellIcon, UsersIcon, LogoutIcon, EditIcon, ClipboardIcon, SettingsIcon } from './Icons';
 import Logo from './Logo';
 
 const Profil = () => {
@@ -9,6 +9,7 @@ const Profil = () => {
   const { kullanici, cikisYapFunc } = useAuth();
   const { gruplar, etkinlikler, arkadaslar } = useData();
   const { setModalAcik, bildirimGoster } = useUI();
+  const { isDark, themeClasses } = useTheme();
 
   const handleCikis = async () => {
     const result = await cikisYapFunc();
@@ -23,6 +24,7 @@ const Profil = () => {
     { icon: UsersIcon, label: 'Arkadaşlarım', badge: arkadaslar?.length, action: () => setModalAcik('arkadaslar') },
     { icon: BellIcon, label: 'Bildirimler', badge: bekleyenIstekler, action: () => setModalAcik('bildirimler') },
     { icon: ClipboardIcon, label: 'Bucket List', action: () => setModalAcik('bucketList') },
+    { icon: SettingsIcon, label: 'Ayarlar', action: () => navigate('/ayarlar') },
   ];
 
   return (

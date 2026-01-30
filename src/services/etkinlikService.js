@@ -55,11 +55,15 @@ export const etkinlikOlustur = async (kullanici, data) => {
       mekan: data.mekan || 'Belirtilmedi',
       tip: data.tip || 'arkadas',
       olusturanId: odUserId,
+      olusturanIsim: kullanici?.isim || '',
+      olusturanAvatar: kullanici?.avatar || '👤',
+      olusturanProfilGizlilik: kullanici?.profilGizlilik || 'public',
       olusturmaTarihi: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       katilimcilar: [{ odUserId, isim: kullanici?.isim || '', avatar: kullanici?.avatar || '👤', durum: 'varim' }],
       participantIds: participantIds,
       visibility: data.visibility || 'public',
+      katilimciLimiti: data.katilimciLimiti || 0,
       status: 'active',
       mesajlar: []
     };
@@ -207,7 +211,7 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
 
 const PAGE_SIZE = 10;
 
-// Keşfet: Sadece visibility='public' olan, benim olmayan planlar
+// Keşfet: Sadece visibility='public' olan, benim olmayan, gizli profil olmayan planlar
 export const kesfetPlanlariGetir = async (userId, arkadasIds = [], sonDoc = null) => {
   try {
     const eventsRef = collection(db, 'events');
@@ -240,6 +244,9 @@ export const kesfetPlanlariGetir = async (userId, arkadasIds = [], sonDoc = null
 
       // Keşfet'te kendi planlarım ASLA görünmesin
       if (data.olusturanId === userId) return;
+
+      // Gizli profillerin planları keşfet'te görünmez
+      if (data.olusturanProfilGizlilik === 'private') return;
 
       // Geçmiş planları gösterme
       if (new Date(tarih) < new Date(bugun.split('T')[0])) return;

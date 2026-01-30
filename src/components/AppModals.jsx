@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth, useData, useUI } from '../context';
-import { XIcon, SearchIcon, CheckIcon, ChevronRightIcon, SendIcon, ClockIcon, LocationIcon, UsersIcon, TrashIcon } from './Icons';
+import { XIcon, SearchIcon, CheckIcon, ChevronRightIcon, SendIcon, ClockIcon, LocationIcon, UsersIcon, TrashIcon, EditIcon, GlobeIcon, LockIcon, BellIcon } from './Icons';
 import { kullaniciAra, arkadasIstegiGonder, arkadasSil, arkadasIstegiKabulEt, arkadasIstegiReddet } from '../services/arkadasService';
-import { mesajEkle } from '../services/etkinlikService';
-import Logo from './Logo';
-
-const saatler = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
-const grupIkonlari = ['🎓', '💼', '⚽', '🎮', '🎵', '🍕', '☕', '🎬', '🏖️', '🎉'];
-const avatarlar = {
-  erkek: ['👨', '👨‍🦱', '👨‍🦰', '👨‍🦳', '🧔', '👱‍♂️', '👨‍🎓', '👨‍💼', '🤵', '👲'],
-  kadin: ['👩', '👩‍🦱', '👩‍🦰', '👩‍🦳', '👱‍♀️', '👩‍🎓', '👩‍💼', '👰', '🧕', '👧'],
-  fantastik: ['🤖', '👽', '👻', '🦊', '🐱', '🐶', '🦁', '🐼', '🦄', '🐲']
-};
+import { mesajEkle, etkinlikSil, etkinlikGuncelle } from '../services/etkinlikService';
+import { bildirimOkunduIsaretle, tumBildirimleriOkunduIsaretle, BILDIRIM_TIPLERI } from '../services/bildirimService';
+import {
+  HOUR_OPTIONS, GROUP_ICONS, AVATAR_CATEGORIES, PARTICIPANT_LIMITS,
+  PLAN_VISIBILITY, KATILIM_DURUMLARI, KATILIM_LABELS, KATILIM_COLORS,
+  MAX_VISIBLE_PARTICIPANTS
+} from '../constants';
 
 const ModalWrapper = ({ children, onClose, title }) => (
   <div className="fixed inset-0 z-[100] flex items-end justify-center">
@@ -28,9 +26,103 @@ const ModalWrapper = ({ children, onClose, title }) => (
   </div>
 );
 
+// Katılımcı Avatar Stack Bileşeni
+const ParticipantAvatars = ({ participants, maxVisible = MAX_VISIBLE_PARTICIPANTS, onPress }) => {
+  const varimOlanlar = participants?.filter(k => k.durum === KATILIM_DURUMLARI.VARIM) || [];
+  const gosterilecek = varimOlanlar.slice(0, maxVisible);
+  const fazlasi = varimOlanlar.length - maxVisible;
+
+  if (varimOlanlar.length === 0) {
+    return <p className="text-dark-500 text-sm">Henüz katılımcı yok</p>;
+  }
+
+  return (
+    <button onClick={onPress} className="flex items-center">
+      <div className="flex -space-x-3">
+        {gosterilecek.map((k, i) => (
+          <div
+            key={k.odUserId || i}
+            className="w-10 h-10 rounded-full bg-dark-700 border-2 border-dark-900 flex items-center justify-center text-lg"
+            style={{ zIndex: maxVisible - i }}
+          >
+            {k.avatar || '👤'}
+          </div>
+        ))}
+        {fazlasi > 0 && (
+          <div
+            className="w-10 h-10 rounded-full bg-gold-500/20 border-2 border-dark-900 flex items-center justify-center text-xs font-bold text-gold-500"
+            style={{ zIndex: 0 }}
+          >
+            +{fazlasi}
+          </div>
+        )}
+      </div>
+      <ChevronRightIcon className="w-4 h-4 text-dark-500 ml-2" />
+    </button>
+  );
+};
+
+// Katılımcı Listesi Modal
+const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => {
+  if (!isOpen) return null;
+
+  const varimOlanlar = participants?.filter(k => k.durum === KATILIM_DURUMLARI.VARIM) || [];
+  const yokumOlanlar = participants?.filter(k => k.durum === KATILIM_DURUMLARI.YOKUM) || [];
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-end justify-center">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-dark-900 rounded-t-3xl max-h-[60vh] flex flex-col animate-slide-up">
+        <div className="p-4 border-b border-dark-800 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-white">Katılımcılar</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-dark-800 flex items-center justify-center">
+            <XIcon className="w-4 h-4 text-dark-400" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          {varimOlanlar.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-medium text-emerald-400 mb-2">Katılacak ({varimOlanlar.length})</p>
+              <div className="space-y-2">
+                {varimOlanlar.map((k, i) => (
+                  <div key={k.odUserId || i} className="flex items-center gap-3 p-2 rounded-xl bg-emerald-500/10">
+                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl">
+                      {k.avatar || '👤'}
+                    </div>
+                    <span className="text-white font-medium">
+                      {k.odUserId === currentUserId ? 'Sen' : k.isim || 'Katılımcı'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {yokumOlanlar.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-red-400 mb-2">Katılmayacak ({yokumOlanlar.length})</p>
+              <div className="space-y-2">
+                {yokumOlanlar.map((k, i) => (
+                  <div key={k.odUserId || i} className="flex items-center gap-3 p-2 rounded-xl bg-red-500/10">
+                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl">
+                      {k.avatar || '👤'}
+                    </div>
+                    <span className="text-white font-medium">
+                      {k.odUserId === currentUserId ? 'Sen' : k.isim || 'Katılımcı'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const HizliPlanModal = () => {
   const { kullanici } = useAuth();
-  const { gruplar, arkadaslar, yeniGrupOlustur, yeniEtkinlikOlustur } = useData();
+  const { gruplar, arkadaslar, etkinlikler, musaitlikler, yeniEtkinlikOlustur } = useData();
   const { modalAcik, setModalAcik, bildirimGoster } = useUI();
   const [baslik, setBaslik] = useState('');
   const [seciliTarih, setSeciliTarih] = useState(new Date().toISOString().split('T')[0]);
@@ -41,6 +133,40 @@ const HizliPlanModal = () => {
   const [secilenGrupId, setSecilenGrupId] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(false);
 
+  // Yeni: Görünürlük ve limit ayarları
+  const [visibility, setVisibility] = useState(PLAN_VISIBILITY.PRIVATE);
+  const [katilimciLimit, setKatilimciLimit] = useState(0);
+
+  // Müsait arkadaşları hesapla
+  const musaitArkadaslar = useMemo(() => {
+    if (!arkadaslar?.length) return [];
+
+    const seciliDateTime = new Date(seciliTarih);
+    const key = `${seciliDateTime.toDateString()}-${seciliSaat}`;
+
+    return arkadaslar.filter(arkadas => {
+      // Arkadaşın müsaitlik bilgisini kontrol et
+      const arkadasMusait = arkadas.musaitlikler?.[key] === true;
+
+      // Aynı zaman diliminde başka planı var mı kontrol et
+      const mesgulMu = etkinlikler?.some(e => {
+        const planTarih = new Date(e.startAt || e.tarih);
+        return planTarih.toDateString() === seciliDateTime.toDateString() &&
+               e.saat === seciliSaat &&
+               (e.participantIds?.includes(arkadas.odUserId) || e.olusturanId === arkadas.odUserId);
+      });
+
+      return arkadasMusait && !mesgulMu;
+    });
+  }, [arkadaslar, seciliTarih, seciliSaat, etkinlikler]);
+
+  // Müsait olmayan arkadaşlar
+  const digerArkadaslar = useMemo(() => {
+    if (!arkadaslar?.length) return [];
+    const musaitIds = musaitArkadaslar.map(a => a.odUserId);
+    return arkadaslar.filter(a => !musaitIds.includes(a.odUserId));
+  }, [arkadaslar, musaitArkadaslar]);
+
   if (modalAcik !== 'hizliPlan') return null;
 
   const arkadasToggle = (id) => {
@@ -49,23 +175,35 @@ const HizliPlanModal = () => {
 
   const handleOlustur = async () => {
     if (!baslik.trim()) { bildirimGoster('Plan adı gerekli', 'error'); return; }
-    if (secimModu === 'arkadas' && secilenArkadaslar.length === 0) { bildirimGoster('En az bir arkadaş seç', 'error'); return; }
-    if (secimModu === 'grup' && !secilenGrupId) { bildirimGoster('Bir grup seç', 'error'); return; }
+
+    // Private plan için en az bir davetli gerekli
+    if (visibility === PLAN_VISIBILITY.PRIVATE) {
+      if (secimModu === 'arkadas' && secilenArkadaslar.length === 0) {
+        bildirimGoster('En az bir arkadaş seç', 'error');
+        return;
+      }
+      if (secimModu === 'grup' && !secilenGrupId) {
+        bildirimGoster('Bir grup seç', 'error');
+        return;
+      }
+    }
 
     setYukleniyor(true);
     const planData = {
-      baslik,
+      baslik: baslik.trim(),
       ikon: 'diger',
       tarih: new Date(seciliTarih),
       saat: seciliSaat,
-      mekan: mekan || 'Belirtilmedi',
-      tip: secimModu
+      mekan: mekan.trim() || 'Belirtilmedi',
+      tip: secimModu,
+      visibility,
+      katilimciLimit: katilimciLimit || null
     };
 
-    if (secimModu === 'arkadas') {
+    if (secimModu === 'arkadas' && secilenArkadaslar.length > 0) {
       planData.davetliler = secilenArkadaslar;
       planData.davetliDetaylar = arkadaslar.filter(a => secilenArkadaslar.includes(a.odUserId));
-    } else {
+    } else if (secimModu === 'grup' && secilenGrupId) {
       planData.grup = gruplar.find(g => g.id === secilenGrupId);
     }
 
@@ -76,8 +214,9 @@ const HizliPlanModal = () => {
       bildirimGoster('Plan oluşturuldu!', 'success');
       setModalAcik(null);
       setBaslik(''); setMekan(''); setSecilenArkadaslar([]); setSecilenGrupId(null);
+      setVisibility(PLAN_VISIBILITY.PRIVATE); setKatilimciLimit(0);
     } else {
-      bildirimGoster(result.error, 'error');
+      bildirimGoster(result.error || 'Bir hata oluştu', 'error');
     }
   };
 
@@ -92,12 +231,12 @@ const HizliPlanModal = () => {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-medium text-dark-400 mb-2 block">Tarih</label>
-            <input type="date" value={seciliTarih} onChange={(e) => setSeciliTarih(e.target.value)} className="input-dark" />
+            <input type="date" value={seciliTarih} onChange={(e) => setSeciliTarih(e.target.value)} min={new Date().toISOString().split('T')[0]} className="input-dark" />
           </div>
           <div>
             <label className="text-xs font-medium text-dark-400 mb-2 block">Saat</label>
             <select value={seciliSaat} onChange={(e) => setSeciliSaat(e.target.value)} className="input-dark bg-dark-800">
-              {saatler.map(s => <option key={s} value={s}>{s}</option>)}
+              {HOUR_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
@@ -107,6 +246,40 @@ const HizliPlanModal = () => {
           <input type="text" value={mekan} onChange={(e) => setMekan(e.target.value)} placeholder="Nerede buluşalım?" className="input-dark" />
         </div>
 
+        {/* Görünürlük Ayarları */}
+        <div>
+          <label className="text-xs font-medium text-dark-400 mb-2 block">Plan Görünürlüğü</label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setVisibility(PLAN_VISIBILITY.PRIVATE)}
+              className={`flex-1 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 ${visibility === PLAN_VISIBILITY.PRIVATE ? 'btn-gold' : 'btn-ghost'}`}
+            >
+              <LockIcon className="w-4 h-4" /> Özel
+            </button>
+            <button
+              onClick={() => setVisibility(PLAN_VISIBILITY.PUBLIC)}
+              className={`flex-1 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 ${visibility === PLAN_VISIBILITY.PUBLIC ? 'btn-gold' : 'btn-ghost'}`}
+            >
+              <GlobeIcon className="w-4 h-4" /> Açık
+            </button>
+          </div>
+          <p className="text-xs text-dark-500 mt-1">
+            {visibility === PLAN_VISIBILITY.PUBLIC ? 'Herkes keşfette görebilir ve katılım isteği gönderebilir' : 'Sadece davet ettiklerin görebilir'}
+          </p>
+        </div>
+
+        {/* Katılımcı Limiti (Public planlar için) */}
+        {visibility === PLAN_VISIBILITY.PUBLIC && (
+          <div>
+            <label className="text-xs font-medium text-dark-400 mb-2 block">Katılımcı Limiti</label>
+            <select value={katilimciLimit} onChange={(e) => setKatilimciLimit(parseInt(e.target.value, 10))} className="input-dark bg-dark-800">
+              {PARTICIPANT_LIMITS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div>
           <label className="text-xs font-medium text-dark-400 mb-2 block">Kimlerle?</label>
           <div className="flex gap-2">
@@ -115,15 +288,49 @@ const HizliPlanModal = () => {
           </div>
         </div>
 
-        {secimModu === 'arkadas' && arkadaslar?.length > 0 && (
-          <div className="card p-3 max-h-48 overflow-y-auto space-y-2">
-            {arkadaslar.map(a => (
-              <button key={a.odUserId} onClick={() => arkadasToggle(a.odUserId)} className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenArkadaslar.includes(a.odUserId) ? 'bg-gold-500/20 border border-gold-500/30' : 'hover:bg-dark-700'}`}>
-                <div className="w-10 h-10 rounded-xl bg-dark-700 flex items-center justify-center text-xl">{a.avatar || '👤'}</div>
-                <span className="flex-1 text-left text-white font-medium">{a.isim}</span>
-                {secilenArkadaslar.includes(a.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
-              </button>
-            ))}
+        {secimModu === 'arkadas' && (
+          <div className="space-y-3">
+            {/* Müsait Arkadaşlar */}
+            {musaitArkadaslar.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-emerald-400 mb-2 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  Müsait Arkadaşlar ({musaitArkadaslar.length})
+                </p>
+                <div className="card p-3 max-h-32 overflow-y-auto space-y-2 border-emerald-500/20">
+                  {musaitArkadaslar.map(a => (
+                    <button key={a.odUserId} onClick={() => arkadasToggle(a.odUserId)} className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenArkadaslar.includes(a.odUserId) ? 'bg-gold-500/20 border border-gold-500/30' : 'hover:bg-dark-700'}`}>
+                      <div className="w-10 h-10 rounded-xl bg-dark-700 flex items-center justify-center text-xl">{a.avatar || '👤'}</div>
+                      <span className="flex-1 text-left text-white font-medium">{a.isim}</span>
+                      <span className="text-xs text-emerald-400">Müsait</span>
+                      {secilenArkadaslar.includes(a.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Diğer Arkadaşlar */}
+            {digerArkadaslar.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-dark-400 mb-2">
+                  Diğer Arkadaşlar ({digerArkadaslar.length})
+                </p>
+                <div className="card p-3 max-h-32 overflow-y-auto space-y-2">
+                  {digerArkadaslar.map(a => (
+                    <button key={a.odUserId} onClick={() => arkadasToggle(a.odUserId)} className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenArkadaslar.includes(a.odUserId) ? 'bg-gold-500/20 border border-gold-500/30' : 'hover:bg-dark-700'}`}>
+                      <div className="w-10 h-10 rounded-xl bg-dark-700 flex items-center justify-center text-xl">{a.avatar || '👤'}</div>
+                      <span className="flex-1 text-left text-white font-medium">{a.isim}</span>
+                      {secilenArkadaslar.includes(a.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {arkadaslar?.length === 0 && (
+              <div className="text-center py-4 text-dark-400 text-sm">Henüz arkadaşın yok</div>
+            )}
           </div>
         )}
 
@@ -277,106 +484,230 @@ const DetayModal = () => {
   const { katilimDurumuGuncelle } = useData();
   const { modalAcik, setModalAcik, seciliEtkinlik, setSeciliEtkinlik, bildirimGoster } = useUI();
   const [mesaj, setMesaj] = useState('');
+  const [katilimcilarModalAcik, setKatilimcilarModalAcik] = useState(false);
+  const [silmeOnay, setSilmeOnay] = useState(false);
 
   if (modalAcik !== 'detay' || !seciliEtkinlik) return null;
 
-  const tarih = new Date(seciliEtkinlik.tarih);
+  const tarih = new Date(seciliEtkinlik.startAt || seciliEtkinlik.tarih);
   const katilimcilar = seciliEtkinlik.katilimcilar || [];
   const benimDurum = katilimcilar.find(k => k.odUserId === kullanici?.odUserId)?.durum;
   const benimPlanim = seciliEtkinlik.olusturanId === kullanici?.odUserId;
 
+  // Plan sahibi bilgisi
+  const planSahibi = katilimcilar.find(k => k.odUserId === seciliEtkinlik.olusturanId);
+
+  // Mesaj yazma yetkisi: Plan sahibi veya katılımcı (participants içinde)
+  const mesajYazabilir = benimPlanim ||
+    seciliEtkinlik.participantIds?.includes(kullanici?.odUserId) ||
+    katilimcilar.some(k => k.odUserId === kullanici?.odUserId && k.durum === KATILIM_DURUMLARI.VARIM);
+
+  // Katılım durumu güncelleme - Bakarız kaldırıldı, sadece Varım/Yokum
   const handleKatilim = (durum) => {
     katilimDurumuGuncelle(seciliEtkinlik.id, durum);
-    bildirimGoster(durum === 'varim' ? 'Katılıyorsun!' : durum === 'bakariz' ? 'Bakarız olarak işaretlendi' : 'Katılmıyorsun', 'success');
+    bildirimGoster(durum === KATILIM_DURUMLARI.VARIM ? 'Katılıyorsun!' : 'Katılmıyorsun', 'success');
   };
 
   const handleMesajGonder = async () => {
     if (!mesaj.trim()) return;
+    if (!mesajYazabilir) {
+      bildirimGoster('Bu plana mesaj yazma yetkin yok', 'error');
+      return;
+    }
     await mesajEkle(seciliEtkinlik.id, { odUserId: kullanici.odUserId, isim: kullanici.isim, avatar: kullanici.avatar, mesaj: mesaj.trim() });
     setSeciliEtkinlik(prev => ({ ...prev, mesajlar: [...(prev.mesajlar || []), { odUserId: kullanici.odUserId, isim: kullanici.isim, avatar: kullanici.avatar, mesaj: mesaj.trim(), zaman: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) }] }));
     setMesaj('');
   };
 
-  return (
-    <ModalWrapper title={seciliEtkinlik.baslik} onClose={() => { setModalAcik(null); setSeciliEtkinlik(null); }}>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="card p-3"><p className="text-xs text-dark-400 mb-1">Tarih</p><p className="font-medium text-white">{tarih.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' })}</p></div>
-          <div className="card p-3"><p className="text-xs text-dark-400 mb-1">Saat</p><p className="font-medium text-white">{seciliEtkinlik.saat}</p></div>
-        </div>
-        {seciliEtkinlik.mekan && seciliEtkinlik.mekan !== 'Belirtilmedi' && (
-          <div className="card p-3"><p className="text-xs text-dark-400 mb-1">Mekan</p><p className="font-medium text-white">{seciliEtkinlik.mekan}</p></div>
-        )}
+  const handlePlanSil = async () => {
+    const result = await etkinlikSil(seciliEtkinlik.id);
+    if (result.success) {
+      bildirimGoster('Plan silindi', 'success');
+      setModalAcik(null);
+      setSeciliEtkinlik(null);
+    } else {
+      bildirimGoster(result.error || 'Silme hatası', 'error');
+    }
+    setSilmeOnay(false);
+  };
 
-        {!benimPlanim && (
-          <div>
-            <p className="text-xs text-dark-400 mb-2">Katılım Durumun</p>
-            <div className="flex gap-2">
-              {[{ d: 'varim', l: 'Varım', c: 'emerald' }, { d: 'bakariz', l: 'Bakarız', c: 'amber' }, { d: 'yokum', l: 'Yokum', c: 'red' }].map(b => (
-                <button key={b.d} onClick={() => handleKatilim(b.d)} className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${benimDurum === b.d ? `bg-${b.c}-500/20 border border-${b.c}-500/30 text-${b.c}-400` : 'btn-ghost'}`}>{b.l}</button>
-              ))}
+  return (
+    <>
+      <ModalWrapper title={seciliEtkinlik.baslik} onClose={() => { setModalAcik(null); setSeciliEtkinlik(null); }}>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Plan Sahibi Bilgisi */}
+          <div className="flex items-center gap-3 p-3 card">
+            <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl border-2 border-gold-500/30">
+              {planSahibi?.avatar || seciliEtkinlik.olusturanAvatar || '👤'}
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-dark-400">Plan Sahibi</p>
+              <p className="font-medium text-white">{planSahibi?.isim || seciliEtkinlik.olusturanIsim || 'Kullanıcı'}</p>
+            </div>
+            {seciliEtkinlik.visibility === PLAN_VISIBILITY.PUBLIC && (
+              <span className="text-xs bg-gold-500/20 text-gold-400 px-2 py-1 rounded-lg flex items-center gap-1">
+                <GlobeIcon className="w-3 h-3" /> Açık
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="card p-3">
+              <p className="text-xs text-dark-400 mb-1">Tarih</p>
+              <p className="font-medium text-white">{tarih.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' })}</p>
+            </div>
+            <div className="card p-3">
+              <p className="text-xs text-dark-400 mb-1">Saat</p>
+              <p className="font-medium text-white">{seciliEtkinlik.saat}</p>
             </div>
           </div>
-        )}
 
-        <div>
-          <p className="text-xs text-dark-400 mb-2">Katılımcılar ({katilimcilar.filter(k => k.durum === 'varim').length})</p>
-          <div className="flex flex-wrap gap-2">
-            {katilimcilar.map((k, i) => (
-              <span key={i} className={`px-3 py-1.5 rounded-lg text-sm ${k.durum === 'varim' ? 'bg-emerald-500/10 text-emerald-400' : k.durum === 'bakariz' ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-400'}`}>
-                {k.odUserId === kullanici?.odUserId ? 'Sen' : k.isim?.split(' ')[0] || 'Katılımcı'}
-              </span>
-            ))}
-          </div>
-        </div>
+          {seciliEtkinlik.mekan && seciliEtkinlik.mekan !== 'Belirtilmedi' && (
+            <div className="card p-3">
+              <p className="text-xs text-dark-400 mb-1">Mekan</p>
+              <p className="font-medium text-white">{seciliEtkinlik.mekan}</p>
+            </div>
+          )}
 
-        <div>
-          <p className="text-xs text-dark-400 mb-2">Mesajlar</p>
-          <div className="card p-3 max-h-48 overflow-y-auto space-y-3">
-            {(seciliEtkinlik.mesajlar || []).map((m, i) => (
-              <div key={i} className={`flex gap-2 ${m.odUserId === kullanici?.odUserId ? 'flex-row-reverse' : ''}`}>
-                <div className="w-8 h-8 rounded-lg bg-dark-700 flex items-center justify-center text-sm flex-shrink-0">{m.avatar || '👤'}</div>
-                <div className={`max-w-[70%] px-3 py-2 rounded-xl ${m.odUserId === kullanici?.odUserId ? 'bg-gold-500/20 text-gold-100' : 'bg-dark-700 text-white'}`}>
-                  <p className="text-xs text-dark-400 mb-0.5">{m.isim}</p>
-                  <p className="text-sm">{m.mesaj}</p>
-                </div>
+          {/* Katılım Durumu - Sadece Varım/Yokum */}
+          {!benimPlanim && (
+            <div>
+              <p className="text-xs text-dark-400 mb-2">Katılım Durumun</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleKatilim(KATILIM_DURUMLARI.VARIM)}
+                  className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${
+                    benimDurum === KATILIM_DURUMLARI.VARIM
+                      ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                      : 'btn-ghost'
+                  }`}
+                >
+                  {KATILIM_LABELS.varim}
+                </button>
+                <button
+                  onClick={() => handleKatilim(KATILIM_DURUMLARI.YOKUM)}
+                  className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${
+                    benimDurum === KATILIM_DURUMLARI.YOKUM
+                      ? 'bg-red-500/20 border border-red-500/30 text-red-400'
+                      : 'btn-ghost'
+                  }`}
+                >
+                  {KATILIM_LABELS.yokum}
+                </button>
               </div>
-            ))}
-            {(!seciliEtkinlik.mesajlar || seciliEtkinlik.mesajlar.length === 0) && <p className="text-center text-dark-500 text-sm">Henüz mesaj yok</p>}
-          </div>
-        </div>
-      </div>
+            </div>
+          )}
 
-      <div className="p-4 border-t border-dark-800">
-        <div className="flex gap-2">
-          <input type="text" value={mesaj} onChange={(e) => setMesaj(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleMesajGonder()} placeholder="Mesaj yaz..." className="flex-1 input-dark" />
-          <button onClick={handleMesajGonder} className="w-12 h-12 btn-gold rounded-xl flex items-center justify-center"><SendIcon className="w-5 h-5" /></button>
+          {/* Katılımcılar - Yuvarlak avatarlar */}
+          <div>
+            <p className="text-xs text-dark-400 mb-2">Katılımcılar ({katilimcilar.filter(k => k.durum === KATILIM_DURUMLARI.VARIM).length})</p>
+            <ParticipantAvatars
+              participants={katilimcilar}
+              maxVisible={MAX_VISIBLE_PARTICIPANTS}
+              onPress={() => setKatilimcilarModalAcik(true)}
+            />
+          </div>
+
+          {/* Mesajlar */}
+          <div>
+            <p className="text-xs text-dark-400 mb-2">Mesajlar</p>
+            <div className="card p-3 max-h-48 overflow-y-auto space-y-3">
+              {(seciliEtkinlik.mesajlar || []).map((m, i) => (
+                <div key={i} className={`flex gap-2 ${m.odUserId === kullanici?.odUserId ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-sm flex-shrink-0">{m.avatar || '👤'}</div>
+                  <div className={`max-w-[70%] px-3 py-2 rounded-xl ${m.odUserId === kullanici?.odUserId ? 'bg-gold-500/20 text-gold-100' : 'bg-dark-700 text-white'}`}>
+                    <p className="text-xs text-dark-400 mb-0.5">{m.isim}</p>
+                    <p className="text-sm">{m.mesaj}</p>
+                  </div>
+                </div>
+              ))}
+              {(!seciliEtkinlik.mesajlar || seciliEtkinlik.mesajlar.length === 0) && <p className="text-center text-dark-500 text-sm">Henüz mesaj yok</p>}
+            </div>
+          </div>
+
+          {/* Plan Sil Butonu (Sadece plan sahibi için) */}
+          {benimPlanim && (
+            <div className="pt-2">
+              {silmeOnay ? (
+                <div className="flex gap-2">
+                  <button onClick={handlePlanSil} className="flex-1 bg-red-500 text-white py-3 rounded-xl font-medium text-sm">
+                    Evet, Sil
+                  </button>
+                  <button onClick={() => setSilmeOnay(false)} className="flex-1 btn-ghost py-3 rounded-xl font-medium text-sm">
+                    Vazgeç
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setSilmeOnay(true)} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all">
+                  <TrashIcon className="w-4 h-4" /> Planı Sil
+                </button>
+              )}
+            </div>
+          )}
         </div>
-      </div>
-    </ModalWrapper>
+
+        {/* Mesaj Gönderme - Sadece yetkisi olanlar için */}
+        {mesajYazabilir ? (
+          <div className="p-4 border-t border-dark-800">
+            <div className="flex gap-2">
+              <input type="text" value={mesaj} onChange={(e) => setMesaj(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleMesajGonder()} placeholder="Mesaj yaz..." className="flex-1 input-dark" />
+              <button onClick={handleMesajGonder} className="w-12 h-12 btn-gold rounded-xl flex items-center justify-center"><SendIcon className="w-5 h-5" /></button>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 border-t border-dark-800">
+            <p className="text-center text-dark-500 text-sm">Mesaj yazmak için plana katılmalısın</p>
+          </div>
+        )}
+      </ModalWrapper>
+
+      {/* Katılımcılar Modal */}
+      <KatilimcilarModal
+        isOpen={katilimcilarModalAcik}
+        onClose={() => setKatilimcilarModalAcik(false)}
+        participants={katilimcilar}
+        currentUserId={kullanici?.odUserId}
+      />
+    </>
   );
 };
 
 const YeniGrupModal = () => {
+  const { arkadaslar } = useData();
   const { yeniGrupOlustur } = useData();
   const { modalAcik, setModalAcik, bildirimGoster } = useUI();
   const [isim, setIsim] = useState('');
   const [emoji, setEmoji] = useState('🎉');
+  const [secilenUyeler, setSecilenUyeler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(false);
 
   if (modalAcik !== 'yeniGrup') return null;
 
+  const uyeToggle = (id) => {
+    setSecilenUyeler(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
   const handleOlustur = async () => {
-    if (!isim.trim()) return;
+    if (!isim.trim()) {
+      bildirimGoster('Grup adı gerekli', 'error');
+      return;
+    }
     setYukleniyor(true);
-    const result = await yeniGrupOlustur(isim, emoji);
+    const result = await yeniGrupOlustur(isim, emoji, secilenUyeler);
     setYukleniyor(false);
-    if (result.success) { bildirimGoster('Grup oluşturuldu!', 'success'); setModalAcik(null); setIsim(''); }
+    if (result.success) {
+      bildirimGoster('Grup oluşturuldu!', 'success');
+      setModalAcik(null);
+      setIsim('');
+      setSecilenUyeler([]);
+    } else {
+      bildirimGoster(result.error || 'Bir hata oluştu', 'error');
+    }
   };
 
   return (
     <ModalWrapper title="Yeni Grup" onClose={() => setModalAcik(null)}>
-      <div className="flex-1 p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div>
           <label className="text-xs font-medium text-dark-400 mb-2 block">Grup Adı</label>
           <input type="text" value={isim} onChange={(e) => setIsim(e.target.value)} placeholder="Grup adı" className="input-dark" />
@@ -384,11 +715,31 @@ const YeniGrupModal = () => {
         <div>
           <label className="text-xs font-medium text-dark-400 mb-2 block">İkon</label>
           <div className="flex flex-wrap gap-2">
-            {grupIkonlari.map((e, i) => (
+            {GROUP_ICONS.map((e, i) => (
               <button key={i} onClick={() => setEmoji(e)} className={`w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all ${emoji === e ? 'bg-gold-500/20 border border-gold-500/30 scale-110' : 'bg-dark-800 hover:bg-dark-700'}`}>{e}</button>
             ))}
           </div>
         </div>
+
+        {/* Grup Üyeleri Seçimi */}
+        {arkadaslar?.length > 0 && (
+          <div>
+            <label className="text-xs font-medium text-dark-400 mb-2 block">Üyeler (Opsiyonel)</label>
+            <div className="card p-3 max-h-40 overflow-y-auto space-y-2">
+              {arkadaslar.map(a => (
+                <button
+                  key={a.odUserId}
+                  onClick={() => uyeToggle(a.odUserId)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenUyeler.includes(a.odUserId) ? 'bg-gold-500/20 border border-gold-500/30' : 'hover:bg-dark-700'}`}
+                >
+                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-lg">{a.avatar || '👤'}</div>
+                  <span className="flex-1 text-left text-white text-sm">{a.isim}</span>
+                  {secilenUyeler.includes(a.odUserId) && <CheckIcon className="w-4 h-4 text-gold-500" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <div className="p-4 border-t border-dark-800">
         <button onClick={handleOlustur} disabled={yukleniyor} className="w-full btn-gold py-4 rounded-xl font-semibold">{yukleniyor ? 'Oluşturuluyor...' : 'Oluştur'}</button>
@@ -398,19 +749,131 @@ const YeniGrupModal = () => {
 };
 
 const BildirimlerModal = () => {
-  const { modalAcik, setModalAcik, bildirimler } = useUI();
+  const navigate = useNavigate();
+  const { kullanici } = useAuth();
+  const { etkinlikler } = useData();
+  const { modalAcik, setModalAcik, bildirimler, setSeciliEtkinlik } = useUI();
+
   if (modalAcik !== 'bildirimler') return null;
+
+  const okunmamisSayisi = bildirimler?.filter(b => !b.okundu).length || 0;
+
+  const handleTumunuOkunduYap = async () => {
+    if (kullanici?.odUserId) {
+      await tumBildirimleriOkunduIsaretle(kullanici.odUserId);
+    }
+  };
+
+  const handleBildirimTikla = async (bildirim) => {
+    // Önce okundu olarak işaretle
+    if (!bildirim.okundu) {
+      await bildirimOkunduIsaretle(bildirim.id);
+    }
+
+    // Bildirim tipine göre navigasyon
+    switch (bildirim.tip) {
+      case BILDIRIM_TIPLERI.PLAN_DAVET:
+      case BILDIRIM_TIPLERI.PLAN_GUNCELLEME:
+      case BILDIRIM_TIPLERI.PLAN_YORUM:
+        // Plan detayına git
+        if (bildirim.planId) {
+          const plan = etkinlikler?.find(e => e.id === bildirim.planId);
+          if (plan) {
+            setSeciliEtkinlik(plan);
+            setModalAcik('detay');
+          }
+        }
+        break;
+      case BILDIRIM_TIPLERI.YENI_MESAJ:
+        // Mesajlar sayfasına git
+        setModalAcik(null);
+        navigate('/mesajlar');
+        break;
+      case BILDIRIM_TIPLERI.ARKADAS_ISTEGI:
+      case BILDIRIM_TIPLERI.ARKADAS_KABUL:
+        // Profil sayfasına git
+        setModalAcik(null);
+        navigate('/profil');
+        break;
+      default:
+        // Sadece modal'ı kapat
+        setModalAcik(null);
+    }
+  };
+
+  const getBildirimIkonu = (tip) => {
+    switch (tip) {
+      case BILDIRIM_TIPLERI.PLAN_DAVET:
+      case BILDIRIM_TIPLERI.PLAN_GUNCELLEME:
+        return <ClockIcon className="w-5 h-5 text-gold-500" />;
+      case BILDIRIM_TIPLERI.YENI_MESAJ:
+        return <SendIcon className="w-5 h-5 text-blue-400" />;
+      case BILDIRIM_TIPLERI.ARKADAS_ISTEGI:
+      case BILDIRIM_TIPLERI.ARKADAS_KABUL:
+        return <UsersIcon className="w-5 h-5 text-emerald-400" />;
+      default:
+        return <BellIcon className="w-5 h-5 text-dark-400" />;
+    }
+  };
+
+  const formatZaman = (tarih) => {
+    if (!tarih) return '';
+    const simdi = new Date();
+    const fark = simdi - tarih;
+    const dakika = Math.floor(fark / 60000);
+    const saat = Math.floor(dakika / 60);
+    const gun = Math.floor(saat / 24);
+
+    if (dakika < 1) return 'Az önce';
+    if (dakika < 60) return `${dakika} dk önce`;
+    if (saat < 24) return `${saat} saat önce`;
+    if (gun < 7) return `${gun} gün önce`;
+    return tarih.toLocaleDateString('tr-TR');
+  };
 
   return (
     <ModalWrapper title="Bildirimler" onClose={() => setModalAcik(null)}>
-      <div className="flex-1 overflow-y-auto p-4">
+      {okunmamisSayisi > 0 && (
+        <div className="px-4 py-2 border-b border-dark-800 flex justify-end">
+          <button
+            onClick={handleTumunuOkunduYap}
+            className="text-gold-500 text-sm font-medium"
+          >
+            Tümünü okundu işaretle
+          </button>
+        </div>
+      )}
+      <div className="flex-1 overflow-y-auto">
         {bildirimler?.length > 0 ? bildirimler.map(b => (
-          <div key={b.id} className={`p-4 rounded-xl mb-2 ${b.okundu ? 'bg-dark-800/50' : 'bg-gold-500/10 border border-gold-500/20'}`}>
-            <p className="text-white text-sm">{b.mesaj}</p>
-            <p className="text-xs text-dark-500 mt-1">{b.olusturulma?.toLocaleString?.('tr-TR') || ''}</p>
-          </div>
+          <button
+            key={b.id}
+            onClick={() => handleBildirimTikla(b)}
+            className={`w-full p-4 flex items-start gap-3 text-left border-b border-dark-800/50 transition-colors ${
+              b.okundu ? 'bg-transparent' : 'bg-gold-500/5'
+            } hover:bg-dark-800/50`}
+          >
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              b.okundu ? 'bg-dark-800' : 'bg-gold-500/10'
+            }`}>
+              {getBildirimIkonu(b.tip)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm ${b.okundu ? 'text-dark-300' : 'text-white'}`}>
+                {b.mesaj}
+              </p>
+              <p className="text-xs text-dark-500 mt-1">
+                {formatZaman(b.olusturulma)}
+              </p>
+            </div>
+            {!b.okundu && (
+              <div className="w-2 h-2 rounded-full bg-gold-500 mt-2" />
+            )}
+          </button>
         )) : (
-          <div className="text-center py-8"><p className="text-dark-400">Bildirim yok</p></div>
+          <div className="text-center py-12">
+            <BellIcon className="w-12 h-12 text-dark-600 mx-auto mb-3" />
+            <p className="text-dark-400">Bildirim yok</p>
+          </div>
         )}
       </div>
     </ModalWrapper>
@@ -478,7 +941,7 @@ const AvatarDegistirModal = () => {
           ))}
         </div>
         <div className="grid grid-cols-5 gap-2">
-          {avatarlar[avatarKategori].map((a, i) => (
+          {AVATAR_CATEGORIES[avatarKategori].map((a, i) => (
             <button key={i} onClick={() => setSeciliAvatar(a)} className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${seciliAvatar === a ? 'bg-gold-500/20 border-2 border-gold-500 scale-110' : 'bg-dark-700'}`}>{a}</button>
           ))}
         </div>
