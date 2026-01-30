@@ -15,13 +15,21 @@ import {
   getDocs
 } from 'firebase/firestore';
 
-export const etkinlikOlustur = async (data, odUserId) => {
+export const etkinlikOlustur = async (kullanici, data) => {
   try {
+    // Zorunlu alanları kontrol et
+    if (!data || !data.baslik || !data.baslik.trim()) {
+      return { success: false, error: 'Plan adı zorunludur' };
+    }
+
+    const odUserId = kullanici?.odUserId || '';
+
+    // Firestore'a gönderilecek obje - undefined değerler yerine boş string veya varsayılan değer kullan
     const etkinlikData = {
-      baslik: data.baslik,
+      baslik: data.baslik.trim(),
       ikon: data.ikon || 'diger',
-      tarih: data.tarih,
-      saat: data.saat,
+      tarih: data.tarih || new Date().toISOString(),
+      saat: data.saat || '12:00',
       mekan: data.mekan || 'Belirtilmedi',
       tip: data.tip || 'arkadas',
       olusturanId: odUserId,
@@ -30,18 +38,24 @@ export const etkinlikOlustur = async (data, odUserId) => {
       mesajlar: []
     };
 
+    // Grup bilgisi varsa ekle
     if (data.grup && data.grup.id) {
       etkinlikData.grupId = data.grup.id;
-      etkinlikData.grup = data.grup;
+      etkinlikData.grup = {
+        id: data.grup.id,
+        isim: data.grup.isim || '',
+        emoji: data.grup.emoji || '🎉'
+      };
     }
 
-    if (data.davetliler && data.davetliler.length > 0) {
+    // Davetliler varsa ekle
+    if (data.davetliler && Array.isArray(data.davetliler) && data.davetliler.length > 0) {
       etkinlikData.davetliler = data.davetliler;
-      etkinlikData.davetliDetaylar = data.davetliDetaylar || [];
+      etkinlikData.davetliDetaylar = Array.isArray(data.davetliDetaylar) ? data.davetliDetaylar : [];
     }
 
     const docRef = await addDoc(collection(db, 'events'), etkinlikData);
-    
+
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error('Etkinlik oluşturma hatası:', error);
