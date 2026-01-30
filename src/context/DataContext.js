@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { gruplariDinle, grupOlustur } from '../services/grupService';
-import { etkinlikleriDinle, etkinlikOlustur, katilimDurumuGuncelleDB } from '../services/etkinlikService';
+import { etkinlikleriDinle, etkinlikOlustur, katilimDurumuGuncelleDB, kesfetPlanlariGetir, arkadasPlanlariFiltrele, gecmisPlanlariFiltrele } from '../services/etkinlikService';
 import { arkadaslariDinle } from '../services/arkadasService';
 import { konusmalariDinle } from '../services/dmService';
 import { hikayeleriDinle, benimHikayelerimi } from '../services/hikayeService';
@@ -25,6 +25,12 @@ export const DataProvider = ({ children }) => {
   const [bucketList, setBucketList] = useState([]);
   const [musaitlikler, setMusaitlikler] = useState({});
   const [yukleniyor, setYukleniyor] = useState(true);
+
+  const [feedKaynagi, setFeedKaynagi] = useState('arkadaslar');
+  const [kesfetPlanlar, setKesfetPlanlar] = useState([]);
+  const [kesfetSonDoc, setKesfetSonDoc] = useState(null);
+  const [kesfetDahaVar, setKesfetDahaVar] = useState(true);
+  const [kesfetYukleniyor, setKesfetYukleniyor] = useState(false);
 
   useEffect(() => {
     if (!kullanici?.odUserId) {
@@ -98,11 +104,48 @@ export const DataProvider = ({ children }) => {
     setBucketList(prev => prev.filter(i => i.id !== id));
   };
 
+  const arkadasPlanlar = React.useMemo(() => {
+    if (!etkinlikler?.length) return [];
+    const arkadasIds = arkadaslar?.map(a => a.odUserId) || [];
+    return arkadasPlanlariFiltrele(etkinlikler, arkadasIds, kullanici?.odUserId);
+  }, [etkinlikler, arkadaslar, kullanici?.odUserId]);
+
+  const kesfetYukle = async (yenidenYukle = false) => {
+    if (kesfetYukleniyor) return;
+    if (!yenidenYukle && !kesfetDahaVar) return;
+
+    setKesfetYukleniyor(true);
+    const arkadasIds = arkadaslar?.map(a => a.odUserId) || [];
+    const sonDoc = yenidenYukle ? null : kesfetSonDoc;
+
+    const result = await kesfetPlanlariGetir(kullanici?.odUserId, arkadasIds, sonDoc);
+
+    if (result.success) {
+      if (yenidenYukle) {
+        setKesfetPlanlar(result.planlar);
+      } else {
+        setKesfetPlanlar(prev => [...prev, ...result.planlar]);
+      }
+      setKesfetSonDoc(result.sonDoc);
+      setKesfetDahaVar(result.dahaVar);
+    }
+    setKesfetYukleniyor(false);
+  };
+
+  const feedDegistir = (kaynak) => {
+    setFeedKaynagi(kaynak);
+    if (kaynak === 'kesfet' && kesfetPlanlar.length === 0) {
+      kesfetYukle(true);
+    }
+  };
+
   const value = {
     gruplar, etkinlikler, arkadaslar, konusmalar, hikayeler, benimHikayelerim,
     bucketList, musaitlikler, yukleniyor,
     yeniGrupOlustur, yeniEtkinlikOlustur, katilimDurumuGuncelle,
-    musaitlikToggle, bucketListEkle, bucketListToggle, bucketListSil
+    musaitlikToggle, bucketListEkle, bucketListToggle, bucketListSil,
+    feedKaynagi, arkadasPlanlar, kesfetPlanlar, kesfetDahaVar, kesfetYukleniyor,
+    feedDegistir, kesfetYukle
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
