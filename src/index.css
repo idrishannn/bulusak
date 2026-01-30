@@ -11,11 +11,25 @@
     @apply bg-dark-900 text-white antialiased;
   }
 
-  /* Light Theme Override */
+  /* Light Theme Override - Geliştirilmiş Kontrast */
   html.light-theme body {
     @apply bg-gray-50 text-gray-900;
   }
 
+  /* Light Theme Metin Hiyerarşisi */
+  html.light-theme h1, html.light-theme h2, html.light-theme h3 {
+    @apply text-gray-900;
+  }
+
+  html.light-theme p {
+    @apply text-gray-700;
+  }
+
+  html.light-theme span.text-secondary {
+    @apply text-gray-600;
+  }
+
+  /* Light Theme Scrollbar */
   html.light-theme ::-webkit-scrollbar-thumb {
     @apply bg-gray-300;
   }

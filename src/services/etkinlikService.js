@@ -211,18 +211,35 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
 
 const PAGE_SIZE = 10;
 
-// Keşfet: Sadece visibility='public' olan, benim olmayan, gizli profil olmayan planlar
+/**
+ * KEŞFET GÖRÜNÜRLüK KURALLARI (Güncellenmiş):
+ *
+ * 1. Plan görünürlüğü iki katmandır:
+ *    - Profil gizliliği (public/private) - artık keşfet için önemsiz
+ *    - Plan görünürlüğü (public/private) - asıl belirleyici
+ *
+ * 2. Keşfet için nihai kural:
+ *    - Plan visibility='public' ise keşfette görünebilir
+ *    - Profil private olsa bile, kullanıcı planı public yaptıysa plan keşfette GÖRÜNÜR
+ *    - Plan visibility='private' ise keşfette GÖRÜNMEZ
+ *
+ * 3. Ek kurallar (korunuyor):
+ *    - Kendi planımı keşfette ben GÖRMEM, ama başkaları görsün
+ *    - Geçmiş planlar keşfette görünmez
+ *    - Tarih filtresi aktif
+ */
 export const kesfetPlanlariGetir = async (userId, arkadasIds = [], sonDoc = null) => {
   try {
     const eventsRef = collection(db, 'events');
     const bugun = new Date().toISOString();
 
-    // Basit query - client-side filtreleme yapacağız
+    // Query: visibility='public' olan planları çek
+    // NOT: Artık olusturanProfilGizlilik kontrolü YOK - plan public ise görünür
     let q = query(
       eventsRef,
       where('visibility', '==', 'public'),
       orderBy('startAt', 'asc'),
-      limit(PAGE_SIZE * 2) // Daha fazla çek, filtreleyeceğiz
+      limit(PAGE_SIZE * 2)
     );
 
     if (sonDoc) {
@@ -242,13 +259,14 @@ export const kesfetPlanlariGetir = async (userId, arkadasIds = [], sonDoc = null
       const data = docSnap.data();
       const tarih = data.startAt || data.tarih;
 
-      // Keşfet'te kendi planlarım ASLA görünmesin
+      // KURAL 1: Keşfet'te kendi planlarım ASLA görünmesin (ben görmeyeyim, başkaları görsün)
       if (data.olusturanId === userId) return;
 
-      // Gizli profillerin planları keşfet'te görünmez
-      if (data.olusturanProfilGizlilik === 'private') return;
+      // KURAL 2: Plan visibility='public' - zaten query'de filtreledik ama double-check
+      // NOT: Profil private olsa bile plan public ise GÖRÜNÜR (eski kural kaldırıldı)
+      if (data.visibility !== 'public') return;
 
-      // Geçmiş planları gösterme
+      // KURAL 3: Geçmiş planları gösterme
       if (new Date(tarih) < new Date(bugun.split('T')[0])) return;
 
       planlar.push({ id: docSnap.id, ...data, _doc: docSnap });

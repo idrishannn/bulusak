@@ -1,10 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useAuth, useData, useUI, useTheme } from '../context';
 import Stories from './Stories';
 import EmptyState from './EmptyState';
 import { SkeletonCard } from './Skeleton';
-import { ClockIcon, LocationIcon, UsersIcon } from './Icons';
-import { KATILIM_DURUMLARI } from '../constants';
+import { ClockIcon, LocationIcon, UsersIcon, ChevronRightIcon } from './Icons';
+import { KATILIM_DURUMLARI, LOCATION_RADIUS_OPTIONS, POPULAR_LOCATIONS } from '../constants';
 
 const FEED_TABS = [
   { id: 'arkadaslar', label: 'Arkadaşlar' },
@@ -95,16 +95,119 @@ const PlanKarti = ({ plan, onClick }) => {
   );
 };
 
+// Konum Seçici Bileşeni
+const KonumSecici = ({ onClose }) => {
+  const { kesfetMerkezKonum, kesfetYaricap, merkezKonumGuncelle, yaricapGuncelle, kesfetYukle } = useData();
+  const { themeClasses, isDark } = useTheme();
+  const [seciliKonum, setSeciliKonum] = useState(kesfetMerkezKonum);
+  const [seciliYaricap, setSeciliYaricap] = useState(kesfetYaricap);
+
+  const handleUygula = () => {
+    merkezKonumGuncelle(seciliKonum);
+    yaricapGuncelle(seciliYaricap);
+    kesfetYukle(true);
+    onClose();
+  };
+
+  const handleTemizle = () => {
+    setSeciliKonum(null);
+    merkezKonumGuncelle(null);
+    kesfetYukle(true);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative w-full max-w-lg ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-t-3xl max-h-[80vh] flex flex-col animate-slide-up`}>
+        <div className={`p-4 border-b ${themeClasses.border} flex items-center justify-between`}>
+          <h2 className={`text-lg font-semibold ${themeClasses.text}`}>Konum Ayarları</h2>
+          <button onClick={onClose} className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}>
+            <span className={themeClasses.textMuted}>✕</span>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Yarıçap Seçimi */}
+          <div>
+            <label className={`text-xs font-medium ${themeClasses.textSecondary} mb-2 block`}>Keşfet Yarıçapı</label>
+            <div className="flex gap-2 flex-wrap">
+              {LOCATION_RADIUS_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSeciliYaricap(opt.value)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    seciliYaricap === opt.value
+                      ? 'btn-gold'
+                      : isDark ? 'bg-dark-800 text-dark-300 hover:bg-dark-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Merkez Konum Seçimi */}
+          <div>
+            <label className={`text-xs font-medium ${themeClasses.textSecondary} mb-2 block`}>Merkez Konum</label>
+            <div className="grid grid-cols-2 gap-2">
+              {POPULAR_LOCATIONS.map(loc => (
+                <button
+                  key={loc.id}
+                  onClick={() => setSeciliKonum(loc)}
+                  className={`p-3 rounded-xl text-left transition-all ${
+                    seciliKonum?.id === loc.id
+                      ? 'bg-gold-500/20 border border-gold-500/30'
+                      : isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <LocationIcon className={`w-4 h-4 ${seciliKonum?.id === loc.id ? 'text-gold-500' : themeClasses.textMuted}`} />
+                    <span className={`font-medium ${seciliKonum?.id === loc.id ? 'text-gold-500' : themeClasses.text}`}>
+                      {loc.name}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {seciliKonum && (
+            <div className={`p-3 rounded-xl ${isDark ? 'bg-gold-500/10' : 'bg-gold-50'} border border-gold-500/20`}>
+              <p className="text-sm text-gold-500">
+                <LocationIcon className="w-4 h-4 inline mr-1" />
+                {seciliKonum.name} merkezli {seciliYaricap} km içindeki planlar gösterilecek
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className={`p-4 border-t ${themeClasses.border} flex gap-2`}>
+          <button onClick={handleTemizle} className={`flex-1 py-3 rounded-xl font-medium ${isDark ? 'bg-dark-800 text-dark-300' : 'bg-gray-200 text-gray-700'}`}>
+            Temizle
+          </button>
+          <button onClick={handleUygula} className="flex-1 btn-gold py-3 rounded-xl font-semibold">
+            Uygula
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Feed = () => {
   const { kullanici } = useAuth();
   const {
     yukleniyor,
     feedKaynagi, arkadasPlanlar, kesfetPlanlar,
-    kesfetDahaVar, kesfetYukleniyor, feedDegistir, kesfetYukle
+    kesfetDahaVar, kesfetYukleniyor, feedDegistir, kesfetYukle,
+    kesfetMerkezKonum, kesfetYaricap, planYaricaptaMi
   } = useData();
   const { setModalAcik, setSeciliEtkinlik } = useUI();
   const { themeClasses, isDark } = useTheme();
   const loaderRef = useRef();
+  const [konumSeciciAcik, setKonumSeciciAcik] = useState(false);
 
   const handlePlanTikla = (plan) => {
     setSeciliEtkinlik(plan);
@@ -174,7 +277,30 @@ const Feed = () => {
             </button>
           ))}
         </div>
+
+        {/* Keşfet sekmesinde konum filtresi */}
+        {feedKaynagi === 'kesfet' && (
+          <button
+            onClick={() => setKonumSeciciAcik(true)}
+            className={`w-full mt-3 p-3 rounded-xl flex items-center justify-between transition-all ${
+              kesfetMerkezKonum
+                ? 'bg-gold-500/10 border border-gold-500/30'
+                : isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <LocationIcon className={`w-4 h-4 ${kesfetMerkezKonum ? 'text-gold-500' : themeClasses.textMuted}`} />
+              <span className={`text-sm ${kesfetMerkezKonum ? 'text-gold-500 font-medium' : themeClasses.textSecondary}`}>
+                {kesfetMerkezKonum ? `${kesfetMerkezKonum.name} · ${kesfetYaricap} km` : 'Konum seç'}
+              </span>
+            </div>
+            <ChevronRightIcon className={`w-4 h-4 ${kesfetMerkezKonum ? 'text-gold-500' : themeClasses.textMuted}`} />
+          </button>
+        )}
       </div>
+
+      {/* Konum Seçici Modal */}
+      {konumSeciciAcik && <KonumSecici onClose={() => setKonumSeciciAcik(false)} />}
 
       {siradakiPlan && (
         <div className="px-4 mb-6">

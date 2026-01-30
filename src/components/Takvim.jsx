@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useData, useUI, useTheme } from '../context';
 import EmptyState from './EmptyState';
+import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
 
 const gunler = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
 const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
@@ -12,15 +13,35 @@ const Takvim = () => {
   const { themeClasses, isDark } = useTheme();
 
   const bugun = new Date();
-  const haftaninGunleri = [];
-  const haftaninBaslangici = new Date(bugun);
-  haftaninBaslangici.setDate(bugun.getDate() - bugun.getDay() + 1);
 
-  for (let i = 0; i < 7; i++) {
-    const gun = new Date(haftaninBaslangici);
-    gun.setDate(haftaninBaslangici.getDate() + i);
-    haftaninGunleri.push(gun);
-  }
+  // Hafta navigasyonu için state - kaç hafta ileri/geri
+  const [haftaOffset, setHaftaOffset] = useState(0);
+
+  // Seçili haftanın başlangıcını hesapla
+  const getHaftaninGunleri = () => {
+    const haftaninGunleri = [];
+    const haftaninBaslangici = new Date(bugun);
+    // Pazartesi'yi bul (getDay: 0=Pazar, 1=Pazartesi, ...)
+    const gunSayisi = bugun.getDay() === 0 ? 6 : bugun.getDay() - 1;
+    haftaninBaslangici.setDate(bugun.getDate() - gunSayisi + (haftaOffset * 7));
+
+    for (let i = 0; i < 7; i++) {
+      const gun = new Date(haftaninBaslangici);
+      gun.setDate(haftaninBaslangici.getDate() + i);
+      haftaninGunleri.push(gun);
+    }
+    return haftaninGunleri;
+  };
+
+  const haftaninGunleri = getHaftaninGunleri();
+
+  // Seçili haftanın ay/yıl bilgisi
+  const seciliHaftaTarih = haftaninGunleri[3]; // Haftanın ortası
+
+  // Hafta navigasyonu
+  const oncekiHafta = () => setHaftaOffset(prev => prev - 1);
+  const sonrakiHafta = () => setHaftaOffset(prev => prev + 1);
+  const buHafta = () => setHaftaOffset(0);
 
   // startAt (veya tarih) alanını kullanarak planı takvimde bul
   const etkinlikBul = (tarih, saat) => {
@@ -104,7 +125,31 @@ const Takvim = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className={`font-bold ${themeClasses.text}`}>{seciliGrup ? seciliGrup.isim : 'Takvimim'}</h2>
-              <p className={`${themeClasses.textMuted} text-sm`}>{aylar[bugun.getMonth()]} {bugun.getFullYear()}</p>
+              <p className={`${themeClasses.textMuted} text-sm`}>{aylar[seciliHaftaTarih.getMonth()]} {seciliHaftaTarih.getFullYear()}</p>
+            </div>
+
+            {/* Hafta Navigasyonu */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={oncekiHafta}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-dark-700 hover:bg-dark-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+              >
+                <ChevronLeftIcon className={`w-4 h-4 ${themeClasses.textSecondary}`} />
+              </button>
+              {haftaOffset !== 0 && (
+                <button
+                  onClick={buHafta}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium btn-gold"
+                >
+                  Bugün
+                </button>
+              )}
+              <button
+                onClick={sonrakiHafta}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-dark-700 hover:bg-dark-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+              >
+                <ChevronRightIcon className={`w-4 h-4 ${themeClasses.textSecondary}`} />
+              </button>
             </div>
           </div>
 

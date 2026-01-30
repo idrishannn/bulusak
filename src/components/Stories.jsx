@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth, useData, useUI } from '../context';
-import { PlusIcon, XIcon, ChevronLeftIcon, ChevronRightIcon, SendIcon } from './Icons';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth, useData, useUI, useTheme } from '../context';
+import { PlusIcon, XIcon, ChevronLeftIcon, ChevronRightIcon, SendIcon, CameraIcon, ImageIcon } from './Icons';
 import { SkeletonStory } from './Skeleton';
 import { hikayeEkle, hikayeIzle, hikayeyeTepkiVer } from '../services/hikayeService';
 import { konusmaOlusturVeyaGetir, mesajGonder } from '../services/dmService';
@@ -8,23 +8,86 @@ import Logo from './Logo';
 
 const TEPKILER = ['❤️', '🔥', '😂', '😮', '😢', '👏'];
 
+// İzin verilen dosya türleri - Video yasak, sadece fotoğraf
+const IZIN_VERILEN_TIPLER = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const MAX_DOSYA_BOYUTU = 5 * 1024 * 1024; // 5MB
+
 const Stories = () => {
   const { kullanici } = useAuth();
   const { hikayeler, yukleniyor, benimHikayelerim } = useData();
   const { setModalAcik, bildirimGoster } = useUI();
+  const { themeClasses, isDark } = useTheme();
   const [acikHikaye, setAcikHikaye] = useState(null);
   const [aktifIndex, setAktifIndex] = useState(0);
   const [cevapMetni, setCevapMetni] = useState('');
   const [gonderiyor, setGonderiyor] = useState(false);
+  const [hikayeEklePaneli, setHikayeEklePaneli] = useState(false);
+  const [yukluyor, setYukluyor] = useState(false);
+  const fileInputRef = useRef();
 
-  const handleHikayeEkle = async () => {
+  // Fotoğraf seçme ve yükleme
+  const handleFotografSec = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleDosyaDegisikligi = async (e) => {
+    const dosya = e.target.files?.[0];
+    if (!dosya) return;
+
+    // Video kontrolü - yasak
+    if (dosya.type.startsWith('video/')) {
+      bildirimGoster('Video yüklenemez, sadece fotoğraf kabul edilir!', 'error');
+      return;
+    }
+
+    // Dosya türü kontrolü
+    if (!IZIN_VERILEN_TIPLER.includes(dosya.type)) {
+      bildirimGoster('Sadece JPEG, PNG, GIF ve WebP formatları kabul edilir', 'error');
+      return;
+    }
+
+    // Dosya boyutu kontrolü
+    if (dosya.size > MAX_DOSYA_BOYUTU) {
+      bildirimGoster('Dosya boyutu 5MB\'dan küçük olmalı', 'error');
+      return;
+    }
+
+    setYukluyor(true);
+    setHikayeEklePaneli(false);
+
+    // Base64'e çevir (basit implementasyon - gerçek projede Firebase Storage kullanılmalı)
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result;
+      const result = await hikayeEkle(kullanici, base64, 'image');
+      if (result.success) {
+        bildirimGoster('Hikaye eklendi!', 'success');
+      } else {
+        bildirimGoster('Hikaye eklenemedi', 'error');
+      }
+      setYukluyor(false);
+    };
+    reader.readAsDataURL(dosya);
+
+    // Input'u temizle
+    e.target.value = '';
+  };
+
+  const handleMetinHikaye = async () => {
     const metin = prompt('Hikayene ne eklemek istersin?');
     if (!metin?.trim()) return;
 
+    setYukluyor(true);
+    setHikayeEklePaneli(false);
     const result = await hikayeEkle(kullanici, metin.trim(), 'text');
     if (result.success) {
       bildirimGoster('Hikaye eklendi!', 'success');
     }
+    setYukluyor(false);
+  };
+
+  const handleHikayeEkle = () => {
+    setHikayeEklePaneli(true);
   };
 
   const handleHikayeAc = async (hikayeGrubu, baslangicIndex = 0) => {
@@ -215,12 +278,21 @@ const Stories = () => {
             </div>
           </div>
 
+          {/* Hikaye İçeriği - Fotoğraf veya Metin */}
           <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="text-center">
-              <p className="text-white text-xl font-medium">
-                {acikHikaye.hikayeler[aktifIndex]?.icerik}
-              </p>
-            </div>
+            {acikHikaye.hikayeler[aktifIndex]?.tip === 'image' ? (
+              <img
+                src={acikHikaye.hikayeler[aktifIndex]?.icerik}
+                alt="Hikaye"
+                className="max-w-full max-h-full object-contain rounded-xl"
+              />
+            ) : (
+              <div className="text-center">
+                <p className="text-white text-xl font-medium">
+                  {acikHikaye.hikayeler[aktifIndex]?.icerik}
+                </p>
+              </div>
+            )}
           </div>
 
           <button
@@ -276,6 +348,73 @@ const Stories = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Hikaye Ekleme Paneli - Instagram Tarzı */}
+      {hikayeEklePaneli && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setHikayeEklePaneli(false)} />
+          <div className={`relative w-full max-w-lg ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-t-3xl p-6 animate-slide-up`}>
+            <div className="w-12 h-1 bg-dark-600 rounded-full mx-auto mb-6" />
+            <h3 className={`text-lg font-semibold ${themeClasses.text} text-center mb-6`}>Hikaye Ekle</h3>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Fotoğraf Seç */}
+              <button
+                onClick={handleFotografSec}
+                className={`flex flex-col items-center gap-3 p-6 rounded-2xl ${isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'} transition-all`}
+              >
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                  <ImageIcon className="w-7 h-7 text-white" />
+                </div>
+                <span className={`font-medium ${themeClasses.text}`}>Fotoğraf</span>
+                <span className={`text-xs ${themeClasses.textMuted}`}>Galeri'den seç</span>
+              </button>
+
+              {/* Metin Hikaye */}
+              <button
+                onClick={handleMetinHikaye}
+                className={`flex flex-col items-center gap-3 p-6 rounded-2xl ${isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'} transition-all`}
+              >
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gold-500 to-orange-500 flex items-center justify-center">
+                  <span className="text-2xl">Aa</span>
+                </div>
+                <span className={`font-medium ${themeClasses.text}`}>Metin</span>
+                <span className={`text-xs ${themeClasses.textMuted}`}>Yazı paylaş</span>
+              </button>
+            </div>
+
+            <p className={`text-xs ${themeClasses.textMuted} text-center mt-4`}>
+              Video yüklenemez, sadece fotoğraf kabul edilir
+            </p>
+
+            <button
+              onClick={() => setHikayeEklePaneli(false)}
+              className={`w-full mt-6 py-3 rounded-xl font-medium ${isDark ? 'bg-dark-800 text-dark-300' : 'bg-gray-200 text-gray-700'}`}
+            >
+              İptal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Gizli dosya input'u */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleDosyaDegisikligi}
+        accept="image/*"
+        className="hidden"
+      />
+
+      {/* Yükleniyor göstergesi */}
+      {yukluyor && (
+        <div className="fixed inset-0 z-[110] bg-black/80 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-white">Hikaye yükleniyor...</p>
+          </div>
         </div>
       )}
     </>
