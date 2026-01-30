@@ -3,7 +3,7 @@ import { useAuth, useData, useUI, useTheme } from '../context';
 import { ChevronLeftIcon, SendIcon, ImageIcon, SearchIcon, XIcon } from './Icons';
 import { SkeletonMessage } from './Skeleton';
 import { mesajGonder, mesajlariDinle, mesajlariOkunduIsaretle, yaziyorGuncelle, konusmaOlusturVeyaGetir } from '../services/dmService';
-import { kullanicilariAra } from '../services/arkadasService';
+import { kullaniciAra } from '../services/arkadasService';
 import Logo from './Logo';
 import EmptyState from './EmptyState';
 
@@ -250,7 +250,7 @@ const KullaniciAramaModal = ({ onClose, onKullaniciSec }) => {
         return;
       }
       setAraniyor(true);
-      const result = await kullanicilariAra(arama.trim(), kullanici?.odUserId);
+      const result = await kullaniciAra(arama.trim(), kullanici?.odUserId);
       if (result.success) {
         setSonuclar(result.kullanicilar);
       }
