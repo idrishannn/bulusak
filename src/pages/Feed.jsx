@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth, useData, useUI } from '../context';
+import { Wordmark } from '../components';
 
 const etkinlikIkonlari = { 
   kahve: '☕', yemek: '🍕', film: '🎬', spor: '⚽', 
@@ -59,8 +60,11 @@ const Feed = () => {
     <div className="pb-24 p-4">
       {/* Hoşgeldin */}
       <div className="mb-6">
-        <h2 className={`text-2xl font-black ${tema.text}`}>
-          Merhaba, {kullanici?.isim?.split(' ')[0] || 'Kullanıcı'} 👋
+        <div className="flex items-center gap-2 mb-1">
+          <Wordmark size="lg" />
+        </div>
+        <h2 className={`text-xl font-semibold ${tema.text}`}>
+          {kullanici?.isim?.split(' ')[0] || 'Kullanıcı'} 👋
         </h2>
         <p className={tema.textSecondary}>
           {baskaPlanlari.length > 0 

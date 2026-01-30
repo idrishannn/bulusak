@@ -4,6 +4,8 @@
 
 import React from 'react';
 import { useUI } from '../../context/UIContext';
+import Logo from '../Logo';
+import Wordmark from '../Wordmark';
 
 const Header = ({ bildirimSayisi = 0 }) => {
   const { modalAc, canSikildiModu, canSikildiToggle } = useUI();
@@ -11,9 +13,12 @@ const Header = ({ bildirimSayisi = 0 }) => {
   return (
     <header className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 text-white shadow-2xl sticky top-0 z-40">
       <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight leading-none">Buluşak</h1>
-          <p className="text-sm text-white/80 font-medium">planla, buluş, yaşa</p>
+        <div className="flex items-center gap-3">
+          <Logo size="sm" />
+          <div>
+            <Wordmark size="md" />
+            <p className="text-sm text-white/80 font-medium">planla, buluş, yaşa</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => modalAc('bildirimler')} className="relative w-11 h-11 bg-white/20 backdrop-blur-lg rounded-xl flex items-center justify-center hover:bg-white/30 transition-all">

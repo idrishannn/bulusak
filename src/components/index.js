@@ -1,4 +1,5 @@
 export { default as Logo } from './Logo';
+export { default as Wordmark } from './Wordmark';
 export { default as SplashScreen } from './SplashScreen';
 export { default as Toast } from './Toast';
 export { default as Header } from './Header';

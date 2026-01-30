@@ -1,4 +1,5 @@
 import React from 'react';
+import logoPng from '../assets/brand/logo.png';
 
 const Logo = ({ size = 'md', className = '' }) => {
   const sizes = {
@@ -11,11 +12,7 @@ const Logo = ({ size = 'md', className = '' }) => {
 
   return (
     <div className={`${sizes[size]} ${className} relative`}>
-      <img 
-        src="/logo.png" 
-        alt="Buluşak" 
-        className="w-full h-full object-contain"
-      />
+      <img src={logoPng} alt="bulusaq" className="w-full h-full object-contain" />
     </div>
   );
 };

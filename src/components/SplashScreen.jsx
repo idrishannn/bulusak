@@ -1,5 +1,6 @@
 import React from 'react';
 import Logo from './Logo';
+import Wordmark from './Wordmark';
 
 const SplashScreen = () => {
   return (
@@ -13,11 +14,11 @@ const SplashScreen = () => {
         <div className="animate-pulse">
           <Logo size="xl" className="glow-gold" />
         </div>
-        
-        <h1 className="mt-6 text-3xl font-bold text-white tracking-tight">
-          Buluşak
-        </h1>
-        
+
+        <div className="mt-6">
+          <Wordmark size="xl" />
+        </div>
+
         <p className="mt-2 text-dark-400 text-sm font-medium tracking-wide">
           planla, buluş, yaşa
         </p>
