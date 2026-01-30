@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { gruplariDinle, grupOlustur } from '../services/grupService';
-import { etkinlikleriDinle, etkinlikOlustur, katilimDurumuGuncelleDB, kesfetPlanlariGetir, arkadasPlanlariFiltrele, gecmisPlanlariFiltrele } from '../services/etkinlikService';
+import { etkinlikleriDinle, etkinlikOlustur, katilimDurumuGuncelleDB, kesfetPlanlariGetir, arkadasPlanlariFiltrele, gecmisPlanlariFiltrele, katildigimPlanlariFiltrele } from '../services/etkinlikService';
 import { arkadaslariDinle } from '../services/arkadasService';
 import { konusmalariDinle } from '../services/dmService';
 import { hikayeleriDinle, benimHikayelerimi } from '../services/hikayeService';
