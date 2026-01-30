@@ -268,17 +268,46 @@ const HizliPlanModal = () => {
           </p>
         </div>
 
-        {/* Katılımcı Limiti (Public planlar için) */}
-        {visibility === PLAN_VISIBILITY.PUBLIC && (
-          <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">Katılımcı Limiti</label>
-            <select value={katilimciLimit} onChange={(e) => setKatilimciLimit(parseInt(e.target.value, 10))} className="input-dark bg-dark-800">
-              {PARTICIPANT_LIMITS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+        {/* Katılımcı Limiti - Serbest Sayı Girişi */}
+        <div>
+          <label className="text-xs font-medium text-dark-400 mb-2 block">Katılımcı Limiti (Opsiyonel)</label>
+          <div className="flex gap-2 items-center">
+            <input
+              type="number"
+              min="0"
+              max="999"
+              value={katilimciLimit || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || val === '0') {
+                  setKatilimciLimit(0);
+                } else {
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num) && num >= 0 && num <= 999) {
+                    setKatilimciLimit(num);
+                  }
+                }
+              }}
+              placeholder="Limitsiz"
+              className="input-dark flex-1"
+            />
+            <button
+              onClick={() => setKatilimciLimit(0)}
+              className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                katilimciLimit === 0
+                  ? 'btn-gold'
+                  : 'btn-ghost'
+              }`}
+            >
+              ∞ Limitsiz
+            </button>
           </div>
-        )}
+          <p className="text-xs text-dark-500 mt-1">
+            {katilimciLimit > 0
+              ? `Maksimum ${katilimciLimit} kişi katılabilir`
+              : 'Sınırsız katılımcı kabul edilir'}
+          </p>
+        </div>
 
         <div>
           <label className="text-xs font-medium text-dark-400 mb-2 block">Kimlerle?</label>
@@ -751,17 +780,77 @@ const YeniGrupModal = () => {
 const BildirimlerModal = () => {
   const navigate = useNavigate();
   const { kullanici } = useAuth();
-  const { etkinlikler } = useData();
-  const { modalAcik, setModalAcik, bildirimler, setSeciliEtkinlik } = useUI();
+  const { etkinlikler, katilimDurumuGuncelle } = useData();
+  const { modalAcik, setModalAcik, bildirimler, setSeciliEtkinlik, bildirimGoster } = useUI();
+  const [islemYapiliyor, setIslemYapiliyor] = useState(null);
 
   if (modalAcik !== 'bildirimler') return null;
 
   const okunmamisSayisi = bildirimler?.filter(b => !b.okundu).length || 0;
 
+  // Davet türündeki bildirimleri ayır (aksiyonlu olanlar)
+  const davetBildirimleri = bildirimler?.filter(b =>
+    !b.okundu && (
+      b.tip === BILDIRIM_TIPLERI.PLAN_DAVET ||
+      b.tip === BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI ||
+      b.tip === 'GRUP_DAVET'
+    )
+  ) || [];
+
+  const digerBildirimler = bildirimler?.filter(b =>
+    b.okundu || (
+      b.tip !== BILDIRIM_TIPLERI.PLAN_DAVET &&
+      b.tip !== BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI &&
+      b.tip !== 'GRUP_DAVET'
+    )
+  ) || [];
+
   const handleTumunuOkunduYap = async () => {
     if (kullanici?.odUserId) {
       await tumBildirimleriOkunduIsaretle(kullanici.odUserId);
     }
+  };
+
+  // Davet Kabul Et
+  const handleDavetKabul = async (bildirim) => {
+    setIslemYapiliyor(bildirim.id);
+    try {
+      if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_DAVET && bildirim.planId) {
+        // Plana katıl
+        await katilimDurumuGuncelle(bildirim.planId, KATILIM_DURUMLARI.VARIM);
+        bildirimGoster('Daveti kabul ettin!', 'success');
+      } else if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI && bildirim.planId) {
+        // Katılım isteğini kabul et - plan detayına yönlendir
+        const plan = etkinlikler?.find(e => e.id === bildirim.planId);
+        if (plan) {
+          setSeciliEtkinlik(plan);
+          setModalAcik('detay');
+        }
+        bildirimGoster('İstek kabul edildi', 'success');
+      }
+      // Bildirimi okundu yap
+      await bildirimOkunduIsaretle(bildirim.id);
+    } catch (error) {
+      bildirimGoster('İşlem başarısız', 'error');
+    }
+    setIslemYapiliyor(null);
+  };
+
+  // Davet Reddet
+  const handleDavetReddet = async (bildirim) => {
+    setIslemYapiliyor(bildirim.id);
+    try {
+      if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_DAVET && bildirim.planId) {
+        // Daveti reddet
+        await katilimDurumuGuncelle(bildirim.planId, KATILIM_DURUMLARI.YOKUM);
+        bildirimGoster('Daveti reddettin', 'success');
+      }
+      // Bildirimi okundu yap
+      await bildirimOkunduIsaretle(bildirim.id);
+    } catch (error) {
+      bildirimGoster('İşlem başarısız', 'error');
+    }
+    setIslemYapiliyor(null);
   };
 
   const handleBildirimTikla = async (bildirim) => {
@@ -804,6 +893,9 @@ const BildirimlerModal = () => {
   const getBildirimIkonu = (tip) => {
     switch (tip) {
       case BILDIRIM_TIPLERI.PLAN_DAVET:
+        return <span className="text-lg">💌</span>;
+      case BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI:
+        return <span className="text-lg">🙋</span>;
       case BILDIRIM_TIPLERI.PLAN_GUNCELLEME:
         return <ClockIcon className="w-5 h-5 text-gold-500" />;
       case BILDIRIM_TIPLERI.YENI_MESAJ:
@@ -811,6 +903,8 @@ const BildirimlerModal = () => {
       case BILDIRIM_TIPLERI.ARKADAS_ISTEGI:
       case BILDIRIM_TIPLERI.ARKADAS_KABUL:
         return <UsersIcon className="w-5 h-5 text-emerald-400" />;
+      case 'GRUP_DAVET':
+        return <span className="text-lg">👥</span>;
       default:
         return <BellIcon className="w-5 h-5 text-dark-400" />;
     }
@@ -844,7 +938,52 @@ const BildirimlerModal = () => {
         </div>
       )}
       <div className="flex-1 overflow-y-auto">
-        {bildirimler?.length > 0 ? bildirimler.map(b => (
+        {/* Davet Merkezi - Aksiyonlu Bildirimler */}
+        {davetBildirimleri.length > 0 && (
+          <div className="p-4 border-b border-dark-700">
+            <h3 className="text-xs font-semibold text-gold-500 mb-3 flex items-center gap-2">
+              <span>💝</span> Davet Merkezi
+            </h3>
+            <div className="space-y-3">
+              {davetBildirimleri.map(b => (
+                <div
+                  key={b.id}
+                  className="p-3 bg-gold-500/5 border border-gold-500/20 rounded-xl"
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center">
+                      {getBildirimIkonu(b.tip)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white">{b.mesaj}</p>
+                      <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
+                    </div>
+                  </div>
+                  {/* Kabul/Reddet Aksiyonları */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleDavetKabul(b)}
+                      disabled={islemYapiliyor === b.id}
+                      className="flex-1 btn-gold py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      {islemYapiliyor === b.id ? '...' : 'Kabul Et'}
+                    </button>
+                    <button
+                      onClick={() => handleDavetReddet(b)}
+                      disabled={islemYapiliyor === b.id}
+                      className="flex-1 btn-ghost py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      Reddet
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Diğer Bildirimler */}
+        {digerBildirimler?.length > 0 ? digerBildirimler.map(b => (
           <button
             key={b.id}
             onClick={() => handleBildirimTikla(b)}
@@ -869,7 +1008,7 @@ const BildirimlerModal = () => {
               <div className="w-2 h-2 rounded-full bg-gold-500 mt-2" />
             )}
           </button>
-        )) : (
+        )) : davetBildirimleri.length === 0 && (
           <div className="text-center py-12">
             <BellIcon className="w-12 h-12 text-dark-600 mx-auto mb-3" />
             <p className="text-dark-400">Bildirim yok</p>

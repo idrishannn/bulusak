@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { gruplariDinle, grupOlustur } from '../services/grupService';
 import { etkinlikleriDinle, etkinlikOlustur, katilimDurumuGuncelleDB, kesfetPlanlariGetir, arkadasPlanlariFiltrele, gecmisPlanlariFiltrele, katildigimPlanlariFiltrele } from '../services/etkinlikService';
@@ -7,6 +7,20 @@ import { konusmalariDinle } from '../services/dmService';
 import { hikayeleriDinle, benimHikayelerimi } from '../services/hikayeService';
 import { bildirimleriDinle } from '../services/bildirimService';
 import { useUI } from './UIContext';
+import { STORAGE_KEYS, DEFAULT_DISCOVER_SETTINGS } from '../constants';
+
+// Haversine formülü ile iki koordinat arasındaki mesafeyi hesapla (km)
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 6371; // Dünya yarıçapı (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
 
 const DataContext = createContext();
 
@@ -31,6 +45,25 @@ export const DataProvider = ({ children }) => {
   const [kesfetSonDoc, setKesfetSonDoc] = useState(null);
   const [kesfetDahaVar, setKesfetDahaVar] = useState(true);
   const [kesfetYukleniyor, setKesfetYukleniyor] = useState(false);
+
+  // Konum Bazlı Keşfet - Merkez ve Yarıçap State'leri
+  const [kesfetMerkezKonum, setKesfetMerkezKonum] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.USER_LOCATION);
+      return saved ? JSON.parse(saved) : DEFAULT_DISCOVER_SETTINGS.centerLocation;
+    } catch {
+      return DEFAULT_DISCOVER_SETTINGS.centerLocation;
+    }
+  });
+
+  const [kesfetYaricap, setKesfetYaricap] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.LOCATION_RADIUS);
+      return saved ? parseInt(saved, 10) : DEFAULT_DISCOVER_SETTINGS.radius;
+    } catch {
+      return DEFAULT_DISCOVER_SETTINGS.radius;
+    }
+  });
 
   useEffect(() => {
     if (!kullanici?.odUserId) {
@@ -104,6 +137,47 @@ export const DataProvider = ({ children }) => {
     setBucketList(prev => prev.filter(i => i.id !== id));
   };
 
+  // Konum Bazlı Keşfet Fonksiyonları
+  const merkezKonumGuncelle = useCallback((konum) => {
+    setKesfetMerkezKonum(konum);
+    if (konum) {
+      localStorage.setItem(STORAGE_KEYS.USER_LOCATION, JSON.stringify(konum));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.USER_LOCATION);
+    }
+    // Konum değiştiğinde keşfeti yeniden yükle
+    setKesfetPlanlar([]);
+    setKesfetSonDoc(null);
+    setKesfetDahaVar(true);
+  }, []);
+
+  const yaricapGuncelle = useCallback((yaricap) => {
+    setKesfetYaricap(yaricap);
+    localStorage.setItem(STORAGE_KEYS.LOCATION_RADIUS, yaricap.toString());
+    // Yarıçap değiştiğinde keşfeti yeniden yükle
+    setKesfetPlanlar([]);
+    setKesfetSonDoc(null);
+    setKesfetDahaVar(true);
+  }, []);
+
+  // Plan konumuna göre yarıçap içinde mi kontrol et
+  const planYaricaptaMi = useCallback((plan, merkez, yaricap) => {
+    if (!merkez || !yaricap) return true; // Konum seçilmemişse tüm planları göster
+
+    // Plan konumunu al (önce plan mekanı, sonra oluşturan konumu)
+    const planKonum = plan.location || plan.olusturanKonum;
+    if (!planKonum?.lat || !planKonum?.lng) return true; // Konum yoksa göster
+
+    const mesafe = calculateDistance(
+      merkez.lat,
+      merkez.lng,
+      planKonum.lat,
+      planKonum.lng
+    );
+
+    return mesafe <= yaricap;
+  }, []);
+
   const arkadasPlanlar = React.useMemo(() => {
     if (!etkinlikler?.length) return [];
     const arkadasIds = arkadaslar?.map(a => a.odUserId) || [];
@@ -145,7 +219,10 @@ export const DataProvider = ({ children }) => {
     yeniGrupOlustur, yeniEtkinlikOlustur, katilimDurumuGuncelle,
     musaitlikToggle, bucketListEkle, bucketListToggle, bucketListSil,
     feedKaynagi, arkadasPlanlar, kesfetPlanlar, kesfetDahaVar, kesfetYukleniyor,
-    feedDegistir, kesfetYukle
+    feedDegistir, kesfetYukle,
+    // Konum Bazlı Keşfet
+    kesfetMerkezKonum, kesfetYaricap,
+    merkezKonumGuncelle, yaricapGuncelle, planYaricaptaMi
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

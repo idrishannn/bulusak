@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth, useData, useUI } from '../context';
-import { ChevronLeftIcon, SendIcon, ImageIcon } from './Icons';
+import { useAuth, useData, useUI, useTheme } from '../context';
+import { ChevronLeftIcon, SendIcon, ImageIcon, SearchIcon, XIcon } from './Icons';
 import { SkeletonMessage } from './Skeleton';
-import { mesajGonder, mesajlariDinle, mesajlariOkunduIsaretle, yaziyorGuncelle } from '../services/dmService';
+import { mesajGonder, mesajlariDinle, mesajlariOkunduIsaretle, yaziyorGuncelle, konusmaOlusturVeyaGetir } from '../services/dmService';
+import { kullanicilariAra } from '../services/arkadasService';
 import Logo from './Logo';
 import EmptyState from './EmptyState';
 
@@ -229,13 +230,121 @@ const SohbetEkrani = ({ konusma, karsiTaraf, onGeri }) => {
   );
 };
 
+// Kullanıcı Arama Modalı
+const KullaniciAramaModal = ({ onClose, onKullaniciSec }) => {
+  const { kullanici } = useAuth();
+  const { themeClasses, isDark } = useTheme();
+  const [arama, setArama] = useState('');
+  const [sonuclar, setSonuclar] = useState([]);
+  const [araniyor, setAraniyor] = useState(false);
+  const inputRef = useRef();
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const ara = async () => {
+      if (arama.trim().length < 2) {
+        setSonuclar([]);
+        return;
+      }
+      setAraniyor(true);
+      const result = await kullanicilariAra(arama.trim(), kullanici?.odUserId);
+      if (result.success) {
+        setSonuclar(result.kullanicilar);
+      }
+      setAraniyor(false);
+    };
+
+    const timeout = setTimeout(ara, 300);
+    return () => clearTimeout(timeout);
+  }, [arama, kullanici?.odUserId]);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-16">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative w-full max-w-lg mx-4 ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-2xl max-h-[70vh] flex flex-col animate-slide-down shadow-2xl`}>
+        {/* Arama Başlığı */}
+        <div className={`p-4 border-b ${themeClasses.border} flex items-center gap-3`}>
+          <div className="relative flex-1">
+            <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.textMuted}`} />
+            <input
+              ref={inputRef}
+              type="text"
+              value={arama}
+              onChange={(e) => setArama(e.target.value)}
+              placeholder="Kullanıcı ara..."
+              className={`w-full pl-10 pr-4 py-3 rounded-xl ${isDark ? 'bg-dark-800 text-white' : 'bg-gray-100 text-gray-900'} outline-none`}
+            />
+          </div>
+          <button onClick={onClose} className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}>
+            <XIcon className={`w-5 h-5 ${themeClasses.textMuted}`} />
+          </button>
+        </div>
+
+        {/* Arama Sonuçları */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {araniyor && (
+            <p className={`text-center ${themeClasses.textMuted} py-4`}>Aranıyor...</p>
+          )}
+
+          {!araniyor && sonuclar.length > 0 && (
+            <div className="space-y-2">
+              {sonuclar.map(k => (
+                <button
+                  key={k.odUserId}
+                  onClick={() => onKullaniciSec(k)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-dark-800' : 'hover:bg-gray-100'}`}
+                >
+                  <div className={`w-12 h-12 rounded-full ${isDark ? 'bg-dark-700' : 'bg-gray-200'} flex items-center justify-center text-2xl`}>
+                    {k.avatar || '👤'}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className={`font-medium ${themeClasses.text}`}>{k.isim}</p>
+                    <p className={`text-sm ${themeClasses.textMuted}`}>@{k.kullaniciAdi}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!araniyor && arama.length >= 2 && sonuclar.length === 0 && (
+            <p className={`text-center ${themeClasses.textMuted} py-4`}>Sonuç bulunamadı</p>
+          )}
+
+          {!araniyor && arama.length < 2 && (
+            <p className={`text-center ${themeClasses.textMuted} py-4`}>Arama için en az 2 karakter yazın</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Mesajlar = () => {
+  const { kullanici } = useAuth();
+  const { themeClasses, isDark } = useTheme();
+  const { bildirimGoster } = useUI();
   const [seciliKonusma, setSeciliKonusma] = useState(null);
   const [karsiTaraf, setKarsiTaraf] = useState(null);
+  const [aramaAcik, setAramaAcik] = useState(false);
 
   const handleKonusmaSecildi = (konusma, karsi) => {
     setSeciliKonusma(konusma);
     setKarsiTaraf(karsi);
+  };
+
+  const handleKullaniciSec = async (k) => {
+    setAramaAcik(false);
+    // Kullanıcıyla sohbet başlat veya mevcut sohbeti aç
+    const result = await konusmaOlusturVeyaGetir(kullanici.odUserId, k.odUserId);
+    if (result.success) {
+      setSeciliKonusma({ id: result.konusmaId, katilimcilar: [kullanici.odUserId, k.odUserId] });
+      setKarsiTaraf(k);
+    } else {
+      bildirimGoster('Sohbet başlatılamadı', 'error');
+    }
   };
 
   if (seciliKonusma) {
@@ -253,10 +362,25 @@ const Mesajlar = () => {
 
   return (
     <div className="flex flex-col h-full pb-32">
-      <div className="glass border-b border-dark-700/50 p-4">
-        <h1 className="text-xl font-bold text-white">Mesajlar</h1>
+      <div className={`${themeClasses.glass} border-b ${themeClasses.border} p-4 flex items-center justify-between`}>
+        <h1 className={`text-xl font-bold ${themeClasses.text}`}>Mesajlar</h1>
+        {/* Arama Butonu - Büyüteç */}
+        <button
+          onClick={() => setAramaAcik(true)}
+          className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-700 hover:bg-dark-600' : 'bg-gray-100 hover:bg-gray-200'} flex items-center justify-center transition-colors`}
+        >
+          <SearchIcon className={`w-5 h-5 ${themeClasses.textSecondary}`} />
+        </button>
       </div>
       <KonusmaListesi onKonusmaSecildi={handleKonusmaSecildi} />
+
+      {/* Kullanıcı Arama Modalı */}
+      {aramaAcik && (
+        <KullaniciAramaModal
+          onClose={() => setAramaAcik(false)}
+          onKullaniciSec={handleKullaniciSec}
+        />
+      )}
     </div>
   );
 };

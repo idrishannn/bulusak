@@ -91,6 +91,26 @@ export const LOCATION_RADIUS_OPTIONS = [
   { value: 80, label: '80 km' }
 ];
 
+// Varsayılan Keşfet Ayarları
+export const DEFAULT_DISCOVER_SETTINGS = {
+  radius: 25,
+  centerLocation: null
+};
+
+// Türkiye'deki Popüler Şehirler (Merkez Konum Seçimi İçin)
+export const POPULAR_LOCATIONS = [
+  { id: 'istanbul', name: 'İstanbul', lat: 41.0082, lng: 28.9784 },
+  { id: 'ankara', name: 'Ankara', lat: 39.9334, lng: 32.8597 },
+  { id: 'izmir', name: 'İzmir', lat: 38.4237, lng: 27.1428 },
+  { id: 'antalya', name: 'Antalya', lat: 36.8969, lng: 30.7133 },
+  { id: 'bursa', name: 'Bursa', lat: 40.1885, lng: 29.0610 },
+  { id: 'trabzon', name: 'Trabzon', lat: 41.0027, lng: 39.7168 },
+  { id: 'rize', name: 'Rize', lat: 41.0201, lng: 40.5234 },
+  { id: 'adana', name: 'Adana', lat: 37.0000, lng: 35.3213 },
+  { id: 'konya', name: 'Konya', lat: 37.8746, lng: 32.4932 },
+  { id: 'gaziantep', name: 'Gaziantep', lat: 37.0662, lng: 37.3833 }
+];
+
 // Katılımcı Limitleri
 export const PARTICIPANT_LIMITS = [
   { value: 0, label: 'Limitsiz' },
