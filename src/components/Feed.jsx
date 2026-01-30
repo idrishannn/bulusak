@@ -1,10 +1,15 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 import { useAuth, useData, useUI } from '../context';
 import Stories from './Stories';
 import EmptyState from './EmptyState';
 import { SkeletonCard } from './Skeleton';
 import { ClockIcon, LocationIcon, UsersIcon, ChevronRightIcon } from './Icons';
 import Logo from './Logo';
+
+const FEED_TABS = [
+  { id: 'arkadaslar', label: 'Arkadaşlar' },
+  { id: 'kesfet', label: 'Keşfet' }
+];
 
 const KATEGORI_IKONLARI = {
   kahve: '/icons/coffee.png',
@@ -120,16 +125,39 @@ const ArkadasKarti = ({ arkadas }) => {
 
 const Feed = () => {
   const { kullanici } = useAuth();
-  const { etkinlikler, arkadaslar, yukleniyor } = useData();
+  const {
+    arkadaslar, yukleniyor,
+    feedKaynagi, arkadasPlanlar, kesfetPlanlar,
+    kesfetDahaVar, kesfetYukleniyor, feedDegistir, kesfetYukle
+  } = useData();
   const { setModalAcik, setSeciliEtkinlik } = useUI();
   const observerRef = useRef();
+  const loaderRef = useRef();
 
   const handlePlanTikla = (plan) => {
     setSeciliEtkinlik(plan);
     setModalAcik('detay');
   };
 
-  const siralananPlanlar = [...(etkinlikler || [])].sort((a, b) => {
+  useEffect(() => {
+    if (feedKaynagi !== 'kesfet' || !kesfetDahaVar || kesfetYukleniyor) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          kesfetYukle(false);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loaderRef.current) observer.observe(loaderRef.current);
+    return () => observer.disconnect();
+  }, [feedKaynagi, kesfetDahaVar, kesfetYukleniyor]);
+
+  const aktivPlanlar = feedKaynagi === 'arkadaslar' ? arkadasPlanlar : kesfetPlanlar;
+
+  const siralananPlanlar = [...(aktivPlanlar || [])].sort((a, b) => {
     const aKatilimci = a.katilimcilar?.find(k => k.odUserId === kullanici?.odUserId);
     const bKatilimci = b.katilimcilar?.find(k => k.odUserId === kullanici?.odUserId);
     if (aKatilimci && !bKatilimci) return -1;
@@ -137,7 +165,9 @@ const Feed = () => {
     return new Date(a.tarih) - new Date(b.tarih);
   });
 
-  const siradakiPlan = siralananPlanlar.find(p => new Date(p.tarih) >= new Date());
+  const siradakiPlan = feedKaynagi === 'arkadaslar'
+    ? siralananPlanlar.find(p => new Date(p.tarih) >= new Date())
+    : null;
   const digerPlanlar = siralananPlanlar.filter(p => p.id !== siradakiPlan?.id);
 
   if (yukleniyor) {
@@ -156,7 +186,25 @@ const Feed = () => {
     <div className="pb-32">
       <Stories />
 
-      {arkadaslar?.length > 0 && (
+      <div className="px-4 mb-4">
+        <div className="flex gap-2 p-1 bg-dark-800 rounded-xl">
+          {FEED_TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => feedDegistir(tab.id)}
+              className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                feedKaynagi === tab.id
+                  ? 'bg-gold-500 text-dark-900'
+                  : 'text-dark-400 hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {feedKaynagi === 'arkadaslar' && arkadaslar?.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center justify-between px-4 mb-3">
             <h2 className="text-sm font-semibold text-white">Arkadaşlar</h2>
@@ -186,25 +234,39 @@ const Feed = () => {
 
       {digerPlanlar.length > 0 ? (
         <div className="px-4">
-          <h2 className="text-sm font-semibold text-white mb-3">Planlar</h2>
+          <h2 className="text-sm font-semibold text-white mb-3">
+            {feedKaynagi === 'arkadaslar' ? 'Planlar' : 'Keşfet'}
+          </h2>
           <div className="space-y-3">
             {digerPlanlar.map(plan => (
-              <PlanKarti 
-                key={plan.id} 
-                plan={plan} 
-                onClick={() => handlePlanTikla(plan)} 
+              <PlanKarti
+                key={plan.id}
+                plan={plan}
+                onClick={() => handlePlanTikla(plan)}
               />
             ))}
           </div>
+
+          {feedKaynagi === 'kesfet' && kesfetDahaVar && (
+            <div ref={loaderRef} className="py-4">
+              {kesfetYukleniyor && <SkeletonCard />}
+            </div>
+          )}
         </div>
       ) : !siradakiPlan && (
         <div className="px-4">
-          <EmptyState
-            title="Henüz plan yok"
-            description="İlk planını oluştur ve arkadaşlarını davet et"
-            action={() => setModalAcik('hizliPlan')}
-            actionLabel="Plan Oluştur"
-          />
+          {feedKaynagi === 'kesfet' && kesfetYukleniyor ? (
+            <SkeletonCard />
+          ) : (
+            <EmptyState
+              title={feedKaynagi === 'arkadaslar' ? 'Henüz plan yok' : 'Keşfedilecek plan yok'}
+              description={feedKaynagi === 'arkadaslar'
+                ? 'İlk planını oluştur ve arkadaşlarını davet et'
+                : 'Şu an açık plan bulunmuyor'}
+              action={feedKaynagi === 'arkadaslar' ? () => setModalAcik('hizliPlan') : null}
+              actionLabel={feedKaynagi === 'arkadaslar' ? 'Plan Oluştur' : null}
+            />
+          )}
         </div>
       )}
     </div>

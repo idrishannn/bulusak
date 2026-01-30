@@ -1,12 +1,18 @@
 import { db } from './firebase';
-import { 
-  collection, 
-  addDoc, 
+import {
+  collection,
+  addDoc,
   onSnapshot,
   doc,
   updateDoc,
   deleteDoc,
-  arrayUnion
+  arrayUnion,
+  query,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs
 } from 'firebase/firestore';
 
 export const etkinlikOlustur = async (data, odUserId) => {
@@ -131,7 +137,7 @@ export const mesajEkle = async (etkinlikId, mesajData) => {
 export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciData, durum) => {
   try {
     const etkinlikRef = doc(db, 'events', etkinlikId);
-    
+
     const katilimci = {
       odUserId,
       isim: kullaniciData?.isim || 'Kullanıcı',
@@ -143,10 +149,76 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
     await updateDoc(etkinlikRef, {
       [`katilimDurumlari.${odUserId}`]: katilimci
     });
-    
+
     return { success: true };
   } catch (error) {
     console.error('Katılım güncelleme hatası:', error);
     return { success: false, error: error.message };
   }
+};
+
+const PAGE_SIZE = 10;
+
+export const kesfetPlanlariGetir = async (userId, arkadasIds = [], sonDoc = null) => {
+  try {
+    const eventsRef = collection(db, 'events');
+    const bugun = new Date().toISOString().split('T')[0];
+
+    let q = query(
+      eventsRef,
+      where('tarih', '>=', bugun),
+      where('gizlilik', '==', 'acik'),
+      orderBy('tarih', 'asc'),
+      limit(PAGE_SIZE)
+    );
+
+    if (sonDoc) {
+      q = query(
+        eventsRef,
+        where('tarih', '>=', bugun),
+        where('gizlilik', '==', 'acik'),
+        orderBy('tarih', 'asc'),
+        startAfter(sonDoc),
+        limit(PAGE_SIZE)
+      );
+    }
+
+    const snapshot = await getDocs(q);
+    const planlar = [];
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.olusturanId !== userId && !arkadasIds.includes(data.olusturanId)) {
+        planlar.push({ id: docSnap.id, ...data, _doc: docSnap });
+      }
+    });
+
+    const sonDocYeni = snapshot.docs[snapshot.docs.length - 1] || null;
+    const dahaVar = snapshot.docs.length === PAGE_SIZE;
+
+    return { success: true, planlar, sonDoc: sonDocYeni, dahaVar };
+  } catch (error) {
+    console.error('Keşfet planları hatası:', error);
+    return { success: false, planlar: [], sonDoc: null, dahaVar: false };
+  }
+};
+
+export const arkadasPlanlariFiltrele = (etkinlikler, arkadasIds = [], userId) => {
+  const bugun = new Date();
+  bugun.setHours(0, 0, 0, 0);
+
+  return etkinlikler.filter(e => {
+    const tarih = new Date(e.tarih);
+    if (tarih < bugun) return false;
+    if (e.olusturanId === userId) return true;
+    if (arkadasIds.includes(e.olusturanId)) return true;
+    if (e.davetliler?.includes(userId)) return true;
+    return false;
+  });
+};
+
+export const gecmisPlanlariFiltrele = (etkinlikler) => {
+  const bugun = new Date();
+  bugun.setHours(0, 0, 0, 0);
+  return etkinlikler.filter(e => new Date(e.tarih) >= bugun);
 };
