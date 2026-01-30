@@ -1,12 +1,13 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { HomeIcon, CalendarIcon, ClipboardIcon, UserIcon, PlusIcon } from './Icons';
-import { useUI } from '../context';
+import { useUI, useTheme } from '../context';
 
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setModalAcik } = useUI();
+  const { themeClasses } = useTheme();
 
   const tabs = [
     { path: '/', icon: HomeIcon, label: 'Ana Sayfa' },
@@ -19,7 +20,7 @@ const BottomNav = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
       <div className="max-w-lg mx-auto px-4 pb-2">
-        <div className="glass rounded-2xl p-2 flex items-center justify-around">
+        <div className={`${themeClasses.glass} rounded-2xl p-2 flex items-center justify-around`}>
           {tabs.map((tab) => {
             const isActive = location.pathname === tab.path;
             const Icon = tab.icon;
@@ -48,7 +49,7 @@ const BottomNav = () => {
               >
                 <Icon className="w-6 h-6" active={isActive} />
                 <span className={`text-xs mt-1 font-medium ${
-                  isActive ? 'text-gold-500' : 'text-dark-400'
+                  isActive ? 'text-gold-500' : themeClasses.textMuted
                 }`}>
                   {tab.label}
                 </span>

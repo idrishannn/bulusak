@@ -13,5 +13,6 @@ export { default as Profil } from './Profil';
 export { default as Mesajlar } from './Mesajlar';
 export { default as AuthScreens } from './AuthScreens';
 export { default as AppModals } from './AppModals';
+export { default as Ayarlar } from './Ayarlar';
 export * from './Icons';
 export * from './Skeleton';

@@ -1,5 +1,6 @@
 import React from 'react';
 import wordmarkPng from '../assets/brand/wordmark.png';
+import { APP_NAME } from '../constants';
 
 const Wordmark = ({ size = 'md', className = '' }) => {
   const sizes = {
@@ -13,7 +14,7 @@ const Wordmark = ({ size = 'md', className = '' }) => {
   return (
     <img
       src={wordmarkPng}
-      alt="bulusaq"
+      alt={APP_NAME}
       className={`${sizes[size]} w-auto ${className}`}
     />
   );

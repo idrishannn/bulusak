@@ -4,11 +4,34 @@ import { emailIleGiris, emailIleKayitOl } from '../services/authService';
 import Logo from './Logo';
 import Wordmark from './Wordmark';
 import { ChevronLeftIcon, CheckIcon } from './Icons';
+import { USERNAME_RULES, AVATAR_CATEGORIES } from '../constants';
 
-const avatarlar = {
-  erkek: ['👨', '👨‍🦱', '👨‍🦰', '👨‍🦳', '🧔', '👱‍♂️', '👨‍🎓', '👨‍💼', '🤵', '👲'],
-  kadin: ['👩', '👩‍🦱', '👩‍🦰', '👩‍🦳', '👱‍♀️', '👩‍🎓', '👩‍💼', '👰', '🧕', '👧'],
-  fantastik: ['🤖', '👽', '👻', '🦊', '🐱', '🐶', '🦁', '🐼', '🦄', '🐲']
+const avatarlar = AVATAR_CATEGORIES;
+
+// Kullanıcı adı doğrulama fonksiyonu
+const validateUsername = (username) => {
+  if (!username) return { valid: false, error: 'Kullanıcı adı gerekli' };
+
+  const clean = username.toLowerCase().trim();
+
+  if (clean.length < USERNAME_RULES.MIN_LENGTH) {
+    return { valid: false, error: `En az ${USERNAME_RULES.MIN_LENGTH} karakter olmalı` };
+  }
+
+  if (clean.length > USERNAME_RULES.MAX_LENGTH) {
+    return { valid: false, error: `En fazla ${USERNAME_RULES.MAX_LENGTH} karakter olabilir` };
+  }
+
+  if (!USERNAME_RULES.PATTERN.test(clean)) {
+    return { valid: false, error: 'Sadece küçük harf, rakam ve alt çizgi kullanılabilir' };
+  }
+
+  const forbidden = USERNAME_RULES.FORBIDDEN_WORDS.find(word => clean.includes(word));
+  if (forbidden) {
+    return { valid: false, error: `"${forbidden}" kullanılamaz` };
+  }
+
+  return { valid: true, error: null };
 };
 
 const GirisEkrani = ({ setEkran }) => {
@@ -118,6 +141,18 @@ const KayitEkrani = ({ setEkran }) => {
   const [kullaniciAdi, setKullaniciAdi] = useState('');
   const [sifre, setSifre] = useState('');
   const [sifreTekrar, setSifreTekrar] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+
+  const handleUsernameChange = (e) => {
+    const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setKullaniciAdi(value);
+    if (value) {
+      const validation = validateUsername(value);
+      setUsernameError(validation.error || '');
+    } else {
+      setUsernameError('');
+    }
+  };
 
   const handleKayit = async (e) => {
     e.preventDefault();
@@ -125,6 +160,14 @@ const KayitEkrani = ({ setEkran }) => {
       bildirimGoster('Tüm alanları doldur', 'error');
       return;
     }
+
+    // Kullanıcı adı doğrulama
+    const usernameValidation = validateUsername(kullaniciAdi);
+    if (!usernameValidation.valid) {
+      bildirimGoster(usernameValidation.error, 'error');
+      return;
+    }
+
     if (sifre !== sifreTekrar) {
       bildirimGoster('Şifreler eşleşmiyor', 'error');
       return;
@@ -134,7 +177,7 @@ const KayitEkrani = ({ setEkran }) => {
       return;
     }
     setIslemYukleniyor(true);
-    const email = `${kullaniciAdi.toLowerCase().replace('@', '')}@bulusak.local`;
+    const email = `${kullaniciAdi.toLowerCase()}@bulusak.local`;
     const result = await emailIleKayitOl(email, sifre, kullaniciAdi);
     setIslemYukleniyor(false);
     if (result.success) {
@@ -166,10 +209,19 @@ const KayitEkrani = ({ setEkran }) => {
             <input
               type="text"
               value={kullaniciAdi}
-              onChange={(e) => setKullaniciAdi(e.target.value)}
+              onChange={handleUsernameChange}
               placeholder="kullaniciadi"
-              className="input-dark"
+              maxLength={USERNAME_RULES.MAX_LENGTH}
+              className={`input-dark ${usernameError ? 'border-red-500/50 focus:border-red-500/50' : ''}`}
             />
+            {usernameError && (
+              <p className="text-red-400 text-xs mt-1">{usernameError}</p>
+            )}
+            {kullaniciAdi && !usernameError && (
+              <p className="text-emerald-400 text-xs mt-1 flex items-center gap-1">
+                <CheckIcon className="w-3 h-3" /> Kullanılabilir
+              </p>
+            )}
           </div>
           <div>
             <label className="text-xs font-medium text-dark-400 mb-2 block">Şifre</label>
@@ -279,12 +331,32 @@ const BilgiEkrani = () => {
   const { bildirimGoster } = useUI();
   const [isim, setIsim] = useState('');
   const [kullaniciAdi, setKullaniciAdi] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+
+  const handleUsernameChange = (e) => {
+    const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setKullaniciAdi(value);
+    if (value) {
+      const validation = validateUsername(value);
+      setUsernameError(validation.error || '');
+    } else {
+      setUsernameError('');
+    }
+  };
 
   const handleTamamla = async () => {
     if (!isim.trim() || !kullaniciAdi.trim()) {
       bildirimGoster('Tüm alanları doldur', 'error');
       return;
     }
+
+    // Kullanıcı adı doğrulama
+    const usernameValidation = validateUsername(kullaniciAdi);
+    if (!usernameValidation.valid) {
+      bildirimGoster(usernameValidation.error, 'error');
+      return;
+    }
+
     const result = await profilTamamla(isim, kullaniciAdi);
     if (result.success) {
       bildirimGoster('Hoş geldin!', 'success');
@@ -327,11 +399,20 @@ const BilgiEkrani = () => {
               <input
                 type="text"
                 value={kullaniciAdi}
-                onChange={(e) => setKullaniciAdi(e.target.value.replace('@', ''))}
+                onChange={handleUsernameChange}
                 placeholder="kullaniciadi"
-                className="input-dark pl-8"
+                maxLength={USERNAME_RULES.MAX_LENGTH}
+                className={`input-dark pl-8 ${usernameError ? 'border-red-500/50 focus:border-red-500/50' : ''}`}
               />
             </div>
+            {usernameError && (
+              <p className="text-red-400 text-xs mt-1">{usernameError}</p>
+            )}
+            {kullaniciAdi && !usernameError && (
+              <p className="text-emerald-400 text-xs mt-1 flex items-center gap-1">
+                <CheckIcon className="w-3 h-3" /> Kullanılabilir
+              </p>
+            )}
           </div>
         </div>
       </div>
