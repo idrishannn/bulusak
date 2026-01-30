@@ -145,12 +145,12 @@ const PlanKarti = ({ plan, onClick, showCover = false }) => {
           <div className="flex items-center gap-2">
             <div className="avatar-stack">
               {katilimcilar.slice(0, 3).map((k, i) => (
-                <div key={i} className="avatar">
+                <div key={i} className="avatar-stack-item">
                   {k.avatar || k.isim?.charAt(0)}
                 </div>
               ))}
               {varimSayisi > 3 && (
-                <div className="avatar avatar-more">
+                <div className="avatar-stack-more">
                   +{varimSayisi - 3}
                 </div>
               )}

@@ -499,13 +499,14 @@ html.light-theme .btn-google {
   @apply flex -space-x-2;
 }
 
-.avatar-stack .avatar {
+.avatar-stack-item {
   @apply w-7 h-7 rounded-full border-2 border-dark-900 flex items-center justify-center
          text-xs bg-dark-700;
 }
 
-.avatar-stack .avatar-more {
-  @apply avatar bg-gold-500/20 text-gold-500 text-[10px] font-semibold;
+.avatar-stack-more {
+  @apply w-7 h-7 rounded-full border-2 border-dark-900 flex items-center justify-center
+         text-[10px] font-semibold bg-gold-500/20 text-gold-500;
 }
 
 /* Kategori Chip'leri */
@@ -515,11 +516,13 @@ html.light-theme .btn-google {
 }
 
 .category-chip-active {
-  @apply category-chip bg-gold-500 text-dark-900;
+  @apply px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap
+         transition-all duration-200 flex items-center gap-1.5 bg-gold-500 text-dark-900;
 }
 
 .category-chip-inactive {
-  @apply category-chip bg-dark-800 text-dark-300 hover:bg-dark-700;
+  @apply px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap
+         transition-all duration-200 flex items-center gap-1.5 bg-dark-800 text-dark-300 hover:bg-dark-700;
 }
 
 html.light-theme .category-chip-inactive {
