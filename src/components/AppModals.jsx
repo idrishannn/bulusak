@@ -648,22 +648,38 @@ const DetayModal = () => {
   const [katilimcilarModalAcik, setKatilimcilarModalAcik] = useState(false);
   const [silmeOnay, setSilmeOnay] = useState(false);
   const mesajlarRef = useRef(null);
+  const unsubscribeRef = useRef(null);
 
   // Gerçek zamanlı etkinlik dinleme
   useEffect(() => {
+    // Önceki listener'ı temizle
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+
     if (modalAcik !== 'detay' || !seciliEtkinlik?.id) return;
 
-    const unsubscribe = etkinlikDinle(seciliEtkinlik.id, (guncelEtkinlik) => {
-      if (guncelEtkinlik) {
-        setSeciliEtkinlik(prev => ({
-          ...prev,
-          ...guncelEtkinlik
-        }));
+    const etkinlikId = seciliEtkinlik.id;
+    let isActive = true;
+
+    unsubscribeRef.current = etkinlikDinle(etkinlikId, (guncelEtkinlik) => {
+      if (isActive && guncelEtkinlik) {
+        setSeciliEtkinlik(prev => {
+          if (prev?.id !== etkinlikId) return prev;
+          return { ...prev, ...guncelEtkinlik };
+        });
       }
     });
 
-    return () => unsubscribe();
-  }, [modalAcik, seciliEtkinlik?.id]);
+    return () => {
+      isActive = false;
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [modalAcik, seciliEtkinlik?.id, setSeciliEtkinlik]);
 
   // Mesajlar değiştiğinde en alta scroll
   useEffect(() => {
