@@ -1,14 +1,17 @@
 import { db } from './firebase';
-import { 
-  collection, 
-  getDocs, 
-  doc, 
-  updateDoc, 
-  arrayUnion, 
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  arrayUnion,
   arrayRemove,
   getDoc,
-  onSnapshot
+  onSnapshot,
+  addDoc,
+  serverTimestamp
 } from 'firebase/firestore';
+import { bildirimOlustur, BILDIRIM_TIPLERI } from './bildirimService';
 
 export const kullaniciAra = async (aramaMetni) => {
   if (!aramaMetni || aramaMetni.length < 1) {
@@ -87,6 +90,19 @@ export const arkadasIstegiGonder = async (gonderen, aliciId) => {
       arkadasIstekleri: arrayUnion(yeniIstek)
     });
 
+    try {
+      await bildirimOlustur(
+        aliciId,
+        BILDIRIM_TIPLERI.ARKADAS_ISTEGI,
+        {
+          mesaj: `${gonderen.isim || 'Bir kullanıcı'} sana arkadaşlık isteği gönderdi`,
+          gonderenId: gonderen.odUserId,
+          gonderenIsim: gonderen.isim,
+          gonderenAvatar: gonderen.avatar
+        }
+      );
+    } catch (e) {}
+
     return { success: true, message: 'İstek gönderildi! 🎉' };
   } catch (error) {
     console.error('İstek gönderme hatası:', error);
@@ -117,6 +133,19 @@ export const arkadasIstegiKabulEt = async (kullanici, istekGonderenId) => {
     await updateDoc(gonderenRef, {
       arkadaslar: arrayUnion(kullanici.odUserId)
     });
+
+    try {
+      await bildirimOlustur(
+        istekGonderenId,
+        BILDIRIM_TIPLERI.ARKADAS_KABUL,
+        {
+          mesaj: `${kullanici.isim || 'Bir kullanıcı'} arkadaşlık isteğini kabul etti`,
+          gonderenId: kullanici.odUserId,
+          gonderenIsim: kullanici.isim,
+          gonderenAvatar: kullanici.avatar
+        }
+      );
+    } catch (e) {}
 
     return { success: true, message: 'Arkadaşlık kabul edildi! 🎉' };
   } catch (error) {

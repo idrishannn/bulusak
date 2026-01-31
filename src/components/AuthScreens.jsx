@@ -106,7 +106,7 @@ const PasswordInput = ({ value, onChange, placeholder, error, showStrength = fal
 
 // FAZ 1 - Geliştirilmiş Giriş Ekranı
 const GirisEkrani = ({ setEkran }) => {
-  const { googleIleGirisYap, setIslemYukleniyor, islemYukleniyor } = useAuth();
+  const { googleIleGirisYap, appleIleGirisYap, setIslemYukleniyor, islemYukleniyor } = useAuth();
   const { bildirimGoster } = useUI();
   const [kullaniciAdi, setKullaniciAdi] = useState('');
   const [sifre, setSifre] = useState('');
@@ -158,9 +158,12 @@ const GirisEkrani = ({ setEkran }) => {
     }
   };
 
-  // FAZ 1 - Apple ile giriş (placeholder - gerçek implementasyon için Firebase Apple Auth gerekli)
+  // Apple ile giriş
   const handleAppleGiris = async () => {
-    bildirimGoster('Apple ile giriş yakında aktif olacak', 'warning');
+    const result = await appleIleGirisYap();
+    if (result?.error) {
+      bildirimGoster(result.error, 'error');
+    }
   };
 
   // FAZ 1 - Şifre sıfırlama

@@ -207,7 +207,7 @@ const SohbetEkrani = ({ konusma, karsiTaraf, onGeri }) => {
       </div>
 
       <div className="p-4 glass border-t border-dark-700/50 safe-bottom">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <input
             ref={inputRef}
             type="text"
@@ -215,12 +215,12 @@ const SohbetEkrani = ({ konusma, karsiTaraf, onGeri }) => {
             onChange={handleInputChange}
             onKeyPress={(e) => e.key === 'Enter' && handleGonder()}
             placeholder="Mesaj yaz..."
-            className="flex-1 input-dark rounded-full px-4 py-3"
+            className="flex-1 min-w-0 bg-dark-800 border border-dark-600 rounded-full px-4 py-3 text-white placeholder:text-dark-400 focus:border-gold-500/50 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition-all"
           />
           <button
             onClick={handleGonder}
             disabled={!yeniMesaj.trim() || gonderiyor}
-            className="w-12 h-12 btn-gold rounded-full flex items-center justify-center disabled:opacity-50"
+            className="w-12 h-12 flex-shrink-0 btn-gold rounded-full flex items-center justify-center disabled:opacity-50"
           >
             <SendIcon className="w-5 h-5" />
           </button>

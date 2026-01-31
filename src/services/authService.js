@@ -8,15 +8,15 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from './firebase';
+import { auth, db, googleProvider, appleProvider } from './firebase';
 
 export const googleIleGiris = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
-    
+
     const userDoc = await getDoc(doc(db, 'users', user.uid));
-    
+
     if (!userDoc.exists()) {
       await setDoc(doc(db, 'users', user.uid), {
         isim: user.displayName || 'Kullanıcı',
@@ -36,11 +36,53 @@ export const googleIleGiris = async () => {
         online: true
       });
     }
-    
+
     return { success: true, user, isNewUser: !userDoc.exists() };
   } catch (error) {
-    console.error('Google giriş hatası:', error);
-    return { success: false, error: error.message };
+    if (error.code === 'auth/popup-closed-by-user') {
+      return { success: false, error: 'Giriş iptal edildi' };
+    }
+    return { success: false, error: 'Google ile giriş başarısız' };
+  }
+};
+
+export const appleIleGiris = async () => {
+  try {
+    const result = await signInWithPopup(auth, appleProvider);
+    const user = result.user;
+    const credential = OAuthProvider.credentialFromResult(result);
+
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+
+    if (!userDoc.exists()) {
+      const displayName = user.displayName || 'Apple Kullanıcı';
+      const emailPart = user.email ? user.email.split('@')[0] : `user_${user.uid.slice(0, 8)}`;
+      await setDoc(doc(db, 'users', user.uid), {
+        isim: displayName,
+        email: user.email || '',
+        avatar: '🍎',
+        kullaniciAdi: `@${emailPart}`,
+        kullaniciAdiLower: emailPart.toLowerCase(),
+        kullaniciAdiKucuk: emailPart.toLowerCase(),
+        online: true,
+        olusturulmaTarihi: serverTimestamp(),
+        profilTamamlandi: false,
+        authProvider: 'apple',
+        arkadaslar: [],
+        arkadasIstekleri: []
+      });
+    } else {
+      await updateDoc(doc(db, 'users', user.uid), {
+        online: true
+      });
+    }
+
+    return { success: true, user, isNewUser: !userDoc.exists() };
+  } catch (error) {
+    if (error.code === 'auth/popup-closed-by-user') {
+      return { success: false, error: 'Giriş iptal edildi' };
+    }
+    return { success: false, error: 'Apple ile giriş başarısız' };
   }
 };
 

@@ -1,27 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useData, useUI, useTheme } from '../context';
 import {
   ChevronRightIcon, BellIcon, UsersIcon, LogoutIcon, EditIcon,
   ClipboardIcon, SettingsIcon, MenuIcon, LockIcon, LocationIcon,
-  SunIcon, MoonIcon, XIcon
+  SunIcon, MoonIcon, XIcon, PlusIcon
 } from './Icons';
 import Logo from './Logo';
 
 const Profil = () => {
   const navigate = useNavigate();
   const { kullanici, cikisYapFunc } = useAuth();
-  const { gruplar, etkinlikler, arkadaslar } = useData();
+  const { gruplar, etkinlikler, arkadaslar, benimHikayelerim } = useData();
   const { setModalAcik, bildirimGoster, setSeciliEtkinlik } = useUI();
   const { isDark, themeClasses, toggleTheme } = useTheme();
   const [menuAcik, setMenuAcik] = useState(false);
-  const [aktifTab, setAktifTab] = useState('planlar'); // planlar, gruplar
+  const [aktifTab, setAktifTab] = useState('planlar');
+  const [cikisDialogAcik, setCikisDialogAcik] = useState(false);
+  const [cikisYukleniyor, setCikisYukleniyor] = useState(false);
+  const cikisDebounceRef = useRef(false);
 
-  const handleCikis = async () => {
+  const temizKullaniciAdi = (kullaniciAdi) => {
+    if (!kullaniciAdi) return '';
+    return kullaniciAdi.replace(/@/g, '');
+  };
+
+  const handleCikisDialogAc = useCallback(() => {
+    if (cikisDebounceRef.current) return;
+    cikisDebounceRef.current = true;
     setMenuAcik(false);
-    const result = await cikisYapFunc();
-    if (result.success) {
-      bildirimGoster('Görüşürüz!', 'success');
+    setTimeout(() => {
+      setCikisDialogAcik(true);
+      cikisDebounceRef.current = false;
+    }, 100);
+  }, []);
+
+  const handleCikisOnayla = async () => {
+    if (cikisYukleniyor) return;
+    setCikisYukleniyor(true);
+    try {
+      const result = await cikisYapFunc();
+      if (result.success) {
+        bildirimGoster('Görüşürüz!', 'success');
+      }
+    } finally {
+      setCikisYukleniyor(false);
+      setCikisDialogAcik(false);
     }
   };
 
@@ -124,7 +148,7 @@ const Profil = () => {
       <div className={`sticky top-0 z-30 ${themeClasses.glass} border-b ${themeClasses.border} safe-top`}>
         <div className="px-4 py-3 flex items-center justify-between">
           <h1 className={`text-lg font-bold ${themeClasses.text}`}>
-            @{kullanici?.kullaniciAdi || 'kullanici'}
+            {temizKullaniciAdi(kullanici?.kullaniciAdi) || 'kullanici'}
           </h1>
           <button
             onClick={() => setMenuAcik(true)}
@@ -138,15 +162,47 @@ const Profil = () => {
       <div className="p-4">
         {/* Profil Üst Kısmı - Instagram tarzı */}
         <div className="flex items-start gap-4 mb-6">
-          {/* Avatar */}
+          {/* Avatar - Hikaye özellikli */}
           <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gold-500/30 to-gold-600/20 border-2 border-gold-500/50 flex items-center justify-center">
-              {kullanici?.avatar ? (
-                <span className="text-4xl">{kullanici.avatar}</span>
-              ) : (
-                <Logo size="md" className="opacity-50" />
-              )}
-            </div>
+            {/* Hikaye varsa gradient ring */}
+            <button
+              onClick={() => {
+                if (benimHikayelerim?.length > 0) {
+                  setModalAcik('hikayeGoruntule');
+                }
+              }}
+              className={`w-20 h-20 rounded-full flex items-center justify-center ${
+                benimHikayelerim?.length > 0
+                  ? 'p-0.5 bg-gradient-to-tr from-gold-500 via-orange-500 to-pink-500'
+                  : 'bg-gradient-to-br from-gold-500/30 to-gold-600/20 border-2 border-gold-500/50'
+              }`}
+            >
+              <div className={`w-full h-full rounded-full flex items-center justify-center ${
+                benimHikayelerim?.length > 0
+                  ? (isDark ? 'bg-dark-900' : 'bg-white') + ' p-0.5'
+                  : ''
+              }`}>
+                <div className={`w-full h-full rounded-full flex items-center justify-center ${
+                  benimHikayelerim?.length > 0
+                    ? 'bg-gradient-to-br from-gold-500/30 to-gold-600/20'
+                    : ''
+                }`}>
+                  {kullanici?.avatar ? (
+                    <span className="text-4xl">{kullanici.avatar}</span>
+                  ) : (
+                    <Logo size="md" className="opacity-50" />
+                  )}
+                </div>
+              </div>
+            </button>
+            {/* Hikaye Ekleme Butonu - Sol Alt */}
+            <button
+              onClick={() => setModalAcik('hikayeEkle')}
+              className="absolute -bottom-1 -left-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-dark-900"
+            >
+              <PlusIcon className="w-4 h-4 text-white" />
+            </button>
+            {/* Avatar Düzenleme Butonu - Sağ Alt */}
             <button
               onClick={() => setModalAcik('avatarDegistir')}
               className="absolute -bottom-1 -right-1 w-7 h-7 bg-gold-500 rounded-full flex items-center justify-center shadow-lg"
@@ -161,11 +217,11 @@ const Profil = () => {
               <div className={`text-xl font-bold ${themeClasses.text}`}>{katildigimPlanlar.length}</div>
               <div className={`text-xs ${themeClasses.textMuted}`}>Plan</div>
             </div>
-            <button onClick={() => setModalAcik('arkadaslar')} className="text-center">
+            <button onClick={() => setModalAcik('takipciListesi')} className="text-center">
               <div className={`text-xl font-bold ${themeClasses.text}`}>{arkadaslar?.length || 0}</div>
               <div className={`text-xs ${themeClasses.textMuted}`}>Takipçi</div>
             </button>
-            <button onClick={() => setModalAcik('arkadaslar')} className="text-center">
+            <button onClick={() => setModalAcik('takipciListesi')} className="text-center">
               <div className={`text-xl font-bold ${themeClasses.text}`}>{arkadaslar?.length || 0}</div>
               <div className={`text-xs ${themeClasses.textMuted}`}>Takip</div>
             </button>
@@ -287,7 +343,7 @@ const Profil = () => {
                 </div>
                 <div>
                   <p className={`font-semibold ${themeClasses.text}`}>{kullanici?.isim}</p>
-                  <p className={`text-sm ${themeClasses.textMuted}`}>@{kullanici?.kullaniciAdi}</p>
+                  <p className={`text-sm ${themeClasses.textMuted}`}>{temizKullaniciAdi(kullanici?.kullaniciAdi)}</p>
                 </div>
               </div>
             </div>
@@ -316,13 +372,40 @@ const Profil = () => {
             {/* Çıkış Yap */}
             <div className={`absolute bottom-0 left-0 right-0 p-4 border-t ${themeClasses.border} safe-bottom`}>
               <button
-                onClick={handleCikis}
+                onClick={handleCikisDialogAc}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
                   <LogoutIcon className="w-5 h-5 text-red-400" />
                 </div>
                 <span className="text-red-400 font-medium">Çıkış Yap</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cikisDialogAcik && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCikisDialogAcik(false)} />
+          <div className={`relative w-full max-w-sm ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-2xl p-6 border ${isDark ? 'border-dark-700' : 'border-gray-200'}`}>
+            <h3 className={`text-lg font-semibold ${themeClasses.text} text-center mb-2`}>Çıkış Yap?</h3>
+            <p className={`text-sm ${themeClasses.textMuted} text-center mb-6`}>
+              Hesabınızdan çıkış yapmak istiyor musunuz?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCikisDialogAcik(false)}
+                className={`flex-1 py-3 rounded-xl font-medium ${isDark ? 'bg-dark-700 text-white hover:bg-dark-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-colors`}
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleCikisOnayla}
+                disabled={cikisYukleniyor}
+                className="flex-1 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {cikisYukleniyor ? 'Çıkılıyor...' : 'Çıkış Yap'}
               </button>
             </div>
           </div>
