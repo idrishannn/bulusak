@@ -10,7 +10,6 @@ export { default as Feed } from './Feed';
 export { default as Takvim } from './Takvim';
 export { default as Planlar } from './Planlar';
 export { default as Profil } from './Profil';
-export { default as Mesajlar } from './Mesajlar';
 export { default as AuthScreens } from './AuthScreens';
 export { default as AppModals } from './AppModals';
 export { default as Ayarlar } from './Ayarlar';
