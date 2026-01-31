@@ -1,16 +1,18 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, useData, useUI, useTheme } from '../context';
 import {
-  ChevronRightIcon, BellIcon, UsersIcon, LogoutIcon, EditIcon,
+  ChevronRightIcon, BellIcon, UsersIcon, LogoutIcon,
   ClipboardIcon, SettingsIcon, MenuIcon, LockIcon, LocationIcon,
-  SunIcon, MoonIcon, XIcon, PlusIcon, StoryIcon, PinIcon
+  SunIcon, MoonIcon, XIcon, StoryIcon, PinIcon
 } from './Icons';
 import Logo from './Logo';
 import { kullanicininPlanHikayeleriniGetir } from '../services/planHikayeService';
+import { kullaniciPlanOnayliMi, kullaniciPlanReddettimi } from '../services/etkinlikService';
 
 const Profil = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { kullanici, cikisYapFunc } = useAuth();
   const { gruplar, etkinlikler, arkadaslar, benimHikayelerim } = useData();
   const { setModalAcik, bildirimGoster, setSeciliEtkinlik } = useUI();
@@ -22,6 +24,13 @@ const Profil = () => {
   const [anilar, setAnilar] = useState({});
   const [anilarYukleniyor, setAnilarYukleniyor] = useState(false);
   const cikisDebounceRef = useRef(false);
+
+  useEffect(() => {
+    if (location.state?.menuAcik) {
+      setMenuAcik(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   useEffect(() => {
     if (aktifTab === 'anilar' && kullanici?.odUserId) {
@@ -66,11 +75,21 @@ const Profil = () => {
 
   const bekleyenIstekler = kullanici?.arkadasIstekleri?.filter(i => i.durum === 'bekliyor').length || 0;
 
-  // Kullanıcının katıldığı planlar
-  const katildigimPlanlar = etkinlikler?.filter(e =>
-    e.katilimcilar?.some(k => k.odUserId === kullanici?.odUserId) ||
-    e.olusturanId === kullanici?.odUserId
+  const reddedilmemisEtkinlikler = etkinlikler?.filter(e =>
+    !kullaniciPlanReddettimi(e, kullanici?.odUserId)
   ) || [];
+
+  const benimPlanlarim = reddedilmemisEtkinlikler.filter(e =>
+    e.olusturanId === kullanici?.odUserId &&
+    kullaniciPlanOnayliMi(e, kullanici?.odUserId)
+  );
+
+  const katildigimPlanlarListesi = reddedilmemisEtkinlikler.filter(e =>
+    e.olusturanId !== kullanici?.odUserId &&
+    kullaniciPlanOnayliMi(e, kullanici?.odUserId)
+  );
+
+  const profilPlanSayisi = benimPlanlarim.length + katildigimPlanlarListesi.length;
 
   // Menü öğeleri - Instagram tarzı
   const menuItems = [
@@ -177,15 +196,8 @@ const Profil = () => {
       <div className="p-4">
         {/* Profil Üst Kısmı - Instagram tarzı */}
         <div className="flex items-start gap-4 mb-6">
-          {/* Avatar - Hikaye özellikli */}
           <div className="relative">
-            {/* Hikaye varsa gradient ring */}
-            <button
-              onClick={() => {
-                if (benimHikayelerim?.length > 0) {
-                  setModalAcik('hikayeGoruntule');
-                }
-              }}
+            <div
               className={`w-20 h-20 rounded-full flex items-center justify-center ${
                 benimHikayelerim?.length > 0
                   ? 'p-0.5 bg-gradient-to-tr from-gold-500 via-orange-500 to-pink-500'
@@ -209,27 +221,12 @@ const Profil = () => {
                   )}
                 </div>
               </div>
-            </button>
-            {/* Hikaye Ekleme Butonu - Sol Alt */}
-            <button
-              onClick={() => setModalAcik('hikayeEkle')}
-              className="absolute -bottom-1 -left-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-dark-900"
-            >
-              <PlusIcon className="w-4 h-4 text-white" />
-            </button>
-            {/* Avatar Düzenleme Butonu - Sağ Alt */}
-            <button
-              onClick={() => setModalAcik('avatarDegistir')}
-              className="absolute -bottom-1 -right-1 w-7 h-7 bg-gold-500 rounded-full flex items-center justify-center shadow-lg"
-            >
-              <EditIcon className="w-3.5 h-3.5 text-dark-900" />
-            </button>
+            </div>
           </div>
 
-          {/* Stats - Instagram tarzı */}
           <div className="flex-1 flex justify-around text-center pt-2">
             <div>
-              <div className={`text-xl font-bold ${themeClasses.text}`}>{katildigimPlanlar.length}</div>
+              <div className={`text-xl font-bold ${themeClasses.text}`}>{profilPlanSayisi}</div>
               <div className={`text-xs ${themeClasses.textMuted}`}>Plan</div>
             </div>
             <button onClick={() => setModalAcik('takipciListesi')} className="text-center">
@@ -259,11 +256,10 @@ const Profil = () => {
           Profili Düzenle
         </button>
 
-        {/* Tab Bar - Planlar / Gruplar / Anılar */}
         <div className={`flex border-b ${themeClasses.border} mb-4`}>
           <button
             onClick={() => setAktifTab('planlar')}
-            className={`flex-1 py-3 text-center font-medium text-sm transition-colors relative ${
+            className={`flex-1 py-3 text-center font-medium text-xs transition-colors relative ${
               aktifTab === 'planlar' ? themeClasses.text : themeClasses.textMuted
             }`}
           >
@@ -273,8 +269,19 @@ const Profil = () => {
             )}
           </button>
           <button
+            onClick={() => setAktifTab('katildigim')}
+            className={`flex-1 py-3 text-center font-medium text-xs transition-colors relative ${
+              aktifTab === 'katildigim' ? themeClasses.text : themeClasses.textMuted
+            }`}
+          >
+            Katıldığım
+            {aktifTab === 'katildigim' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold-500" />
+            )}
+          </button>
+          <button
             onClick={() => setAktifTab('gruplar')}
-            className={`flex-1 py-3 text-center font-medium text-sm transition-colors relative ${
+            className={`flex-1 py-3 text-center font-medium text-xs transition-colors relative ${
               aktifTab === 'gruplar' ? themeClasses.text : themeClasses.textMuted
             }`}
           >
@@ -285,7 +292,7 @@ const Profil = () => {
           </button>
           <button
             onClick={() => setAktifTab('anilar')}
-            className={`flex-1 py-3 text-center font-medium text-sm transition-colors relative ${
+            className={`flex-1 py-3 text-center font-medium text-xs transition-colors relative ${
               aktifTab === 'anilar' ? themeClasses.text : themeClasses.textMuted
             }`}
           >
@@ -296,18 +303,33 @@ const Profil = () => {
           </button>
         </div>
 
-        {/* Tab İçeriği */}
         {aktifTab === 'planlar' && (
           <div className="space-y-3">
-            {katildigimPlanlar.length > 0 ? (
-              katildigimPlanlar.map(plan => (
+            {benimPlanlarim.length > 0 ? (
+              benimPlanlarim.map(plan => (
                 <PlanKarti key={plan.id} plan={plan} />
               ))
             ) : (
               <div className={`text-center py-12 ${themeClasses.textMuted}`}>
                 <p className="text-4xl mb-3">📅</p>
-                <p className="font-medium">Henüz plan yok</p>
-                <p className="text-sm mt-1">Planlar oluştur veya davetleri kabul et</p>
+                <p className="font-medium">Henüz onaylanmış plan yok</p>
+                <p className="text-sm mt-1">Plan zamanı geldiğinde "Katıldım" dersen burada görünür</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {aktifTab === 'katildigim' && (
+          <div className="space-y-3">
+            {katildigimPlanlarListesi.length > 0 ? (
+              katildigimPlanlarListesi.map(plan => (
+                <PlanKarti key={plan.id} plan={plan} />
+              ))
+            ) : (
+              <div className={`text-center py-12 ${themeClasses.textMuted}`}>
+                <p className="text-4xl mb-3">🎯</p>
+                <p className="font-medium">Henüz katıldığın plan yok</p>
+                <p className="text-sm mt-1">Davet aldığın planlara "Katıldım" dersen burada görünür</p>
               </div>
             )}
           </div>
