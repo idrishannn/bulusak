@@ -5,8 +5,31 @@ import {
 } from 'firebase/firestore';
 
 export const bildirimOlustur = async (aliciId, tip, veri) => {
+  if (!aliciId) {
+    console.error('bildirimOlustur: aliciId yok!', { tip, veri });
+    return { success: false, error: 'Alıcı ID gerekli' };
+  }
+
   try {
     const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
+
+    // Duplicate kontrolü
+    if (veri.gonderenId) {
+      const duplicateQuery = query(
+        bildirimRef,
+        where('aliciId', '==', aliciId),
+        where('tip', '==', tip),
+        where('gonderenId', '==', veri.gonderenId),
+        where('okundu', '==', false),
+        limit(1)
+      );
+      const existingDocs = await getDocs(duplicateQuery);
+      if (!existingDocs.empty) {
+        console.log('bildirimOlustur: Duplicate bildirim atlandı', { aliciId, tip });
+        return { success: true, duplicate: true };
+      }
+    }
+
     const bildirim = {
       aliciId,
       tip,
@@ -14,31 +37,47 @@ export const bildirimOlustur = async (aliciId, tip, veri) => {
       okundu: false,
       olusturulma: serverTimestamp()
     };
-    
+
+    console.log('bildirimOlustur: Bildirim oluşturuluyor', { aliciId, tip });
     await addDoc(bildirimRef, bildirim);
     return { success: true };
   } catch (error) {
+    console.error('bildirimOlustur hatası:', error);
     return { success: false, error: error.message };
   }
 };
 
 export const bildirimleriDinle = (kullaniciId, callback) => {
+  if (!kullaniciId) {
+    console.warn('bildirimleriDinle: kullaniciId yok!');
+    callback([]);
+    return () => {};
+  }
+
   const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
+  // Sadece aliciId ile filtrele - index gerektirmez
   const q = query(
     bildirimRef,
-    where('aliciId', '==', kullaniciId),
-    orderBy('olusturulma', 'desc'),
-    limit(50)
+    where('aliciId', '==', kullaniciId)
   );
-  
-  return onSnapshot(q, (snapshot) => {
-    const bildirimler = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      olusturulma: doc.data().olusturulma?.toDate?.() || new Date()
-    }));
-    callback(bildirimler);
-  });
+
+  return onSnapshot(q,
+    (snapshot) => {
+      const bildirimler = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        olusturulma: doc.data().olusturulma?.toDate?.() || new Date()
+      }));
+      // JavaScript'te sırala (en yeni önce)
+      bildirimler.sort((a, b) => b.olusturulma - a.olusturulma);
+      // Son 50 bildirim
+      callback(bildirimler.slice(0, 50));
+    },
+    (error) => {
+      console.error('Bildirim dinleme hatası:', error);
+      callback([]);
+    }
+  );
 };
 
 export const bildirimOkunduIsaretle = async (bildirimId) => {

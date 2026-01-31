@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { gruplariDinle, grupOlustur } from '../services/grupService';
-import { etkinlikleriDinle, etkinlikOlustur, katilimDurumuGuncelleDB, kesfetPlanlariGetir, arkadasPlanlariFiltrele, gecmisPlanlariFiltrele, katildigimPlanlariFiltrele } from '../services/etkinlikService';
+import { etkinlikleriDinle, etkinlikOlustur, katilimDurumuGuncelleDB, kesfetPlanlariGetir, arkadasPlanlariFiltrele, gecmisPlanlariFiltrele, katildigimPlanlariFiltrele, planHatirlatmalariniKontrolEt } from '../services/etkinlikService';
 import { arkadaslariDinle } from '../services/arkadasService';
 import { konusmalariDinle } from '../services/dmService';
 import { hikayeleriDinle, benimHikayelerimi, hikayeEkle as hikayeEkleService } from '../services/hikayeService';
@@ -100,6 +100,21 @@ export const DataProvider = ({ children }) => {
     };
     fetchHikayelerim();
   }, [kullanici?.odUserId]);
+
+  // Plan hatırlatma bildirimleri (her dakika kontrol et)
+  useEffect(() => {
+    if (!kullanici?.odUserId || !etkinlikler?.length) return;
+
+    // İlk kontrol
+    planHatirlatmalariniKontrolEt(etkinlikler, kullanici);
+
+    // Her dakika kontrol et
+    const interval = setInterval(() => {
+      planHatirlatmalariniKontrolEt(etkinlikler, kullanici);
+    }, 60000); // 1 dakika
+
+    return () => clearInterval(interval);
+  }, [kullanici?.odUserId, etkinlikler]);
 
   const yeniGrupOlustur = async (isim, emoji) => {
     const result = await grupOlustur(kullanici, isim, emoji);

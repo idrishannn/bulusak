@@ -164,51 +164,64 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
 
 const HizliPlanModal = () => {
   const { kullanici } = useAuth();
-  const { gruplar, arkadaslar, etkinlikler, musaitlikler, yeniEtkinlikOlustur } = useData();
+  const { yeniEtkinlikOlustur } = useData();
   const { modalAcik, setModalAcik, bildirimGoster } = useUI();
   const [baslik, setBaslik] = useState('');
   const [seciliTarih, setSeciliTarih] = useState(new Date().toISOString().split('T')[0]);
   const [seciliSaat, setSeciliSaat] = useState('15:00');
   const [mekan, setMekan] = useState('');
-  const [secimModu, setSecimModu] = useState('arkadas');
   const [secilenArkadaslar, setSecilenArkadaslar] = useState([]);
-  const [secilenGrupId, setSecilenGrupId] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(false);
-  const [grupAdi, setGrupAdi] = useState('');
   const [kategori, setKategori] = useState('tumu');
 
   const [visibility, setVisibility] = useState(PLAN_VISIBILITY.PRIVATE);
   const [katilimciLimit, setKatilimciLimit] = useState(0);
 
-  // Müsait arkadaşları hesapla
-  const musaitArkadaslar = useMemo(() => {
-    if (!arkadaslar?.length) return [];
+  // Fotoğraf state
+  const [planFoto, setPlanFoto] = useState(null);
+  const fotoInputRef = useRef(null);
 
-    const seciliDateTime = new Date(seciliTarih);
-    const key = `${seciliDateTime.toDateString()}-${seciliSaat}`;
+  // Arama state
+  const [aramaMetni, setAramaMetni] = useState('');
+  const [aramaSonuclari, setAramaSonuclari] = useState([]);
+  const [aramaYukleniyor, setAramaYukleniyor] = useState(false);
 
-    return arkadaslar.filter(arkadas => {
-      // Arkadaşın müsaitlik bilgisini kontrol et
-      const arkadasMusait = arkadas.musaitlikler?.[key] === true;
+  // Kullanıcı ara
+  const handleArama = async (metin) => {
+    setAramaMetni(metin);
+    if (!metin || metin.length < 2) {
+      setAramaSonuclari([]);
+      return;
+    }
 
-      // Aynı zaman diliminde başka planı var mı kontrol et
-      const mesgulMu = etkinlikler?.some(e => {
-        const planTarih = new Date(e.startAt || e.tarih);
-        return planTarih.toDateString() === seciliDateTime.toDateString() &&
-               e.saat === seciliSaat &&
-               (e.participantIds?.includes(arkadas.odUserId) || e.olusturanId === arkadas.odUserId);
-      });
+    setAramaYukleniyor(true);
+    const result = await kullaniciAra(metin);
+    if (result.success) {
+      // Sadece herkese açık hesapları göster ve kendini hariç tut
+      const filtrelenmis = result.kullanicilar.filter(k =>
+        k.odUserId !== kullanici?.odUserId &&
+        k.profilGizlilik !== 'private'
+      );
+      setAramaSonuclari(filtrelenmis);
+    }
+    setAramaYukleniyor(false);
+  };
 
-      return arkadasMusait && !mesgulMu;
-    });
-  }, [arkadaslar, seciliTarih, seciliSaat, etkinlikler]);
-
-  // Müsait olmayan arkadaşlar
-  const digerArkadaslar = useMemo(() => {
-    if (!arkadaslar?.length) return [];
-    const musaitIds = musaitArkadaslar.map(a => a.odUserId);
-    return arkadaslar.filter(a => !musaitIds.includes(a.odUserId));
-  }, [arkadaslar, musaitArkadaslar]);
+  // Fotoğraf seç
+  const handleFotoSec = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        bildirimGoster('Fotoğraf 5MB\'dan küçük olmalı', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setPlanFoto(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   if (modalAcik !== 'hizliPlan') return null;
 
@@ -219,22 +232,6 @@ const HizliPlanModal = () => {
   const handleOlustur = async () => {
     if (!baslik.trim()) { bildirimGoster('Plan adı gerekli', 'error'); return; }
 
-    if (secimModu === 'grup' && !grupAdi.trim()) {
-      bildirimGoster('Grup planı için grup adı zorunlu', 'error');
-      return;
-    }
-
-    if (visibility === PLAN_VISIBILITY.PRIVATE) {
-      if (secimModu === 'arkadas' && secilenArkadaslar.length === 0) {
-        bildirimGoster('En az bir arkadaş seç', 'error');
-        return;
-      }
-      if (secimModu === 'grup' && !secilenGrupId) {
-        bildirimGoster('Bir grup seç', 'error');
-        return;
-      }
-    }
-
     setYukleniyor(true);
     const planData = {
       baslik: baslik.trim(),
@@ -242,19 +239,17 @@ const HizliPlanModal = () => {
       tarih: new Date(seciliTarih),
       saat: seciliSaat,
       mekan: mekan.trim() || 'Belirtilmedi',
-      tip: secimModu,
+      tip: 'arkadas',
       visibility,
       katilimciLimit: katilimciLimit || null,
       kategori: kategori !== 'tumu' ? kategori : null,
-      status: PLAN_STATUS.ACTIVE
+      status: PLAN_STATUS.ACTIVE,
+      foto: planFoto || null
     };
 
-    if (secimModu === 'arkadas' && secilenArkadaslar.length > 0) {
+    if (secilenArkadaslar.length > 0) {
       planData.davetliler = secilenArkadaslar;
-      planData.davetliDetaylar = arkadaslar.filter(a => secilenArkadaslar.includes(a.odUserId));
-    } else if (secimModu === 'grup' && secilenGrupId) {
-      planData.grup = gruplar.find(g => g.id === secilenGrupId);
-      planData.grupAdi = grupAdi.trim();
+      planData.davetliDetaylar = aramaSonuclari.filter(a => secilenArkadaslar.includes(a.odUserId));
     }
 
     const result = await yeniEtkinlikOlustur(planData);
@@ -263,8 +258,9 @@ const HizliPlanModal = () => {
     if (result.success) {
       bildirimGoster('Plan oluşturuldu!', 'success');
       setModalAcik(null);
-      setBaslik(''); setMekan(''); setSecilenArkadaslar([]); setSecilenGrupId(null);
-      setVisibility(PLAN_VISIBILITY.PRIVATE); setKatilimciLimit(0); setGrupAdi(''); setKategori('tumu');
+      setBaslik(''); setMekan(''); setSecilenArkadaslar([]);
+      setVisibility(PLAN_VISIBILITY.PRIVATE); setKatilimciLimit(0); setKategori('tumu');
+      setPlanFoto(null); setAramaMetni(''); setAramaSonuclari([]);
     } else {
       bildirimGoster(result.error || 'Bir hata oluştu', 'error');
     }
@@ -378,87 +374,110 @@ const HizliPlanModal = () => {
           </p>
         </div>
 
+        {/* Plan Fotoğrafı */}
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Kimlerle?</label>
-          <div className="flex gap-2">
-            <button onClick={() => setSecimModu('arkadas')} className={`flex-1 py-3 rounded-xl font-medium text-sm ${secimModu === 'arkadas' ? 'btn-gold' : 'btn-ghost'}`}>Arkadaşlar</button>
-            <button onClick={() => setSecimModu('grup')} className={`flex-1 py-3 rounded-xl font-medium text-sm ${secimModu === 'grup' ? 'btn-gold' : 'btn-ghost'}`}>Grup</button>
-          </div>
+          <label className="text-xs font-medium text-dark-400 mb-2 block">Plan Fotoğrafı (Opsiyonel)</label>
+          <input
+            type="file"
+            ref={fotoInputRef}
+            onChange={handleFotoSec}
+            accept="image/*"
+            className="hidden"
+          />
+          {planFoto ? (
+            <div className="relative">
+              <img src={planFoto} alt="Plan" className="w-full h-32 object-cover rounded-xl" />
+              <button
+                onClick={() => setPlanFoto(null)}
+                className="absolute top-2 right-2 w-8 h-8 bg-dark-900/80 rounded-full flex items-center justify-center"
+              >
+                <XIcon className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fotoInputRef.current?.click()}
+              className="w-full py-6 border-2 border-dashed border-dark-600 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gold-500/50 transition-colors"
+            >
+              <CameraIcon className="w-8 h-8 text-dark-500" />
+              <span className="text-sm text-dark-400">Fotoğraf Ekle</span>
+            </button>
+          )}
         </div>
 
-        {secimModu === 'arkadas' && (
-          <div className="space-y-3">
-            {/* Müsait Arkadaşlar */}
-            {musaitArkadaslar.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-emerald-400 mb-2 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  Müsait Arkadaşlar ({musaitArkadaslar.length})
-                </p>
-                <div className="card p-3 max-h-32 overflow-y-auto space-y-2 border-emerald-500/20">
-                  {musaitArkadaslar.map(a => (
-                    <button key={a.odUserId} onClick={() => arkadasToggle(a.odUserId)} className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenArkadaslar.includes(a.odUserId) ? 'bg-gold-500/20 border border-gold-500/30' : 'hover:bg-dark-700'}`}>
-                      <div className="w-10 h-10 rounded-xl bg-dark-700 flex items-center justify-center text-xl">{a.avatar || '👤'}</div>
-                      <span className="flex-1 text-left text-white font-medium">{a.isim}</span>
-                      <span className="text-xs text-emerald-400">Müsait</span>
-                      {secilenArkadaslar.includes(a.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
+        {/* Davet Et */}
+        <div>
+          <label className="text-xs font-medium text-dark-400 mb-2 block">Davet Et (Opsiyonel)</label>
+
+          {/* Seçilen kişiler */}
+          {secilenArkadaslar.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {secilenArkadaslar.map(id => {
+                const kisi = aramaSonuclari.find(k => k.odUserId === id);
+                if (!kisi) return null;
+                return (
+                  <div key={id} className="flex items-center gap-2 px-3 py-1.5 bg-gold-500/20 rounded-full border border-gold-500/30">
+                    <span className="text-sm">{kisi.avatar || '👤'}</span>
+                    <span className="text-sm text-white">{kisi.isim}</span>
+                    <button onClick={() => arkadasToggle(id)} className="text-gold-500 hover:text-white">
+                      <XIcon className="w-4 h-4" />
                     </button>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
-            {/* Diğer Arkadaşlar */}
-            {digerArkadaslar.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-dark-400 mb-2">
-                  Diğer Arkadaşlar ({digerArkadaslar.length})
-                </p>
-                <div className="card p-3 max-h-32 overflow-y-auto space-y-2">
-                  {digerArkadaslar.map(a => (
-                    <button key={a.odUserId} onClick={() => arkadasToggle(a.odUserId)} className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenArkadaslar.includes(a.odUserId) ? 'bg-gold-500/20 border border-gold-500/30' : 'hover:bg-dark-700'}`}>
-                      <div className="w-10 h-10 rounded-xl bg-dark-700 flex items-center justify-center text-xl">{a.avatar || '👤'}</div>
-                      <span className="flex-1 text-left text-white font-medium">{a.isim}</span>
-                      {secilenArkadaslar.includes(a.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {arkadaslar?.length === 0 && (
-              <div className="text-center py-4 text-dark-400 text-sm">Henüz arkadaşın yok</div>
-            )}
-          </div>
-        )}
-
-        {secimModu === 'grup' && (
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-gold-400 mb-2 block">Grup Adı (Zorunlu)</label>
+          {/* Arama Kutusu */}
+          <div className="space-y-2">
+            <div className="relative">
+              <SearchIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-dark-500" />
               <input
                 type="text"
-                value={grupAdi}
-                onChange={(e) => setGrupAdi(e.target.value)}
-                placeholder="Bu plan için grup adı gir..."
-                className="input-dark"
+                value={aramaMetni}
+                onChange={(e) => handleArama(e.target.value)}
+                placeholder="Kullanıcı adı ile ara..."
+                className="input-dark pl-10"
               />
-              {!grupAdi.trim() && <p className="text-xs text-dark-500 mt-1">Grup planlarında grup adı zorunludur</p>}
             </div>
-            {gruplar?.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-dark-400 block">Mevcut Gruplardan Seç</label>
-                {gruplar.map(g => (
-                  <button key={g.id} onClick={() => { setSecilenGrupId(g.id); if (!grupAdi) setGrupAdi(g.isim); }} className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${secilenGrupId === g.id ? 'bg-gold-500/20 border border-gold-500/30' : 'card-hover'}`}>
-                    <span className="text-2xl">{g.emoji}</span>
-                    <span className="flex-1 text-left text-white font-medium">{g.isim}</span>
-                    {secilenGrupId === g.id && <CheckIcon className="w-5 h-5 text-gold-500" />}
+            {aramaYukleniyor && (
+              <div className="flex justify-center py-3">
+                <div className="w-5 h-5 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {aramaSonuclari.length > 0 && (
+              <div className="card p-2 max-h-40 overflow-y-auto space-y-1">
+                {aramaSonuclari.map(k => (
+                  <button
+                    key={k.odUserId}
+                    onClick={() => arkadasToggle(k.odUserId)}
+                    className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${
+                      secilenArkadaslar.includes(k.odUserId)
+                        ? 'bg-gold-500/20 border border-gold-500/30'
+                        : 'hover:bg-dark-700'
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl">
+                      {k.avatar || '👤'}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-white font-medium">{k.isim}</p>
+                      <p className="text-xs text-dark-400">@{(k.kullaniciAdi || '').replace(/@/g, '')}</p>
+                    </div>
+                    {secilenArkadaslar.includes(k.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
                   </button>
                 ))}
               </div>
             )}
+            {aramaMetni.length >= 2 && aramaSonuclari.length === 0 && !aramaYukleniyor && (
+              <p className="text-center py-2 text-dark-400 text-sm">Kullanıcı bulunamadı</p>
+            )}
+            {!aramaMetni && secilenArkadaslar.length === 0 && (
+              <p className="text-center py-2 text-dark-400 text-xs">Sadece herkese açık hesaplar davet edilebilir</p>
+            )}
           </div>
-        )}
+        </div>
+
       </div>
 
       <div className="p-4 border-t border-dark-800">
@@ -940,36 +959,42 @@ const BildirimlerModal = () => {
   const { etkinlikler, katilimDurumuGuncelle } = useData();
   const { modalAcik, setModalAcik, bildirimler, setSeciliEtkinlik, bildirimGoster } = useUI();
   const [islemYapiliyor, setIslemYapiliyor] = useState(null);
+  const [islenmisBildirimler, setIslenmisBildirimler] = useState({});
 
   if (modalAcik !== 'bildirimler') return null;
 
   const okunmamisSayisi = bildirimler?.filter(b => !b.okundu).length || 0;
 
   const davetBildirimleri = bildirimler?.filter(b =>
-    !b.okundu && (
-      b.tip === BILDIRIM_TIPLERI.PLAN_DAVET ||
+    (b.tip === BILDIRIM_TIPLERI.PLAN_DAVET ||
       b.tip === BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI ||
-      b.tip === 'GRUP_DAVET'
-    )
+      b.tip === 'GRUP_DAVET') && (!b.okundu || islenmisBildirimler[b.id])
   ) || [];
 
   const takipIstekBildirimleri = bildirimler?.filter(b =>
-    !b.okundu && b.tip === BILDIRIM_TIPLERI.TAKIP_ISTEGI
+    b.tip === BILDIRIM_TIPLERI.TAKIP_ISTEGI && (!b.okundu || islenmisBildirimler[b.id])
   ) || [];
 
   const katilimSorguBildirimleri = bildirimler?.filter(b =>
     !b.okundu && b.tip === BILDIRIM_TIPLERI.PLAN_KATILIM_SORGUSU
   ) || [];
 
-  const digerBildirimler = bildirimler?.filter(b =>
-    b.okundu || (
+  const digerBildirimler = bildirimler?.filter(b => {
+    // İşlenmiş takip istekleri ve davetleri hariç tut
+    if (b.tip === BILDIRIM_TIPLERI.TAKIP_ISTEGI && islenmisBildirimler[b.id]) {
+      return false;
+    }
+    if ((b.tip === BILDIRIM_TIPLERI.PLAN_DAVET || b.tip === 'GRUP_DAVET') && islenmisBildirimler[b.id]) {
+      return false;
+    }
+    return b.okundu || (
       b.tip !== BILDIRIM_TIPLERI.PLAN_DAVET &&
       b.tip !== BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI &&
       b.tip !== BILDIRIM_TIPLERI.PLAN_KATILIM_SORGUSU &&
       b.tip !== BILDIRIM_TIPLERI.TAKIP_ISTEGI &&
       b.tip !== 'GRUP_DAVET'
-    )
-  ) || [];
+    );
+  }) || [];
 
   const handleTumunuOkunduYap = async () => {
     if (kullanici?.odUserId) {
@@ -977,14 +1002,21 @@ const BildirimlerModal = () => {
     }
   };
 
-  // Davet Kabul Et
+  // Davet Kabul Et (Varım)
   const handleDavetKabul = async (bildirim) => {
     setIslemYapiliyor(bildirim.id);
     try {
       if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_DAVET && bildirim.planId) {
         // Plana katıl
         await katilimDurumuGuncelle(bildirim.planId, KATILIM_DURUMLARI.VARIM);
-        bildirimGoster('Daveti kabul ettin!', 'success');
+        setIslenmisBildirimler(prev => ({
+          ...prev,
+          [bildirim.id]: {
+            durum: 'kabul',
+            mesaj: `Davete katıldın · "${bildirim.planBaslik || 'Plan'}"`
+          }
+        }));
+        bildirimGoster('Davete katıldın!', 'success');
       } else if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI && bildirim.planId) {
         // Katılım isteğini kabul et - plan detayına yönlendir
         const plan = etkinlikler?.find(e => e.id === bildirim.planId);
@@ -1002,11 +1034,19 @@ const BildirimlerModal = () => {
     setIslemYapiliyor(null);
   };
 
+  // Davet Reddet (Yokum)
   const handleDavetReddet = async (bildirim) => {
     setIslemYapiliyor(bildirim.id);
     try {
       if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_DAVET && bildirim.planId) {
         await katilimDurumuGuncelle(bildirim.planId, KATILIM_DURUMLARI.YOKUM);
+        setIslenmisBildirimler(prev => ({
+          ...prev,
+          [bildirim.id]: {
+            durum: 'red',
+            mesaj: `Daveti reddettin · "${bildirim.planBaslik || 'Plan'}"`
+          }
+        }));
         bildirimGoster('Daveti reddettin', 'success');
       }
       await bildirimOkunduIsaretle(bildirim.id);
@@ -1082,8 +1122,15 @@ const BildirimlerModal = () => {
   const handleTakipIstegiKabul = async (bildirim) => {
     setIslemYapiliyor(bildirim.id);
     try {
-      await takipIstegiKabulEt(kullanici, bildirim.gonderenId);
+      const result = await takipIstegiKabulEt(kullanici, bildirim.gonderenId);
       await bildirimOkunduIsaretle(bildirim.id);
+      setIslenmisBildirimler(prev => ({
+        ...prev,
+        [bildirim.id]: {
+          durum: 'kabul',
+          mesaj: `Kabul ettin · ${bildirim.gonderenIsim || 'Kullanıcı'} seni takip ediyor`
+        }
+      }));
       bildirimGoster('Takip isteği kabul edildi!', 'success');
     } catch (error) {
       bildirimGoster('İşlem başarısız', 'error');
@@ -1096,6 +1143,13 @@ const BildirimlerModal = () => {
     try {
       await takipIstegiReddet(kullanici, bildirim.gonderenId);
       await bildirimOkunduIsaretle(bildirim.id);
+      setIslenmisBildirimler(prev => ({
+        ...prev,
+        [bildirim.id]: {
+          durum: 'red',
+          mesaj: `${bildirim.gonderenIsim || 'Kullanıcı'} takip isteği reddedildi`
+        }
+      }));
       bildirimGoster('Takip isteği reddedildi', 'success');
     } catch (error) {
       bildirimGoster('İşlem başarısız', 'error');
@@ -1203,41 +1257,53 @@ const BildirimlerModal = () => {
         {davetBildirimleri.length > 0 && (
           <div className="p-4 border-b border-dark-700">
             <h3 className="text-xs font-semibold text-gold-500 mb-3 flex items-center gap-2">
-              <span>💝</span> Davet Merkezi
+              <span>💝</span> Plan Davetleri
             </h3>
             <div className="space-y-3">
-              {davetBildirimleri.map(b => (
-                <div
-                  key={b.id}
-                  className="p-3 bg-gold-500/5 border border-gold-500/20 rounded-xl"
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center">
-                      {getBildirimIkonu(b.tip)}
+              {davetBildirimleri.map(b => {
+                const islenmis = islenmisBildirimler[b.id];
+                return (
+                  <div
+                    key={b.id}
+                    className={`p-3 rounded-xl ${islenmis ? 'bg-dark-800/50 border border-dark-700' : 'bg-gold-500/5 border border-gold-500/20'}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${islenmis ? 'bg-dark-700' : 'bg-gold-500/10'}`}>
+                        {b.gonderenAvatar || '💌'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm ${islenmis ? 'text-dark-400' : 'text-white'}`}>
+                          {islenmis ? islenmis.mesaj : b.mesaj}
+                        </p>
+                        <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
+                      </div>
+                      {islenmis && (
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${islenmis.durum === 'kabul' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-dark-600 text-dark-400'}`}>
+                          {islenmis.durum === 'kabul' ? <CheckIcon className="w-4 h-4" /> : <XIcon className="w-4 h-4" />}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white">{b.mesaj}</p>
-                      <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
-                    </div>
+                    {!islenmis && (
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => handleDavetKabul(b)}
+                          disabled={islemYapiliyor === b.id}
+                          className="flex-1 bg-emerald-500 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                          {islemYapiliyor === b.id ? '...' : 'Varım ✓'}
+                        </button>
+                        <button
+                          onClick={() => handleDavetReddet(b)}
+                          disabled={islemYapiliyor === b.id}
+                          className="flex-1 bg-dark-700 text-dark-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                          Yokum ✗
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleDavetKabul(b)}
-                      disabled={islemYapiliyor === b.id}
-                      className="flex-1 btn-gold py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                    >
-                      {islemYapiliyor === b.id ? '...' : 'Kabul Et'}
-                    </button>
-                    <button
-                      onClick={() => handleDavetReddet(b)}
-                      disabled={islemYapiliyor === b.id}
-                      className="flex-1 btn-ghost py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                    >
-                      Reddet
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -1248,38 +1314,50 @@ const BildirimlerModal = () => {
               <span>🙋</span> Takip İstekleri
             </h3>
             <div className="space-y-3">
-              {takipIstekBildirimleri.map(b => (
-                <div
-                  key={b.id}
-                  className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-xl"
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-xl">
-                      {b.gonderenAvatar || '👤'}
+              {takipIstekBildirimleri.map(b => {
+                const islenmis = islenmisBildirimler[b.id];
+                return (
+                  <div
+                    key={b.id}
+                    className={`p-3 rounded-xl ${islenmis ? 'bg-dark-800/50 border border-dark-700' : 'bg-purple-500/5 border border-purple-500/20'}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${islenmis ? 'bg-dark-700' : 'bg-purple-500/10'}`}>
+                        {b.gonderenAvatar || '👤'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm ${islenmis ? 'text-dark-400' : 'text-white'}`}>
+                          {islenmis ? islenmis.mesaj : b.mesaj}
+                        </p>
+                        <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
+                      </div>
+                      {islenmis && (
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${islenmis.durum === 'kabul' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-dark-600 text-dark-400'}`}>
+                          {islenmis.durum === 'kabul' ? <CheckIcon className="w-4 h-4" /> : <XIcon className="w-4 h-4" />}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white">{b.mesaj}</p>
-                      <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
-                    </div>
+                    {!islenmis && (
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => handleTakipIstegiKabul(b)}
+                          disabled={islemYapiliyor === b.id}
+                          className="flex-1 bg-purple-500 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                          {islemYapiliyor === b.id ? '...' : 'Kabul Et'}
+                        </button>
+                        <button
+                          onClick={() => handleTakipIstegiReddet(b)}
+                          disabled={islemYapiliyor === b.id}
+                          className="flex-1 bg-dark-700 text-dark-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                          Reddet
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleTakipIstegiKabul(b)}
-                      disabled={islemYapiliyor === b.id}
-                      className="flex-1 bg-purple-500 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                    >
-                      {islemYapiliyor === b.id ? '...' : 'Kabul Et'}
-                    </button>
-                    <button
-                      onClick={() => handleTakipIstegiReddet(b)}
-                      disabled={islemYapiliyor === b.id}
-                      className="flex-1 bg-dark-700 text-dark-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                    >
-                      Reddet
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -1783,33 +1861,51 @@ const KullaniciEkleModal = () => {
 
 const TakipciListesiModal = () => {
   const { kullanici } = useAuth();
-  const { arkadaslar } = useData();
   const { modalAcik, setModalAcik, bildirimGoster } = useUI();
   const [tab, setTab] = useState('takipciler');
-  const [hedefKullanici, setHedefKullanici] = useState(null);
-  const [listeYukleniyor, setListeYukleniyor] = useState(false);
-  const [gizliHesap, setGizliHesap] = useState(false);
-  const [takipEdiyor, setTakipEdiyor] = useState(false);
-  const [erisimVar, setErisimVar] = useState(true);
+  const [takipciler, setTakipciler] = useState([]);
+  const [takipEdilenler, setTakipEdilenler] = useState([]);
+  const [yukleniyor, setYukleniyor] = useState(true);
 
   useEffect(() => {
-    if (modalAcik === 'takipciListesi' || modalAcik === 'takipListesi') {
-      setHedefKullanici(kullanici);
-      setErisimVar(true);
-      setGizliHesap(kullanici?.profilGizlilik === 'private');
+    if (modalAcik === 'takipciListesi') {
+      setTab('takipciler');
+    } else if (modalAcik === 'takipListesi') {
+      setTab('takipEdilenler');
     }
-  }, [modalAcik, kullanici]);
+  }, [modalAcik]);
 
   useEffect(() => {
-    if (modalAcik === 'takipciListesiDiger' && kullanici) {
-      setListeYukleniyor(true);
-    }
+    const yukle = async () => {
+      if (!kullanici?.odUserId || (modalAcik !== 'takipciListesi' && modalAcik !== 'takipListesi')) return;
+
+      setYukleniyor(true);
+
+      // Takipçileri yükle
+      const takipciIds = kullanici.takipciler || [];
+      const takipciListesi = [];
+      for (const id of takipciIds.slice(0, 50)) {
+        const info = await kullaniciBilgisiGetir(id);
+        if (info) takipciListesi.push({ ...info, odUserId: id });
+      }
+      setTakipciler(takipciListesi);
+
+      // Takip edilenleri yükle
+      const takipEdilenIds = kullanici.takipEdilenler || [];
+      const takipEdilenListesi = [];
+      for (const id of takipEdilenIds.slice(0, 50)) {
+        const info = await kullaniciBilgisiGetir(id);
+        if (info) takipEdilenListesi.push({ ...info, odUserId: id });
+      }
+      setTakipEdilenler(takipEdilenListesi);
+
+      setYukleniyor(false);
+    };
+
+    yukle();
   }, [modalAcik, kullanici]);
 
   if (modalAcik !== 'takipciListesi' && modalAcik !== 'takipListesi') return null;
-
-  const takipciler = arkadaslar || [];
-  const takipEdilenler = arkadaslar || [];
 
   const handleTakipToggle = async (userId) => {
     const result = await takiptenCik(kullanici, userId);
@@ -1852,24 +1948,31 @@ const TakipciListesiModal = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {gosterilecekListe.map(user => (
-          <div key={user.odUserId} className="flex items-center gap-3 p-3 card">
-            <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl">
-              {user.avatar || '👤'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-white truncate">{user.isim}</p>
-              <p className="text-sm text-dark-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
-            </div>
-            <button
-              onClick={() => handleTakipToggle(user.odUserId)}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-dark-700 text-dark-300 hover:bg-dark-600"
-            >
-              Kaldır
-            </button>
+        {yukleniyor ? (
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
           </div>
-        ))}
-        {gosterilecekListe.length === 0 && (
+        ) : gosterilecekListe.length > 0 ? (
+          gosterilecekListe.map(user => (
+            <div key={user.odUserId} className="flex items-center gap-3 p-3 card">
+              <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl">
+                {user.avatar || '👤'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-white truncate">{user.isim}</p>
+                <p className="text-sm text-dark-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
+              </div>
+              {tab === 'takipEdilenler' && (
+                <button
+                  onClick={() => handleTakipToggle(user.odUserId)}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-dark-700 text-dark-300 hover:bg-dark-600"
+                >
+                  Takibi Bırak
+                </button>
+              )}
+            </div>
+          ))
+        ) : (
           <div className="text-center py-8">
             <UsersIcon className="w-12 h-12 text-dark-600 mx-auto mb-3" />
             <p className="text-dark-400">
