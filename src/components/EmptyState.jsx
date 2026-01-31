@@ -12,23 +12,25 @@ const EmptyState = ({
   const { themeClasses, isDark } = useTheme();
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-      <div className={`w-20 h-20 rounded-2xl ${isDark ? 'bg-navy-800' : 'bg-slate-200'} flex items-center justify-center mb-4`}>
-        {icon || <Logo size="md" className="opacity-30" />}
+    <div className={themeClasses.emptyState}>
+      {/* Collage-style tilted icon container with neumorphic shadow */}
+      <div className={themeClasses.emptyStateIcon}>
+        {icon || <Logo size="md" className="opacity-50" />}
       </div>
 
-      <h3 className={`text-lg font-semibold ${themeClasses.text} mb-1`}>
+      {/* Display heading with serif font */}
+      <h3 className={`${themeClasses.emptyStateTitle} ${themeClasses.text}`}>
         {title}
       </h3>
 
-      <p className={`${themeClasses.textMuted} text-sm mb-6 max-w-xs`}>
+      <p className={themeClasses.emptyStateDesc}>
         {description}
       </p>
 
       {action && (
         <button
           onClick={action}
-          className="btn-gold px-6 py-3 rounded-xl font-semibold"
+          className="btn-gold px-6 py-3.5 rounded-2xl font-semibold mt-6"
         >
           {actionLabel}
         </button>

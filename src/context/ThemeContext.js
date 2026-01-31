@@ -46,94 +46,136 @@ export const ThemeProvider = ({ children }) => {
   const isDark = theme === THEMES.DARK;
   const isLight = theme === THEMES.LIGHT;
 
-  // Modern UI Design System - Navy & Slate Theme Classes
+  // Tactile Scrapbook Design System - Neumorphism + Collage
   const themeClasses = {
-    // Arka plan
-    bg: isDark ? 'bg-navy-950' : 'bg-slate-100',
+    // Arka plan - Neumorphic surfaces
+    bg: isDark ? 'bg-navy-950' : 'bg-neu-100',
     bgSecondary: isDark ? 'bg-navy-900' : 'bg-white',
-    bgTertiary: isDark ? 'bg-navy-800' : 'bg-slate-50',
+    bgTertiary: isDark ? 'bg-navy-800' : 'bg-neu-50',
     bgCard: isDark ? 'bg-navy-900/50' : 'bg-white',
-    bgHover: isDark ? 'hover:bg-navy-800/50' : 'hover:bg-slate-100',
-    bgActive: isDark ? 'bg-navy-800/60' : 'bg-slate-100',
-    bgInput: isDark ? 'bg-navy-900/60' : 'bg-slate-50',
+    bgHover: isDark ? 'hover:bg-navy-800/50' : 'hover:bg-neu-100',
+    bgActive: isDark ? 'bg-navy-800/60' : 'bg-neu-100',
+    bgInput: isDark ? 'bg-navy-900/60' : 'bg-neu-50',
     bgOverlay: isDark ? 'bg-navy-950/85' : 'bg-white/95',
-    bgSubtle: isDark ? 'bg-navy-800/40' : 'bg-slate-100/80',
+    bgSubtle: isDark ? 'bg-navy-800/40' : 'bg-neu-100/80',
 
     // Metin renkleri
     text: isDark ? 'text-slate-100' : 'text-slate-900',
     textPrimary: isDark ? 'text-slate-100' : 'text-slate-900',
     textSecondary: isDark ? 'text-navy-300' : 'text-slate-600',
-    textMuted: isDark ? 'text-navy-400' : 'text-slate-500',
-    textTertiary: isDark ? 'text-navy-500' : 'text-slate-400',
+    textMuted: isDark ? 'text-navy-400' : 'text-neu-500',
+    textTertiary: isDark ? 'text-navy-500' : 'text-neu-400',
     textInverse: isDark ? 'text-navy-950' : 'text-white',
 
-    // Başlık hiyerarşisi
-    headingPrimary: isDark ? 'text-slate-100 font-bold' : 'text-slate-900 font-bold',
+    // Başlık hiyerarşisi - Collage style mixed fonts
+    headingPrimary: isDark ? 'text-slate-100 font-bold heading-display' : 'text-slate-900 font-bold heading-display',
     headingSecondary: isDark ? 'text-slate-200 font-semibold' : 'text-slate-800 font-semibold',
     headingTertiary: isDark ? 'text-navy-300 font-medium' : 'text-slate-700 font-medium',
 
     // Border
-    border: isDark ? 'border-navy-700/40' : 'border-slate-200',
-    borderInput: isDark ? 'border-navy-700/50' : 'border-slate-200',
-    borderSubtle: isDark ? 'border-navy-800/30' : 'border-slate-100',
-    borderStrong: isDark ? 'border-navy-600' : 'border-slate-300',
+    border: isDark ? 'border-navy-700/40' : 'border-neu-200',
+    borderInput: isDark ? 'border-navy-700/50' : 'border-neu-200',
+    borderSubtle: isDark ? 'border-navy-800/30' : 'border-neu-100',
+    borderStrong: isDark ? 'border-navy-600' : 'border-neu-300',
 
-    // Glass effect
+    // Glass effect with neumorphic touch
     glass: isDark
-      ? 'bg-navy-900/70 backdrop-blur-xl border-navy-700/40'
-      : 'bg-white/85 backdrop-blur-xl border-slate-200/80 shadow-soft',
+      ? 'bg-navy-900/70 backdrop-blur-xl border-navy-700/40 rounded-2xl'
+      : 'bg-white/85 backdrop-blur-xl border-cream-200/80 rounded-2xl',
 
-    // Card
-    card: isDark
-      ? 'bg-navy-900/50 border-navy-700/40'
-      : 'bg-white border-slate-200/80 shadow-card',
-    cardHover: isDark
-      ? 'hover:bg-navy-800/60 hover:border-navy-600/50'
-      : 'hover:bg-slate-50 hover:border-slate-300 hover:shadow-card-hover',
+    // Neumorphic Card
+    card: 'card',
+    cardHover: 'card-hover',
     cardActive: isDark
       ? 'bg-navy-800/70 border-navy-600'
-      : 'bg-slate-100 border-slate-300',
+      : 'bg-neu-100 border-neu-300',
 
-    // Button
-    btnGhost: isDark
-      ? 'border-navy-600/60 text-slate-200 hover:bg-navy-800/50'
-      : 'border-slate-300 text-slate-700 hover:bg-slate-100',
-    btnDark: isDark
-      ? 'bg-navy-800 text-slate-200 hover:bg-navy-700'
-      : 'bg-slate-200 text-slate-800 hover:bg-slate-300',
-    btnSubtle: isDark
-      ? 'bg-navy-800/40 text-navy-300 hover:bg-navy-700/50'
-      : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+    // Neumorphic Buttons
+    btnGhost: 'btn-ghost',
+    btnDark: 'btn-dark',
+    btnSubtle: 'btn-subtle',
+    btnNeu: isDark ? 'btn-neu-dark' : 'btn-neu',
 
     // Icon renkleri
     iconPrimary: isDark ? 'text-slate-100' : 'text-slate-800',
-    iconSecondary: isDark ? 'text-navy-400' : 'text-slate-500',
-    iconMuted: isDark ? 'text-navy-500' : 'text-slate-400',
+    iconSecondary: isDark ? 'text-navy-400' : 'text-neu-500',
+    iconMuted: isDark ? 'text-navy-500' : 'text-neu-400',
     iconActive: 'text-gold-500',
 
+    // Neumorphic surfaces
+    neuSurface: isDark ? 'neu-surface-dark' : 'neu-surface',
+    neuInset: isDark ? 'neu-inset-dark' : 'neu-inset',
+
     // Özel durumlar
-    menuItem: isDark
-      ? 'hover:bg-navy-800/50 border-navy-700/40'
-      : 'hover:bg-slate-100 border-slate-100',
-    divider: isDark ? 'bg-navy-700/40' : 'bg-slate-200',
+    menuItem: 'menu-item',
+    divider: 'divider',
 
-    // Modal
-    modalBg: isDark ? 'bg-navy-900' : 'bg-white',
-    modalOverlay: isDark ? 'bg-navy-950/80' : 'bg-slate-900/60',
+    // Modal - Neumorphic
+    modalBg: 'modal-content',
+    modalOverlay: 'modal-overlay',
 
-    // Input
-    input: isDark
-      ? 'bg-navy-900/60 border-navy-700/50 text-slate-100 placeholder:text-navy-400'
-      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400',
+    // Neumorphic Input
+    input: 'input-dark',
+    inputEnhanced: 'input-enhanced',
     inputFocus: 'focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20',
 
     // Shadow
-    shadow: isDark ? 'shadow-navy' : 'shadow-soft',
-    shadowLg: isDark ? 'shadow-navy-lg' : 'shadow-soft-lg',
+    shadow: isDark ? 'shadow-neu-dark-md' : 'shadow-neu-md',
+    shadowLg: isDark ? 'shadow-neu-dark-lg' : 'shadow-neu-lg',
 
     // Ring (focus states)
     ring: 'ring-gold-500/20',
     ringOffset: isDark ? 'ring-offset-navy-900' : 'ring-offset-white',
+
+    // Collage/Scrapbook elements
+    sticker: 'sticker',
+    stickerGold: 'sticker-gold',
+    collageTilt: 'collage-tilt',
+    collageTiltRight: 'collage-tilt-right',
+    photoFrame: 'photo-frame',
+    polaroid: 'polaroid',
+    paperTorn: 'paper-torn',
+    labelHandwritten: 'label-handwritten',
+
+    // Empty state
+    emptyState: 'empty-state',
+    emptyStateIcon: 'empty-state-icon',
+    emptyStateTitle: 'empty-state-title',
+    emptyStateDesc: 'empty-state-desc',
+
+    // Section headers
+    sectionHeader: 'section-header',
+    sectionHeaderLabel: 'section-header-label',
+    sectionHeaderLine: 'section-header-line',
+
+    // List items
+    listItem: 'list-item',
+    listItemBorder: 'list-item-border',
+
+    // Icon button
+    iconBtn: 'icon-btn',
+    iconBtnGhost: 'icon-btn-ghost',
+
+    // Tabs
+    tabItem: 'tab-item',
+    tabItemActive: 'tab-item-active',
+    tabItemInactive: 'tab-item-inactive',
+
+    // Category chips
+    categoryChip: 'category-chip',
+    categoryChipActive: 'category-chip-active',
+    categoryChipInactive: 'category-chip-inactive',
+
+    // Toast
+    toast: 'toast',
+
+    // Toggle
+    toggleTrack: 'toggle-track',
+    toggleThumb: 'toggle-thumb',
+
+    // Textures
+    texturePaper: 'texture-paper',
+    textureGrain: 'texture-grain',
   };
 
   const value = {
