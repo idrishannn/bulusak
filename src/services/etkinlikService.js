@@ -12,7 +12,8 @@ import {
   orderBy,
   limit,
   startAfter,
-  getDocs
+  getDocs,
+  getDoc
 } from 'firebase/firestore';
 import { bildirimOlustur, BILDIRIM_TIPLERI } from './bildirimService';
 
@@ -245,7 +246,6 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
     const etkinlikRef = doc(db, 'events', etkinlikId);
 
     // Mevcut etkinliği al
-    const { getDoc } = await import('firebase/firestore');
     const etkinlikDoc = await getDoc(etkinlikRef);
 
     if (!etkinlikDoc.exists()) {
