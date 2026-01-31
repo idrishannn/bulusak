@@ -3,8 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, useData, useUI, useTheme } from '../context';
 import {
   ChevronRightIcon, BellIcon, UsersIcon, LogoutIcon,
-  ClipboardIcon, SettingsIcon, MenuIcon, LockIcon, LocationIcon,
-  SunIcon, MoonIcon, XIcon, StoryIcon, PinIcon
+  SettingsIcon, MenuIcon, XIcon, StoryIcon, PinIcon
 } from './Icons';
 import Logo from './Logo';
 import { kullanicininPlanHikayeleriniGetir } from '../services/planHikayeService';
@@ -16,7 +15,7 @@ const Profil = () => {
   const { kullanici, cikisYapFunc } = useAuth();
   const { gruplar, etkinlikler, arkadaslar, benimHikayelerim } = useData();
   const { setModalAcik, bildirimGoster, setSeciliEtkinlik } = useUI();
-  const { isDark, themeClasses, toggleTheme } = useTheme();
+  const { isDark, themeClasses } = useTheme();
   const [menuAcik, setMenuAcik] = useState(false);
   const [aktifTab, setAktifTab] = useState('planlar');
   const [cikisDialogAcik, setCikisDialogAcik] = useState(false);
@@ -91,15 +90,10 @@ const Profil = () => {
 
   const profilPlanSayisi = benimPlanlarim.length + katildigimPlanlarListesi.length;
 
-  // Menü öğeleri - Instagram tarzı
   const menuItems = [
     { icon: SettingsIcon, label: 'Ayarlar', action: () => { setMenuAcik(false); navigate('/ayarlar'); } },
-    { icon: LockIcon, label: 'Hesap Gizliliği', action: () => { setMenuAcik(false); setModalAcik('gizlilikAyarlari'); } },
-    { icon: LocationIcon, label: 'Konum Ayarları', action: () => { setMenuAcik(false); setModalAcik('konumAyarlari'); } },
-    { icon: isDark ? SunIcon : MoonIcon, label: isDark ? 'Açık Mod' : 'Koyu Mod', action: () => { toggleTheme(); } },
     { icon: BellIcon, label: 'Bildirim Ayarları', action: () => { setMenuAcik(false); setModalAcik('bildirimAyarlari'); } },
     { icon: UsersIcon, label: 'Arkadaşlarım', badge: arkadaslar?.length, action: () => { setMenuAcik(false); setModalAcik('arkadaslar'); } },
-    { icon: ClipboardIcon, label: 'Bucket List', action: () => { setMenuAcik(false); setModalAcik('bucketList'); } },
   ];
 
   // Plan kartı komponenti - Instagram post tarzı
@@ -240,13 +234,11 @@ const Profil = () => {
           </div>
         </div>
 
-        {/* İsim ve Bio */}
-        <div className="mb-4">
-          <h2 className={`font-bold ${themeClasses.text}`}>{kullanici?.isim || 'Kullanıcı'}</h2>
-          {kullanici?.bio && (
-            <p className={`text-sm ${themeClasses.textMuted} mt-1`}>{kullanici.bio}</p>
-          )}
-        </div>
+        {kullanici?.bio && (
+          <div className="mb-4">
+            <p className={`text-sm ${themeClasses.textMuted}`}>{kullanici.bio}</p>
+          </div>
+        )}
 
         {/* Profil Düzenle Butonu */}
         <button
