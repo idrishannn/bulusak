@@ -4,7 +4,7 @@ import { ClockIcon, UsersIcon } from './Icons';
 import EmptyState from './EmptyState';
 import { SkeletonCard } from './Skeleton';
 import { KATILIM_DURUMLARI } from '../constants';
-import { kullaniciPlanReddettimi } from '../services/etkinlikService';
+import { kullaniciPlanReddettimi, kullaniciPlanOnayliMi } from '../services/etkinlikService';
 
 const PLAN_TABS = [
   { id: 'benim', label: 'Planlarım' },
@@ -26,9 +26,15 @@ const PlanKarti = ({ plan, onClick, benimMi }) => {
       className="w-full card-hover p-4 text-left"
     >
       <div className="flex items-start gap-4">
-        {/* Plan sahibi avatarı */}
+        {/* Plan fotoğrafı veya avatar */}
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-500/20 to-gold-600/10 flex items-center justify-center border border-gold-500/20 overflow-hidden">
-          {olusturanAvatar ? (
+          {plan.foto ? (
+            <img
+              src={plan.foto}
+              alt="Plan"
+              className="w-full h-full object-cover"
+            />
+          ) : olusturanAvatar ? (
             <img
               src={olusturanAvatar}
               alt="Plan sahibi"
@@ -77,13 +83,17 @@ const Planlar = () => {
   const { themeClasses, isDark } = useTheme();
   const [aktifTab, setAktifTab] = useState('benim');
 
-  const reddedilmemisEtkinlikler = etkinlikler?.filter(e =>
-    !kullaniciPlanReddettimi(e, kullanici?.odUserId)
-  ) || [];
+  // Reddedilen veya onaylanmış planları Planlar sekmesinden filtrele
+  // (Onaylanmış planlar sadece profilde görünür)
+  const aktifEtkinlikler = etkinlikler?.filter(e => {
+    if (kullaniciPlanReddettimi(e, kullanici?.odUserId)) return false;
+    if (kullaniciPlanOnayliMi(e, kullanici?.odUserId)) return false;
+    return true;
+  }) || [];
 
-  const benimPlanlarim = reddedilmemisEtkinlikler.filter(e => e.olusturanId === kullanici?.odUserId);
+  const benimPlanlarim = aktifEtkinlikler.filter(e => e.olusturanId === kullanici?.odUserId);
 
-  const katildigimPlanlar = reddedilmemisEtkinlikler.filter(e => {
+  const katildigimPlanlar = aktifEtkinlikler.filter(e => {
     if (e.olusturanId === kullanici?.odUserId) return false;
     if (e.participantIds?.includes(kullanici?.odUserId)) return true;
     if (e.davetliler?.includes(kullanici?.odUserId)) return true;

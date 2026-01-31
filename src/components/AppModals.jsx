@@ -164,57 +164,27 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
 
 const HizliPlanModal = () => {
   const { kullanici } = useAuth();
-  const { gruplar, etkinlikler, yeniEtkinlikOlustur } = useData();
+  const { yeniEtkinlikOlustur } = useData();
   const { modalAcik, setModalAcik, bildirimGoster } = useUI();
   const [baslik, setBaslik] = useState('');
   const [seciliTarih, setSeciliTarih] = useState(new Date().toISOString().split('T')[0]);
   const [seciliSaat, setSeciliSaat] = useState('15:00');
   const [mekan, setMekan] = useState('');
-  const [secimModu, setSecimModu] = useState('arkadas');
   const [secilenArkadaslar, setSecilenArkadaslar] = useState([]);
-  const [secilenGrupId, setSecilenGrupId] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(false);
-  const [grupAdi, setGrupAdi] = useState('');
   const [kategori, setKategori] = useState('tumu');
 
   const [visibility, setVisibility] = useState(PLAN_VISIBILITY.PRIVATE);
   const [katilimciLimit, setKatilimciLimit] = useState(0);
 
-  // Takip edilenler state
-  const [takipEdilenler, setTakipEdilenler] = useState([]);
-  const [takipYukleniyor, setTakipYukleniyor] = useState(true);
+  // Fotoğraf state
+  const [planFoto, setPlanFoto] = useState(null);
+  const fotoInputRef = useRef(null);
 
   // Arama state
-  const [aramaAcik, setAramaAcik] = useState(false);
   const [aramaMetni, setAramaMetni] = useState('');
   const [aramaSonuclari, setAramaSonuclari] = useState([]);
   const [aramaYukleniyor, setAramaYukleniyor] = useState(false);
-
-  // Takip edilenleri yükle
-  useEffect(() => {
-    const yukle = async () => {
-      if (!kullanici?.takipEdilenler?.length) {
-        setTakipEdilenler([]);
-        setTakipYukleniyor(false);
-        return;
-      }
-
-      setTakipYukleniyor(true);
-      const liste = [];
-      for (const id of kullanici.takipEdilenler.slice(0, 50)) {
-        const info = await kullaniciBilgisiGetir(id);
-        if (info) {
-          liste.push({ ...info, odUserId: id });
-        }
-      }
-      setTakipEdilenler(liste);
-      setTakipYukleniyor(false);
-    };
-
-    if (modalAcik === 'hizliPlan') {
-      yukle();
-    }
-  }, [modalAcik, kullanici?.takipEdilenler]);
 
   // Kullanıcı ara
   const handleArama = async (metin) => {
@@ -237,10 +207,21 @@ const HizliPlanModal = () => {
     setAramaYukleniyor(false);
   };
 
-  // Sadece herkese açık hesapları göster
-  const davetEdilabilirTakipEdilenler = useMemo(() => {
-    return takipEdilenler.filter(t => t.profilGizlilik !== 'private');
-  }, [takipEdilenler]);
+  // Fotoğraf seç
+  const handleFotoSec = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        bildirimGoster('Fotoğraf 5MB\'dan küçük olmalı', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setPlanFoto(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   if (modalAcik !== 'hizliPlan') return null;
 
@@ -251,22 +232,6 @@ const HizliPlanModal = () => {
   const handleOlustur = async () => {
     if (!baslik.trim()) { bildirimGoster('Plan adı gerekli', 'error'); return; }
 
-    if (secimModu === 'grup' && !grupAdi.trim()) {
-      bildirimGoster('Grup planı için grup adı zorunlu', 'error');
-      return;
-    }
-
-    if (visibility === PLAN_VISIBILITY.PRIVATE) {
-      if (secimModu === 'arkadas' && secilenArkadaslar.length === 0) {
-        bildirimGoster('En az bir arkadaş seç', 'error');
-        return;
-      }
-      if (secimModu === 'grup' && !secilenGrupId) {
-        bildirimGoster('Bir grup seç', 'error');
-        return;
-      }
-    }
-
     setYukleniyor(true);
     const planData = {
       baslik: baslik.trim(),
@@ -274,21 +239,17 @@ const HizliPlanModal = () => {
       tarih: new Date(seciliTarih),
       saat: seciliSaat,
       mekan: mekan.trim() || 'Belirtilmedi',
-      tip: secimModu,
+      tip: 'arkadas',
       visibility,
       katilimciLimit: katilimciLimit || null,
       kategori: kategori !== 'tumu' ? kategori : null,
-      status: PLAN_STATUS.ACTIVE
+      status: PLAN_STATUS.ACTIVE,
+      foto: planFoto || null
     };
 
-    if (secimModu === 'arkadas' && secilenArkadaslar.length > 0) {
+    if (secilenArkadaslar.length > 0) {
       planData.davetliler = secilenArkadaslar;
-      // Takip edilenler ve arama sonuçlarından davetli detaylarını al
-      const tumDavetliler = [...takipEdilenler, ...aramaSonuclari];
-      planData.davetliDetaylar = tumDavetliler.filter(a => secilenArkadaslar.includes(a.odUserId));
-    } else if (secimModu === 'grup' && secilenGrupId) {
-      planData.grup = gruplar.find(g => g.id === secilenGrupId);
-      planData.grupAdi = grupAdi.trim();
+      planData.davetliDetaylar = aramaSonuclari.filter(a => secilenArkadaslar.includes(a.odUserId));
     }
 
     const result = await yeniEtkinlikOlustur(planData);
@@ -297,8 +258,9 @@ const HizliPlanModal = () => {
     if (result.success) {
       bildirimGoster('Plan oluşturuldu!', 'success');
       setModalAcik(null);
-      setBaslik(''); setMekan(''); setSecilenArkadaslar([]); setSecilenGrupId(null);
-      setVisibility(PLAN_VISIBILITY.PRIVATE); setKatilimciLimit(0); setGrupAdi(''); setKategori('tumu');
+      setBaslik(''); setMekan(''); setSecilenArkadaslar([]);
+      setVisibility(PLAN_VISIBILITY.PRIVATE); setKatilimciLimit(0); setKategori('tumu');
+      setPlanFoto(null); setAramaMetni(''); setAramaSonuclari([]);
     } else {
       bildirimGoster(result.error || 'Bir hata oluştu', 'error');
     }
@@ -412,163 +374,110 @@ const HizliPlanModal = () => {
           </p>
         </div>
 
+        {/* Plan Fotoğrafı */}
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Kimlerle?</label>
-          <div className="flex gap-2">
-            <button onClick={() => setSecimModu('arkadas')} className={`flex-1 py-3 rounded-xl font-medium text-sm ${secimModu === 'arkadas' ? 'btn-gold' : 'btn-ghost'}`}>Arkadaşlar</button>
-            <button onClick={() => setSecimModu('grup')} className={`flex-1 py-3 rounded-xl font-medium text-sm ${secimModu === 'grup' ? 'btn-gold' : 'btn-ghost'}`}>Grup</button>
-          </div>
+          <label className="text-xs font-medium text-dark-400 mb-2 block">Plan Fotoğrafı (Opsiyonel)</label>
+          <input
+            type="file"
+            ref={fotoInputRef}
+            onChange={handleFotoSec}
+            accept="image/*"
+            className="hidden"
+          />
+          {planFoto ? (
+            <div className="relative">
+              <img src={planFoto} alt="Plan" className="w-full h-32 object-cover rounded-xl" />
+              <button
+                onClick={() => setPlanFoto(null)}
+                className="absolute top-2 right-2 w-8 h-8 bg-dark-900/80 rounded-full flex items-center justify-center"
+              >
+                <XIcon className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fotoInputRef.current?.click()}
+              className="w-full py-6 border-2 border-dashed border-dark-600 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gold-500/50 transition-colors"
+            >
+              <CameraIcon className="w-8 h-8 text-dark-500" />
+              <span className="text-sm text-dark-400">Fotoğraf Ekle</span>
+            </button>
+          )}
         </div>
 
-        {secimModu === 'arkadas' && (
-          <div className="space-y-3">
-            {/* Seçilen kişiler */}
-            {secilenArkadaslar.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {secilenArkadaslar.map(id => {
-                  const kisi = [...takipEdilenler, ...aramaSonuclari].find(k => k.odUserId === id);
-                  if (!kisi) return null;
-                  return (
-                    <div key={id} className="flex items-center gap-2 px-3 py-1.5 bg-gold-500/20 rounded-full border border-gold-500/30">
-                      <span className="text-sm">{kisi.avatar || '👤'}</span>
-                      <span className="text-sm text-white">{kisi.isim}</span>
-                      <button onClick={() => arkadasToggle(id)} className="text-gold-500 hover:text-white">
-                        <XIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+        {/* Davet Et */}
+        <div>
+          <label className="text-xs font-medium text-dark-400 mb-2 block">Davet Et (Opsiyonel)</label>
 
-            {/* Arama Butonu */}
-            <button
-              onClick={() => setAramaAcik(!aramaAcik)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-dark-700 hover:bg-dark-600 transition-colors text-white"
-            >
-              <SearchIcon className="w-5 h-5" />
-              <span className="font-medium">Kullanıcı Ara</span>
-            </button>
+          {/* Seçilen kişiler */}
+          {secilenArkadaslar.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {secilenArkadaslar.map(id => {
+                const kisi = aramaSonuclari.find(k => k.odUserId === id);
+                if (!kisi) return null;
+                return (
+                  <div key={id} className="flex items-center gap-2 px-3 py-1.5 bg-gold-500/20 rounded-full border border-gold-500/30">
+                    <span className="text-sm">{kisi.avatar || '👤'}</span>
+                    <span className="text-sm text-white">{kisi.isim}</span>
+                    <button onClick={() => arkadasToggle(id)} className="text-gold-500 hover:text-white">
+                      <XIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
-            {/* Arama Kutusu */}
-            {aramaAcik && (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={aramaMetni}
-                  onChange={(e) => handleArama(e.target.value)}
-                  placeholder="Kullanıcı adı veya isim ara..."
-                  className="input-dark"
-                  autoFocus
-                />
-                {aramaYukleniyor && (
-                  <div className="flex justify-center py-3">
-                    <div className="w-5 h-5 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                )}
-                {aramaSonuclari.length > 0 && (
-                  <div className="card p-2 max-h-40 overflow-y-auto space-y-1">
-                    {aramaSonuclari.map(k => (
-                      <button
-                        key={k.odUserId}
-                        onClick={() => arkadasToggle(k.odUserId)}
-                        className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${
-                          secilenArkadaslar.includes(k.odUserId)
-                            ? 'bg-gold-500/20 border border-gold-500/30'
-                            : 'hover:bg-dark-700'
-                        }`}
-                      >
-                        <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl">
-                          {k.avatar || '👤'}
-                        </div>
-                        <div className="flex-1 text-left">
-                          <p className="text-white font-medium">{k.isim}</p>
-                          <p className="text-xs text-dark-400">@{(k.kullaniciAdi || '').replace(/@/g, '')}</p>
-                        </div>
-                        {secilenArkadaslar.includes(k.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {aramaMetni.length >= 2 && aramaSonuclari.length === 0 && !aramaYukleniyor && (
-                  <p className="text-center py-2 text-dark-400 text-sm">Kullanıcı bulunamadı</p>
-                )}
-              </div>
-            )}
-
-            {/* Takip Ettiklerim */}
-            {!aramaAcik && (
-              <>
-                {takipYukleniyor ? (
-                  <div className="flex justify-center py-4">
-                    <div className="w-6 h-6 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : davetEdilabilirTakipEdilenler.length > 0 ? (
-                  <div>
-                    <p className="text-xs font-medium text-dark-400 mb-2">
-                      Takip Ettiklerin ({davetEdilabilirTakipEdilenler.length})
-                    </p>
-                    <div className="card p-2 max-h-40 overflow-y-auto space-y-1">
-                      {davetEdilabilirTakipEdilenler.map(a => (
-                        <button
-                          key={a.odUserId}
-                          onClick={() => arkadasToggle(a.odUserId)}
-                          className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${
-                            secilenArkadaslar.includes(a.odUserId)
-                              ? 'bg-gold-500/20 border border-gold-500/30'
-                              : 'hover:bg-dark-700'
-                          }`}
-                        >
-                          <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl">
-                            {a.avatar || '👤'}
-                          </div>
-                          <div className="flex-1 text-left">
-                            <p className="text-white font-medium">{a.isim}</p>
-                            <p className="text-xs text-dark-400">@{(a.kullaniciAdi || '').replace(/@/g, '')}</p>
-                          </div>
-                          {secilenArkadaslar.includes(a.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-dark-400 text-sm">
-                    <p>Henüz kimseyi takip etmiyorsun</p>
-                    <p className="text-xs mt-1">Yukarıdaki arama butonuyla kullanıcı bulabilirsin</p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {secimModu === 'grup' && (
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-gold-400 mb-2 block">Grup Adı (Zorunlu)</label>
+          {/* Arama Kutusu */}
+          <div className="space-y-2">
+            <div className="relative">
+              <SearchIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-dark-500" />
               <input
                 type="text"
-                value={grupAdi}
-                onChange={(e) => setGrupAdi(e.target.value)}
-                placeholder="Bu plan için grup adı gir..."
-                className="input-dark"
+                value={aramaMetni}
+                onChange={(e) => handleArama(e.target.value)}
+                placeholder="Kullanıcı adı ile ara..."
+                className="input-dark pl-10"
               />
-              {!grupAdi.trim() && <p className="text-xs text-dark-500 mt-1">Grup planlarında grup adı zorunludur</p>}
             </div>
-            {gruplar?.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-dark-400 block">Mevcut Gruplardan Seç</label>
-                {gruplar.map(g => (
-                  <button key={g.id} onClick={() => { setSecilenGrupId(g.id); if (!grupAdi) setGrupAdi(g.isim); }} className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${secilenGrupId === g.id ? 'bg-gold-500/20 border border-gold-500/30' : 'card-hover'}`}>
-                    <span className="text-2xl">{g.emoji}</span>
-                    <span className="flex-1 text-left text-white font-medium">{g.isim}</span>
-                    {secilenGrupId === g.id && <CheckIcon className="w-5 h-5 text-gold-500" />}
+            {aramaYukleniyor && (
+              <div className="flex justify-center py-3">
+                <div className="w-5 h-5 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {aramaSonuclari.length > 0 && (
+              <div className="card p-2 max-h-40 overflow-y-auto space-y-1">
+                {aramaSonuclari.map(k => (
+                  <button
+                    key={k.odUserId}
+                    onClick={() => arkadasToggle(k.odUserId)}
+                    className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${
+                      secilenArkadaslar.includes(k.odUserId)
+                        ? 'bg-gold-500/20 border border-gold-500/30'
+                        : 'hover:bg-dark-700'
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl">
+                      {k.avatar || '👤'}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-white font-medium">{k.isim}</p>
+                      <p className="text-xs text-dark-400">@{(k.kullaniciAdi || '').replace(/@/g, '')}</p>
+                    </div>
+                    {secilenArkadaslar.includes(k.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
                   </button>
                 ))}
               </div>
             )}
+            {aramaMetni.length >= 2 && aramaSonuclari.length === 0 && !aramaYukleniyor && (
+              <p className="text-center py-2 text-dark-400 text-sm">Kullanıcı bulunamadı</p>
+            )}
+            {!aramaMetni && secilenArkadaslar.length === 0 && (
+              <p className="text-center py-2 text-dark-400 text-xs">Sadece herkese açık hesaplar davet edilebilir</p>
+            )}
           </div>
-        )}
+        </div>
+
       </div>
 
       <div className="p-4 border-t border-dark-800">

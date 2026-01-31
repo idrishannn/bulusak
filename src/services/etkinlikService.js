@@ -66,7 +66,8 @@ export const etkinlikOlustur = async (kullanici, data) => {
       visibility: data.visibility || 'public',
       katilimciLimiti: data.katilimciLimiti || 0,
       status: 'active',
-      mesajlar: []
+      mesajlar: [],
+      foto: data.foto || null
     };
 
     // Grup bilgisi varsa ekle
@@ -453,10 +454,33 @@ export const planHatirlatmalariniKontrolEt = async (etkinlikler, kullanici) => {
       planTarihi.setHours(saat || 12, dakika || 0, 0, 0);
     }
 
-    // Geçmiş planları atla
-    if (planTarihi <= simdi) continue;
-
     const kalanDakika = Math.floor((planTarihi - simdi) / (1000 * 60));
+
+    // Plan zamanı geldi mi? (0 ile -30 dakika arası, yani başladıktan sonra 30 dakika içinde)
+    if (kalanDakika <= 0 && kalanDakika > -30) {
+      const katilimSorguKey = `${plan.id}-katilim-sorgu-${kullanici.odUserId}`;
+
+      // Daha önce gönderilmişse atla
+      if (!gonderilmisHatirlatmalar.has(katilimSorguKey)) {
+        try {
+          await bildirimOlustur(kullanici.odUserId, BILDIRIM_TIPLERI.PLAN_KATILIM_SORGUSU, {
+            mesaj: `"${plan.baslik}" planının zamanı geldi! Katıldın mı?`,
+            planId: plan.id,
+            planBaslik: plan.baslik,
+            gonderenId: plan.olusturanId,
+            gonderenIsim: plan.olusturanIsim,
+            gonderenAvatar: plan.olusturanAvatar
+          });
+          gonderilmisHatirlatmalar.add(katilimSorguKey);
+        } catch (e) {
+          console.error('Katılım sorgusu bildirimi gönderilemedi:', e);
+        }
+      }
+      continue; // Geçmiş planlar için hatırlatma gönderme
+    }
+
+    // Geçmiş planları atla (30 dakikadan fazla geçmişse)
+    if (planTarihi <= simdi) continue;
 
     for (const hatirlatma of HATIRLATMA_SURELERI) {
       // Hatırlatma zamanı geldi mi? (± 5 dakika tolerans)
