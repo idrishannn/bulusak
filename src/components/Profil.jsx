@@ -189,7 +189,7 @@ const Profil = () => {
 
       <div className="p-4">
         {/* Profil Üst Kısmı - Instagram tarzı */}
-        <div className="flex items-start gap-4 mb-6">
+        <div className="flex items-start gap-4 mb-4">
           <div className="relative">
             <div
               className={`w-20 h-20 rounded-full flex items-center justify-center ${
@@ -234,9 +234,13 @@ const Profil = () => {
           </div>
         </div>
 
+        <div className="mb-3">
+          <p className={`font-semibold ${themeClasses.text}`}>{kullanici?.isim}</p>
+        </div>
+
         {kullanici?.bio && (
           <div className="mb-4">
-            <p className={`text-sm ${themeClasses.textMuted}`}>{kullanici.bio}</p>
+            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{kullanici.bio}</p>
           </div>
         )}
 
