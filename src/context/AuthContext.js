@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db, COLLECTIONS } from '../services/firebase';
-import { googleIleGiris, profilGuncelle as profilGuncelleService } from '../services/authService';
+import { googleIleGiris, appleIleGiris, profilGuncelle as profilGuncelleService } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -54,6 +54,13 @@ export const AuthProvider = ({ children }) => {
     return result;
   };
 
+  const appleIleGirisYap = async () => {
+    setIslemYukleniyor(true);
+    const result = await appleIleGiris();
+    setIslemYukleniyor(false);
+    return result;
+  };
+
   const cikisYapFunc = async () => {
     try {
       await auth.signOut();
@@ -84,7 +91,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     kullanici, girisYapildi, yukleniyor, islemYukleniyor, setIslemYukleniyor,
     kayitAsamasi, setKayitAsamasi, seciliAvatar, setSeciliAvatar, avatarKategori, setAvatarKategori,
-    googleIleGirisYap, cikisYapFunc, profilTamamla, avatarGuncelle
+    googleIleGirisYap, appleIleGirisYap, cikisYapFunc, profilTamamla, avatarGuncelle
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

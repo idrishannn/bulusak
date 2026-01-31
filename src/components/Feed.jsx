@@ -245,12 +245,51 @@ const PlanKarti = ({ plan, onClick, showCover = false }) => {
   );
 };
 
-// Konum Seçici Bileşeni
 const KonumSecici = ({ onClose }) => {
   const { kesfetMerkezKonum, kesfetYaricap, merkezKonumGuncelle, yaricapGuncelle, kesfetYukle } = useData();
   const { themeClasses, isDark } = useTheme();
   const [seciliKonum, setSeciliKonum] = useState(kesfetMerkezKonum);
-  const [seciliYaricap, setSeciliYaricap] = useState(kesfetYaricap);
+  const [seciliYaricap, setSeciliYaricap] = useState(kesfetYaricap || 25);
+  const [aramaMetni, setAramaMetni] = useState('');
+  const [acikIl, setAcikIl] = useState(null);
+
+  const ilcelerMap = {
+    istanbul: ['Kadıköy', 'Beşiktaş', 'Şişli', 'Bakırköy', 'Ataşehir', 'Üsküdar', 'Beyoğlu', 'Maltepe', 'Kartal', 'Pendik'],
+    ankara: ['Çankaya', 'Keçiören', 'Mamak', 'Etimesgut', 'Yenimahalle', 'Sincan', 'Polatlı', 'Altındağ'],
+    izmir: ['Konak', 'Karşıyaka', 'Bornova', 'Buca', 'Çiğli', 'Bayraklı', 'Alsancak', 'Urla', 'Çeşme'],
+    antalya: ['Muratpaşa', 'Kepez', 'Konyaaltı', 'Alanya', 'Manavgat', 'Serik', 'Side', 'Lara'],
+    bursa: ['Osmangazi', 'Nilüfer', 'Yıldırım', 'Gemlik', 'İnegöl', 'Mudanya'],
+    rize: ['Merkez', 'Çayeli', 'Ardeşen', 'Pazar', 'Fındıklı', 'Güneysu', 'Derepazarı', 'İkizdere']
+  };
+
+  const tumKonumlar = useMemo(() => {
+    const sonuc = [];
+    POPULAR_LOCATIONS.forEach(il => {
+      sonuc.push({ ...il, tip: 'il' });
+      const ilceler = ilcelerMap[il.id] || [];
+      ilceler.forEach(ilce => {
+        sonuc.push({
+          id: `${il.id}-${ilce.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o')}`,
+          name: ilce,
+          ilAdi: il.name,
+          ilId: il.id,
+          lat: il.lat + (Math.random() - 0.5) * 0.1,
+          lng: il.lng + (Math.random() - 0.5) * 0.1,
+          tip: 'ilce'
+        });
+      });
+    });
+    return sonuc;
+  }, []);
+
+  const filtrelenmisKonumlar = useMemo(() => {
+    if (!aramaMetni.trim()) return [];
+    const aranan = aramaMetni.toLowerCase().replace(/i/g, 'ı').replace(/I/g, 'İ');
+    return tumKonumlar.filter(k =>
+      k.name.toLowerCase().includes(aranan) ||
+      (k.ilAdi && k.ilAdi.toLowerCase().includes(aranan))
+    ).slice(0, 10);
+  }, [aramaMetni, tumKonumlar]);
 
   const handleUygula = () => {
     merkezKonumGuncelle(seciliKonum);
@@ -266,10 +305,16 @@ const KonumSecici = ({ onClose }) => {
     onClose();
   };
 
+  const handleKonumSec = (konum) => {
+    setSeciliKonum(konum);
+    setAramaMetni('');
+    setAcikIl(null);
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full max-w-lg ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-t-3xl max-h-[80vh] flex flex-col animate-slide-up`}>
+      <div className={`relative w-full max-w-lg ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-t-3xl max-h-[85vh] flex flex-col animate-slide-up`}>
         <div className={`p-4 border-b ${themeClasses.border} flex items-center justify-between`}>
           <h2 className={`text-lg font-semibold ${themeClasses.text}`}>Konum Ayarları</h2>
           <button onClick={onClose} className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}>
@@ -278,47 +323,120 @@ const KonumSecici = ({ onClose }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Yarıçap Seçimi */}
           <div>
-            <label className={`text-xs font-medium ${themeClasses.textSecondary} mb-2 block`}>Keşfet Yarıçapı</label>
-            <div className="flex gap-2 flex-wrap">
-              {LOCATION_RADIUS_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setSeciliYaricap(opt.value)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    seciliYaricap === opt.value
-                      ? 'btn-gold'
-                      : isDark ? 'bg-dark-800 text-dark-300 hover:bg-dark-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+            <label className={`text-xs font-medium ${themeClasses.textSecondary} mb-2 block`}>
+              Keşfet Yarıçapı: <span className="text-gold-500 font-bold">{seciliYaricap} km</span>
+            </label>
+            <div className="px-2">
+              <input
+                type="range"
+                min="1"
+                max="90"
+                step="1"
+                value={seciliYaricap}
+                onChange={(e) => setSeciliYaricap(parseInt(e.target.value))}
+                className="w-full h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-gold-500"
+                style={{
+                  background: `linear-gradient(to right, #D4AF37 0%, #D4AF37 ${(seciliYaricap / 90) * 100}%, ${isDark ? '#374151' : '#e5e7eb'} ${(seciliYaricap / 90) * 100}%, ${isDark ? '#374151' : '#e5e7eb'} 100%)`
+                }}
+              />
+              <div className="flex justify-between text-xs text-dark-500 mt-1">
+                <span>1 km</span>
+                <span>45 km</span>
+                <span>90 km</span>
+              </div>
             </div>
           </div>
 
-          {/* Merkez Konum Seçimi */}
           <div>
-            <label className={`text-xs font-medium ${themeClasses.textSecondary} mb-2 block`}>Merkez Konum</label>
-            <div className="grid grid-cols-2 gap-2">
-              {POPULAR_LOCATIONS.map(loc => (
-                <button
-                  key={loc.id}
-                  onClick={() => setSeciliKonum(loc)}
-                  className={`p-3 rounded-xl text-left transition-all ${
-                    seciliKonum?.id === loc.id
-                      ? 'bg-gold-500/20 border border-gold-500/30'
-                      : isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <LocationIcon className={`w-4 h-4 ${seciliKonum?.id === loc.id ? 'text-gold-500' : themeClasses.textMuted}`} />
-                    <span className={`font-medium ${seciliKonum?.id === loc.id ? 'text-gold-500' : themeClasses.text}`}>
-                      {loc.name}
-                    </span>
-                  </div>
-                </button>
+            <label className={`text-xs font-medium ${themeClasses.textSecondary} mb-2 block`}>İl veya İlçe Ara</label>
+            <input
+              type="text"
+              value={aramaMetni}
+              onChange={(e) => setAramaMetni(e.target.value)}
+              placeholder="Şehir veya ilçe adı yazın..."
+              className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-dark-800 text-white' : 'bg-gray-100 text-gray-900'} outline-none focus:ring-2 focus:ring-gold-500/30`}
+            />
+            {filtrelenmisKonumlar.length > 0 && (
+              <div className={`mt-2 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-50'} overflow-hidden`}>
+                {filtrelenmisKonumlar.map(k => (
+                  <button
+                    key={k.id}
+                    onClick={() => handleKonumSec(k)}
+                    className={`w-full p-3 flex items-center gap-2 text-left ${isDark ? 'hover:bg-dark-700' : 'hover:bg-gray-100'} transition-colors`}
+                  >
+                    <LocationIcon className="w-4 h-4 text-gold-500" />
+                    <span className={themeClasses.text}>{k.name}</span>
+                    {k.ilAdi && <span className={`text-xs ${themeClasses.textMuted}`}>({k.ilAdi})</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className={`text-xs font-medium ${themeClasses.textSecondary} mb-2 block`}>veya Listeden Seç</label>
+            <div className="space-y-2">
+              {POPULAR_LOCATIONS.map(il => (
+                <div key={il.id}>
+                  <button
+                    onClick={() => {
+                      if (acikIl === il.id) {
+                        setAcikIl(null);
+                      } else {
+                        setAcikIl(il.id);
+                      }
+                    }}
+                    className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${
+                      seciliKonum?.id === il.id || seciliKonum?.ilId === il.id
+                        ? 'bg-gold-500/20 border border-gold-500/30'
+                        : isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <LocationIcon className={`w-4 h-4 ${seciliKonum?.id === il.id ? 'text-gold-500' : themeClasses.textMuted}`} />
+                      <span className={`font-medium ${seciliKonum?.id === il.id ? 'text-gold-500' : themeClasses.text}`}>{il.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {seciliKonum?.id === il.id && <span className="text-xs text-gold-500">Seçili</span>}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleKonumSec(il); }}
+                        className={`px-2 py-1 rounded text-xs ${isDark ? 'bg-dark-700 text-dark-300' : 'bg-gray-200 text-gray-600'}`}
+                      >
+                        İl Seç
+                      </button>
+                      <ChevronRightIcon className={`w-4 h-4 transition-transform ${acikIl === il.id ? 'rotate-90' : ''} ${themeClasses.textMuted}`} />
+                    </div>
+                  </button>
+                  {acikIl === il.id && ilcelerMap[il.id] && (
+                    <div className="ml-6 mt-1 grid grid-cols-2 gap-1">
+                      {ilcelerMap[il.id].map(ilce => {
+                        const ilceId = `${il.id}-${ilce.toLowerCase()}`;
+                        const isSelected = seciliKonum?.name === ilce && seciliKonum?.ilId === il.id;
+                        return (
+                          <button
+                            key={ilceId}
+                            onClick={() => handleKonumSec({
+                              id: ilceId,
+                              name: ilce,
+                              ilAdi: il.name,
+                              ilId: il.id,
+                              lat: il.lat,
+                              lng: il.lng
+                            })}
+                            className={`p-2 rounded-lg text-sm text-left transition-all ${
+                              isSelected
+                                ? 'bg-gold-500/20 text-gold-500 border border-gold-500/30'
+                                : isDark ? 'bg-dark-700 text-dark-300 hover:bg-dark-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            {ilce}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -327,7 +445,7 @@ const KonumSecici = ({ onClose }) => {
             <div className={`p-3 rounded-xl ${isDark ? 'bg-gold-500/10' : 'bg-gold-50'} border border-gold-500/20`}>
               <p className="text-sm text-gold-500">
                 <LocationIcon className="w-4 h-4 inline mr-1" />
-                {seciliKonum.name} merkezli {seciliYaricap} km içindeki planlar gösterilecek
+                {seciliKonum.ilAdi ? `${seciliKonum.name}, ${seciliKonum.ilAdi}` : seciliKonum.name} merkezli {seciliYaricap} km
               </p>
             </div>
           )}

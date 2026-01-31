@@ -4,7 +4,7 @@ import { gruplariDinle, grupOlustur } from '../services/grupService';
 import { etkinlikleriDinle, etkinlikOlustur, katilimDurumuGuncelleDB, kesfetPlanlariGetir, arkadasPlanlariFiltrele, gecmisPlanlariFiltrele, katildigimPlanlariFiltrele } from '../services/etkinlikService';
 import { arkadaslariDinle } from '../services/arkadasService';
 import { konusmalariDinle } from '../services/dmService';
-import { hikayeleriDinle, benimHikayelerimi } from '../services/hikayeService';
+import { hikayeleriDinle, benimHikayelerimi, hikayeEkle as hikayeEkleService } from '../services/hikayeService';
 import { bildirimleriDinle } from '../services/bildirimService';
 import { useUI } from './UIContext';
 import { STORAGE_KEYS, DEFAULT_DISCOVER_SETTINGS } from '../constants';
@@ -137,6 +137,19 @@ export const DataProvider = ({ children }) => {
     setBucketList(prev => prev.filter(i => i.id !== id));
   };
 
+  // Hikaye Ekleme
+  const hikayeEkle = async (hikayeData) => {
+    const result = await hikayeEkleService(kullanici, hikayeData.metin || hikayeData.gorsel, hikayeData.gorsel ? 'image' : 'text');
+    if (result.success) {
+      // Hikayelerimi yeniden yükle
+      const hikayelerimResult = await benimHikayelerimi(kullanici.odUserId);
+      if (hikayelerimResult.success) {
+        setBenimHikayelerim(hikayelerimResult.hikayeler);
+      }
+    }
+    return result;
+  };
+
   // Konum Bazlı Keşfet Fonksiyonları
   const merkezKonumGuncelle = useCallback((konum) => {
     setKesfetMerkezKonum(konum);
@@ -218,6 +231,7 @@ export const DataProvider = ({ children }) => {
     bucketList, musaitlikler, yukleniyor,
     yeniGrupOlustur, yeniEtkinlikOlustur, katilimDurumuGuncelle,
     musaitlikToggle, bucketListEkle, bucketListToggle, bucketListSil,
+    hikayeEkle,
     feedKaynagi, arkadasPlanlar, kesfetPlanlar, kesfetDahaVar, kesfetYukleniyor,
     feedDegistir, kesfetYukle,
     // Konum Bazlı Keşfet
