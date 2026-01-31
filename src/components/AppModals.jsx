@@ -113,6 +113,8 @@ const ParticipantAvatars = ({ participants, maxVisible = MAX_VISIBLE_PARTICIPANT
 
 // Katılımcı Listesi Modal
 const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => {
+  const { profilAc } = useUI();
+
   if (!isOpen) return null;
 
   const varimOlanlar = participants?.filter(k => k.durum === KATILIM_DURUMLARI.VARIM) || [];
@@ -123,6 +125,12 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
       return <img src={avatar} alt="" className="w-full h-full object-cover" />;
     }
     return avatar || '👤';
+  };
+
+  const handleProfilAc = (k) => {
+    if (k.odUserId === currentUserId) return; // Kendi profilini açma
+    onClose();
+    profilAc(k);
   };
 
   return (
@@ -141,14 +149,18 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
               <p className="text-xs font-medium text-emerald-400 mb-2">Katılacak ({varimOlanlar.length})</p>
               <div className="space-y-2">
                 {varimOlanlar.map((k, i) => (
-                  <div key={k.odUserId || i} className="flex items-center gap-3 p-2 rounded-xl bg-emerald-500/10">
+                  <button
+                    key={k.odUserId || i}
+                    onClick={() => handleProfilAc(k)}
+                    className="w-full flex items-center gap-3 p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
+                  >
                     <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl overflow-hidden">
                       {renderAvatar(k.avatar)}
                     </div>
                     <span className="text-white font-medium">
                       {k.odUserId === currentUserId ? 'Sen' : k.isim || 'Katılımcı'}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -158,14 +170,18 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
               <p className="text-xs font-medium text-red-400 mb-2">Katılmayacak ({yokumOlanlar.length})</p>
               <div className="space-y-2">
                 {yokumOlanlar.map((k, i) => (
-                  <div key={k.odUserId || i} className="flex items-center gap-3 p-2 rounded-xl bg-red-500/10">
+                  <button
+                    key={k.odUserId || i}
+                    onClick={() => handleProfilAc(k)}
+                    className="w-full flex items-center gap-3 p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                  >
                     <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl overflow-hidden">
                       {renderAvatar(k.avatar)}
                     </div>
                     <span className="text-white font-medium">
                       {k.odUserId === currentUserId ? 'Sen' : k.isim || 'Katılımcı'}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -1759,7 +1775,7 @@ const BildirimAyarlariModal = () => {
 const KullaniciEkleModal = () => {
   const { kullanici } = useAuth();
   const { arkadaslar } = useData();
-  const { modalAcik, setModalAcik, bildirimGoster } = useUI();
+  const { modalAcik, setModalAcik, bildirimGoster, profilAc } = useUI();
   const [arama, setArama] = useState('');
   const [aramaSonuclari, setAramaSonuclari] = useState([]);
   const [araniyor, setAraniyor] = useState(false);
@@ -1860,15 +1876,20 @@ const KullaniciEkleModal = () => {
               const buttonState = getButtonState(k.odUserId);
               return (
                 <div key={k.odUserId} className="flex items-center gap-3 p-3 card">
-                  <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
-                    {k.avatar?.startsWith('http') || k.avatar?.startsWith('data:') ? (
-                      <img src={k.avatar} alt="" className="w-full h-full object-cover" />
-                    ) : (k.avatar || '👤')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white truncate">{k.isim}</p>
-                    <p className="text-sm text-dark-400 truncate">@{(k.kullaniciAdi || '').replace(/@/g, '')}</p>
-                  </div>
+                  <button
+                    onClick={() => { setModalAcik(null); profilAc(k); }}
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+                      {k.avatar?.startsWith('http') || k.avatar?.startsWith('data:') ? (
+                        <img src={k.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (k.avatar || '👤')}
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="font-medium text-white truncate">{k.isim}</p>
+                      <p className="text-sm text-dark-400 truncate">@{(k.kullaniciAdi || '').replace(/@/g, '')}</p>
+                    </div>
+                  </button>
                   {buttonState === 'takipEdiliyor' ? (
                     <button
                       onClick={() => handleTakiptenCik(k.odUserId)}
@@ -1915,7 +1936,7 @@ const KullaniciEkleModal = () => {
 
 const TakipciListesiModal = () => {
   const { kullanici } = useAuth();
-  const { modalAcik, setModalAcik, bildirimGoster } = useUI();
+  const { modalAcik, setModalAcik, bildirimGoster, profilAc } = useUI();
   const [tab, setTab] = useState('takipciler');
   const [takipciler, setTakipciler] = useState([]);
   const [takipEdilenler, setTakipEdilenler] = useState([]);
@@ -2008,25 +2029,29 @@ const TakipciListesiModal = () => {
           </div>
         ) : gosterilecekListe.length > 0 ? (
           gosterilecekListe.map(user => (
-            <div key={user.odUserId} className="flex items-center gap-3 p-3 card">
+            <button
+              key={user.odUserId}
+              onClick={() => { setModalAcik(null); profilAc(user); }}
+              className="w-full flex items-center gap-3 p-3 card hover:bg-dark-700/50 transition-colors"
+            >
               <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
                 {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
                   <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                 ) : (user.avatar || '👤')}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 text-left">
                 <p className="font-medium text-white truncate">{user.isim}</p>
                 <p className="text-sm text-dark-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
               </div>
               {tab === 'takipEdilenler' && (
-                <button
-                  onClick={() => handleTakipToggle(user.odUserId)}
+                <span
+                  onClick={(e) => { e.stopPropagation(); handleTakipToggle(user.odUserId); }}
                   className="px-3 py-1.5 rounded-lg text-sm font-medium bg-dark-700 text-dark-300 hover:bg-dark-600"
                 >
                   Takibi Bırak
-                </button>
+                </span>
               )}
-            </div>
+            </button>
           ))
         ) : (
           <div className="text-center py-8">
@@ -2044,9 +2069,9 @@ const TakipciListesiModal = () => {
 const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
   const { kullanici } = useAuth();
   const { arkadaslar } = useData();
-  const { bildirimGoster } = useUI();
+  const { bildirimGoster, profilAc } = useUI();
   const [tab, setTab] = useState('takipciler');
-  const [hedefKullanici, setHedefKullanici] = useState(null);
+  const [hedefKullaniciData, setHedefKullaniciData] = useState(null);
   const [takipciler, setTakipciler] = useState([]);
   const [takipEdilenler, setTakipEdilenler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -2063,7 +2088,7 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
         return;
       }
 
-      setHedefKullanici(hedefBilgi);
+      setHedefKullaniciData(hedefBilgi);
 
       const benimProfilim = hedefUserId === kullanici?.odUserId;
       const gizliHesap = hedefBilgi.profilGizlilik === 'private';
@@ -2150,17 +2175,21 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
           </div>
         ) : gosterilecekListe.length > 0 ? (
           gosterilecekListe.map(user => (
-            <div key={user.odUserId} className="flex items-center gap-3 p-3 card">
+            <button
+              key={user.odUserId}
+              onClick={() => { onClose(); profilAc(user); }}
+              className="w-full flex items-center gap-3 p-3 card hover:bg-dark-700/50 transition-colors"
+            >
               <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
                 {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
                   <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                 ) : (user.avatar || '👤')}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 text-left">
                 <p className="font-medium text-white truncate">{user.isim}</p>
                 <p className="text-sm text-dark-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
               </div>
-            </div>
+            </button>
           ))
         ) : (
           <div className="text-center py-8">
@@ -2169,7 +2198,7 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
               {tab === 'takipciler' ? 'Henüz takipçi yok' : 'Henüz kimseyi takip etmiyor'}
             </p>
           </div>
-        )}
+        )
       </div>
     </ModalWrapper>
   );
@@ -2411,6 +2440,218 @@ const HikayeEkleModal = () => {
   );
 };
 
+// Başka Kullanıcının Profili Modal
+const DigerKullaniciProfilModal = () => {
+  const { kullanici } = useAuth();
+  const { modalAcik, setModalAcik, hedefKullanici, bildirimGoster, profilAc } = useUI();
+  const [profilData, setProfilData] = useState(null);
+  const [yukleniyor, setYukleniyor] = useState(true);
+  const [takipYukleniyor, setTakipYukleniyor] = useState(false);
+  const [takipDurumu, setTakipDurumu] = useState(null);
+  const [aktifTab, setAktifTab] = useState('planlar');
+
+  // Kullanıcı bilgilerini yükle
+  useEffect(() => {
+    if (modalAcik !== 'digerProfil' || !hedefKullanici?.odUserId) return;
+
+    const yukle = async () => {
+      setYukleniyor(true);
+      try {
+        const data = await kullaniciBilgisiGetir(hedefKullanici.odUserId);
+        setProfilData(data);
+
+        // Takip durumunu kontrol et
+        const durum = await takipDurumuGetir(kullanici?.odUserId, hedefKullanici.odUserId);
+        setTakipDurumu(durum);
+      } catch (error) {
+        console.error('Profil yükleme hatası:', error);
+      }
+      setYukleniyor(false);
+    };
+
+    yukle();
+  }, [modalAcik, hedefKullanici?.odUserId, kullanici?.odUserId]);
+
+  if (modalAcik !== 'digerProfil' || !hedefKullanici) return null;
+
+  // Profil görünürlük kontrolü
+  const benimProfilim = hedefKullanici.odUserId === kullanici?.odUserId;
+  const gizliProfil = profilData?.gizliProfil === true;
+  const takipEdiyorum = takipDurumu?.takipEdiyor === true;
+  const profilGorunur = !gizliProfil || takipEdiyorum || benimProfilim;
+
+  const handleTakipEt = async () => {
+    if (!kullanici?.odUserId || takipYukleniyor) return;
+    setTakipYukleniyor(true);
+
+    try {
+      if (takipDurumu?.takipEdiyor) {
+        // Takipten çık
+        const result = await takiptenCik(kullanici.odUserId, hedefKullanici.odUserId);
+        if (result.success) {
+          setTakipDurumu({ ...takipDurumu, takipEdiyor: false });
+          bildirimGoster('Takipten çıkıldı', 'success');
+        }
+      } else if (takipDurumu?.istekGonderildi) {
+        // İstek zaten gönderilmiş
+        bildirimGoster('İstek zaten gönderildi', 'info');
+      } else {
+        // Takip et
+        const result = await takipEt(kullanici, hedefKullanici.odUserId);
+        if (result.success) {
+          if (gizliProfil) {
+            setTakipDurumu({ ...takipDurumu, istekGonderildi: true });
+            bildirimGoster('Takip isteği gönderildi', 'success');
+          } else {
+            setTakipDurumu({ ...takipDurumu, takipEdiyor: true });
+            bildirimGoster('Takip edildi', 'success');
+          }
+        }
+      }
+    } catch (error) {
+      bildirimGoster('Bir hata oluştu', 'error');
+    }
+
+    setTakipYukleniyor(false);
+  };
+
+  const getTakipButonText = () => {
+    if (takipYukleniyor) return '...';
+    if (takipDurumu?.takipEdiyor) return 'Takiptesin';
+    if (takipDurumu?.istekGonderildi) return 'İstek Gönderildi';
+    return 'Takip Et';
+  };
+
+  const getTakipButonStyle = () => {
+    if (takipDurumu?.takipEdiyor) return 'bg-dark-700 text-white';
+    if (takipDurumu?.istekGonderildi) return 'bg-dark-700 text-dark-400';
+    return 'btn-gold';
+  };
+
+  return (
+    <ModalWrapper
+      title={profilData?.kullaniciAdi ? `@${profilData.kullaniciAdi.replace(/@/g, '')}` : 'Profil'}
+      onClose={() => setModalAcik(null)}
+    >
+      {yukleniyor ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : profilData ? (
+        <div className="flex-1 overflow-y-auto">
+          {/* Profil Üst Kısım */}
+          <div className="p-4">
+            <div className="flex items-start gap-4 mb-4">
+              {/* Avatar */}
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gold-500/30 to-gold-600/20 border-2 border-gold-500/50 flex items-center justify-center overflow-hidden">
+                {profilData.avatar?.startsWith('http') || profilData.avatar?.startsWith('data:') ? (
+                  <img src={profilData.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-4xl">{profilData.avatar || '👤'}</span>
+                )}
+              </div>
+
+              {/* İstatistikler */}
+              {profilGorunur ? (
+                <div className="flex-1 flex justify-around text-center pt-2">
+                  <div>
+                    <div className="text-xl font-bold text-white">{profilData.planSayisi || 0}</div>
+                    <div className="text-xs text-dark-400">Plan</div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold text-white">{profilData.takipciler?.length || 0}</div>
+                    <div className="text-xs text-dark-400">Takipçi</div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold text-white">{profilData.takipEdilenler?.length || 0}</div>
+                    <div className="text-xs text-dark-400">Takip</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center pt-2">
+                  <div className="flex items-center gap-2 text-dark-400">
+                    <LockIcon className="w-5 h-5" />
+                    <span className="text-sm">Gizli Hesap</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* İsim ve Bio */}
+            <div className="mb-3">
+              <p className="font-semibold text-white">{profilData.isim}</p>
+            </div>
+
+            {profilGorunur && profilData.bio && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-300">{profilData.bio}</p>
+              </div>
+            )}
+
+            {/* Takip Et Butonu */}
+            {!benimProfilim && (
+              <button
+                onClick={handleTakipEt}
+                disabled={takipYukleniyor}
+                className={`w-full py-2.5 rounded-xl font-medium text-sm transition-colors ${getTakipButonStyle()}`}
+              >
+                {getTakipButonText()}
+              </button>
+            )}
+          </div>
+
+          {/* Gizli Profil Uyarısı */}
+          {!profilGorunur && (
+            <div className="px-4 py-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-dark-800 flex items-center justify-center mx-auto mb-4">
+                <LockIcon className="w-8 h-8 text-dark-500" />
+              </div>
+              <h3 className="font-semibold text-white mb-2">Bu Hesap Gizli</h3>
+              <p className="text-sm text-dark-400">
+                Bu kullanıcının paylaşımlarını görmek için takip et.
+              </p>
+            </div>
+          )}
+
+          {/* Profil İçeriği (Açık profil veya takip edilenler için) */}
+          {profilGorunur && (
+            <>
+              {/* Tab Bar */}
+              <div className="flex border-b border-dark-700">
+                <button
+                  onClick={() => setAktifTab('planlar')}
+                  className={`flex-1 py-3 text-center font-medium text-xs transition-colors relative ${
+                    aktifTab === 'planlar' ? 'text-white' : 'text-dark-400'
+                  }`}
+                >
+                  Planları
+                  {aktifTab === 'planlar' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold-500" />
+                  )}
+                </button>
+              </div>
+
+              {/* Planlar */}
+              <div className="p-4">
+                {aktifTab === 'planlar' && (
+                  <div className="text-center py-8 text-dark-400">
+                    <p className="text-4xl mb-3">📅</p>
+                    <p className="text-sm">Henüz plan yok</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-dark-400">Kullanıcı bulunamadı</p>
+        </div>
+      )}
+    </ModalWrapper>
+  );
+};
+
 const AppModals = () => (
   <>
     <HizliPlanModal />
@@ -2427,6 +2668,7 @@ const AppModals = () => (
     <KullaniciEkleModal />
     <TakipIstekleriModal />
     <HikayeEkleModal />
+    <DigerKullaniciProfilModal />
   </>
 );
 
