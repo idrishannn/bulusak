@@ -14,6 +14,7 @@ import {
   startAfter,
   getDocs
 } from 'firebase/firestore';
+import { bildirimOlustur, BILDIRIM_TIPLERI } from './bildirimService';
 
 export const etkinlikOlustur = async (kullanici, data) => {
   try {
@@ -85,6 +86,28 @@ export const etkinlikOlustur = async (kullanici, data) => {
     }
 
     const docRef = await addDoc(collection(db, 'events'), etkinlikData);
+
+    // Davetlilere bildirim gönder
+    if (data.davetliler && Array.isArray(data.davetliler) && data.davetliler.length > 0) {
+      for (const davetliId of data.davetliler) {
+        if (davetliId !== odUserId) {
+          try {
+            await bildirimOlustur(davetliId, BILDIRIM_TIPLERI.PLAN_DAVET, {
+              mesaj: `${kullanici?.isim || 'Biri'} seni "${data.baslik}" planına davet etti`,
+              planId: docRef.id,
+              planBaslik: data.baslik,
+              planTarih: startAt,
+              planSaat: data.saat || '12:00',
+              gonderenId: odUserId,
+              gonderenIsim: kullanici?.isim,
+              gonderenAvatar: kullanici?.avatar
+            });
+          } catch (e) {
+            console.error('Davet bildirimi gönderilemedi:', e);
+          }
+        }
+      }
+    }
 
     return { success: true, id: docRef.id };
   } catch (error) {
@@ -399,4 +422,65 @@ export const kullaniciPlanReddettimi = (plan, kullaniciId) => {
   if (!plan || !kullaniciId) return false;
   const onay = plan.katilimOnaylari?.[kullaniciId];
   return onay?.reddedildi === true;
+};
+
+// Plan hatırlatma bildirimleri kontrol et ve gönder
+const HATIRLATMA_SURELERI = [
+  { dakika: 180, mesaj: '3 saat sonra' },  // 3 saat
+  { dakika: 60, mesaj: '1 saat sonra' },   // 1 saat
+  { dakika: 15, mesaj: '15 dakika sonra' } // 15 dk
+];
+
+const gonderilmisHatirlatmalar = new Set();
+
+export const planHatirlatmalariniKontrolEt = async (etkinlikler, kullanici) => {
+  if (!kullanici?.odUserId || !etkinlikler?.length) return;
+
+  const simdi = new Date();
+
+  for (const plan of etkinlikler) {
+    // Sadece katıldığım veya davet edildiğim planlar
+    const benimPlanim = plan.olusturanId === kullanici.odUserId;
+    const davetliMiyim = plan.davetliler?.includes(kullanici.odUserId);
+    const katilimciyim = plan.participantIds?.includes(kullanici.odUserId);
+
+    if (!benimPlanim && !davetliMiyim && !katilimciyim) continue;
+
+    // Plan tarih ve saatini parse et
+    const planTarihi = new Date(plan.startAt || plan.tarih);
+    if (plan.saat) {
+      const [saat, dakika] = plan.saat.split(':').map(Number);
+      planTarihi.setHours(saat || 12, dakika || 0, 0, 0);
+    }
+
+    // Geçmiş planları atla
+    if (planTarihi <= simdi) continue;
+
+    const kalanDakika = Math.floor((planTarihi - simdi) / (1000 * 60));
+
+    for (const hatirlatma of HATIRLATMA_SURELERI) {
+      // Hatırlatma zamanı geldi mi? (± 5 dakika tolerans)
+      if (kalanDakika <= hatirlatma.dakika && kalanDakika > hatirlatma.dakika - 5) {
+        const hatirlatmaKey = `${plan.id}-${hatirlatma.dakika}-${kullanici.odUserId}`;
+
+        // Daha önce gönderilmişse atla
+        if (gonderilmisHatirlatmalar.has(hatirlatmaKey)) continue;
+
+        try {
+          await bildirimOlustur(kullanici.odUserId, BILDIRIM_TIPLERI.PLAN_GUNCELLEME, {
+            mesaj: `"${plan.baslik}" ${hatirlatma.mesaj} başlıyor!`,
+            planId: plan.id,
+            planBaslik: plan.baslik,
+            gonderenId: plan.olusturanId,
+            gonderenIsim: plan.olusturanIsim,
+            gonderenAvatar: plan.olusturanAvatar,
+            hatirlatmaTipi: hatirlatma.dakika
+          });
+          gonderilmisHatirlatmalar.add(hatirlatmaKey);
+        } catch (e) {
+          console.error('Hatırlatma bildirimi gönderilemedi:', e);
+        }
+      }
+    }
+  }
 };

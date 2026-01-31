@@ -947,11 +947,9 @@ const BildirimlerModal = () => {
   const okunmamisSayisi = bildirimler?.filter(b => !b.okundu).length || 0;
 
   const davetBildirimleri = bildirimler?.filter(b =>
-    !b.okundu && (
-      b.tip === BILDIRIM_TIPLERI.PLAN_DAVET ||
+    (b.tip === BILDIRIM_TIPLERI.PLAN_DAVET ||
       b.tip === BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI ||
-      b.tip === 'GRUP_DAVET'
-    )
+      b.tip === 'GRUP_DAVET') && (!b.okundu || islenmisBildirimler[b.id])
   ) || [];
 
   const takipIstekBildirimleri = bildirimler?.filter(b =>
@@ -963,8 +961,11 @@ const BildirimlerModal = () => {
   ) || [];
 
   const digerBildirimler = bildirimler?.filter(b => {
-    // İşlenmiş takip isteklerini hariç tut
+    // İşlenmiş takip istekleri ve davetleri hariç tut
     if (b.tip === BILDIRIM_TIPLERI.TAKIP_ISTEGI && islenmisBildirimler[b.id]) {
+      return false;
+    }
+    if ((b.tip === BILDIRIM_TIPLERI.PLAN_DAVET || b.tip === 'GRUP_DAVET') && islenmisBildirimler[b.id]) {
       return false;
     }
     return b.okundu || (
@@ -982,14 +983,21 @@ const BildirimlerModal = () => {
     }
   };
 
-  // Davet Kabul Et
+  // Davet Kabul Et (Varım)
   const handleDavetKabul = async (bildirim) => {
     setIslemYapiliyor(bildirim.id);
     try {
       if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_DAVET && bildirim.planId) {
         // Plana katıl
         await katilimDurumuGuncelle(bildirim.planId, KATILIM_DURUMLARI.VARIM);
-        bildirimGoster('Daveti kabul ettin!', 'success');
+        setIslenmisBildirimler(prev => ({
+          ...prev,
+          [bildirim.id]: {
+            durum: 'kabul',
+            mesaj: `Davete katıldın · "${bildirim.planBaslik || 'Plan'}"`
+          }
+        }));
+        bildirimGoster('Davete katıldın!', 'success');
       } else if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI && bildirim.planId) {
         // Katılım isteğini kabul et - plan detayına yönlendir
         const plan = etkinlikler?.find(e => e.id === bildirim.planId);
@@ -1007,11 +1015,19 @@ const BildirimlerModal = () => {
     setIslemYapiliyor(null);
   };
 
+  // Davet Reddet (Yokum)
   const handleDavetReddet = async (bildirim) => {
     setIslemYapiliyor(bildirim.id);
     try {
       if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_DAVET && bildirim.planId) {
         await katilimDurumuGuncelle(bildirim.planId, KATILIM_DURUMLARI.YOKUM);
+        setIslenmisBildirimler(prev => ({
+          ...prev,
+          [bildirim.id]: {
+            durum: 'red',
+            mesaj: `Daveti reddettin · "${bildirim.planBaslik || 'Plan'}"`
+          }
+        }));
         bildirimGoster('Daveti reddettin', 'success');
       }
       await bildirimOkunduIsaretle(bildirim.id);
@@ -1222,41 +1238,53 @@ const BildirimlerModal = () => {
         {davetBildirimleri.length > 0 && (
           <div className="p-4 border-b border-dark-700">
             <h3 className="text-xs font-semibold text-gold-500 mb-3 flex items-center gap-2">
-              <span>💝</span> Davet Merkezi
+              <span>💝</span> Plan Davetleri
             </h3>
             <div className="space-y-3">
-              {davetBildirimleri.map(b => (
-                <div
-                  key={b.id}
-                  className="p-3 bg-gold-500/5 border border-gold-500/20 rounded-xl"
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center">
-                      {getBildirimIkonu(b.tip)}
+              {davetBildirimleri.map(b => {
+                const islenmis = islenmisBildirimler[b.id];
+                return (
+                  <div
+                    key={b.id}
+                    className={`p-3 rounded-xl ${islenmis ? 'bg-dark-800/50 border border-dark-700' : 'bg-gold-500/5 border border-gold-500/20'}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${islenmis ? 'bg-dark-700' : 'bg-gold-500/10'}`}>
+                        {b.gonderenAvatar || '💌'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm ${islenmis ? 'text-dark-400' : 'text-white'}`}>
+                          {islenmis ? islenmis.mesaj : b.mesaj}
+                        </p>
+                        <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
+                      </div>
+                      {islenmis && (
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${islenmis.durum === 'kabul' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-dark-600 text-dark-400'}`}>
+                          {islenmis.durum === 'kabul' ? <CheckIcon className="w-4 h-4" /> : <XIcon className="w-4 h-4" />}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white">{b.mesaj}</p>
-                      <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
-                    </div>
+                    {!islenmis && (
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => handleDavetKabul(b)}
+                          disabled={islemYapiliyor === b.id}
+                          className="flex-1 bg-emerald-500 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                          {islemYapiliyor === b.id ? '...' : 'Varım ✓'}
+                        </button>
+                        <button
+                          onClick={() => handleDavetReddet(b)}
+                          disabled={islemYapiliyor === b.id}
+                          className="flex-1 bg-dark-700 text-dark-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                          Yokum ✗
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleDavetKabul(b)}
-                      disabled={islemYapiliyor === b.id}
-                      className="flex-1 btn-gold py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                    >
-                      {islemYapiliyor === b.id ? '...' : 'Kabul Et'}
-                    </button>
-                    <button
-                      onClick={() => handleDavetReddet(b)}
-                      disabled={islemYapiliyor === b.id}
-                      className="flex-1 btn-ghost py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                    >
-                      Reddet
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
