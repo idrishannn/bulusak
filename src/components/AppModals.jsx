@@ -26,18 +26,18 @@ const ModalWrapper = ({ children, onClose, onBack, title, fullScreen = false }) 
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-[100] bg-dark-900 flex flex-col">
-        <div className="p-4 border-b border-dark-800 flex items-center justify-between safe-top">
+      <div className="fixed inset-0 z-[100] bg-navy-900 flex flex-col">
+        <div className="p-4 border-b border-navy-800 flex items-center justify-between safe-top">
           <div className="flex items-center gap-3">
             {onBack && (
-              <button onClick={onBack} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center">
-                <ChevronLeftIcon className="w-5 h-5 text-dark-400" />
+              <button onClick={onBack} className="w-10 h-10 rounded-xl bg-navy-800 flex items-center justify-center">
+                <ChevronLeftIcon className="w-5 h-5 text-navy-400" />
               </button>
             )}
             <h2 className="text-lg font-semibold text-white">{title}</h2>
           </div>
-          <button onClick={onClose} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center">
-            <XIcon className="w-5 h-5 text-dark-400" />
+          <button onClick={onClose} className="w-10 h-10 rounded-xl bg-navy-800 flex items-center justify-center">
+            <XIcon className="w-5 h-5 text-navy-400" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto">{children}</div>
@@ -48,18 +48,18 @@ const ModalWrapper = ({ children, onClose, onBack, title, fullScreen = false }) 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-dark-900 rounded-t-3xl max-h-[90vh] flex flex-col animate-slide-up">
-        <div className="p-4 border-b border-dark-800 flex items-center justify-between">
+      <div className="relative w-full max-w-lg bg-navy-900 rounded-t-3xl max-h-[90vh] flex flex-col animate-slide-up">
+        <div className="p-4 border-b border-navy-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {onBack && (
-              <button onClick={onBack} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center">
-                <ChevronLeftIcon className="w-5 h-5 text-dark-400" />
+              <button onClick={onBack} className="w-10 h-10 rounded-xl bg-navy-800 flex items-center justify-center">
+                <ChevronLeftIcon className="w-5 h-5 text-navy-400" />
               </button>
             )}
             <h2 className="text-lg font-semibold text-white">{title}</h2>
           </div>
-          <button onClick={onClose} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center">
-            <XIcon className="w-5 h-5 text-dark-400" />
+          <button onClick={onClose} className="w-10 h-10 rounded-xl bg-navy-800 flex items-center justify-center">
+            <XIcon className="w-5 h-5 text-navy-400" />
           </button>
         </div>
         {children}
@@ -75,7 +75,7 @@ const ParticipantAvatars = ({ participants, maxVisible = MAX_VISIBLE_PARTICIPANT
   const fazlasi = varimOlanlar.length - maxVisible;
 
   if (varimOlanlar.length === 0) {
-    return <p className="text-dark-500 text-sm">Henüz katılımcı yok</p>;
+    return <p className="text-navy-500 text-sm">Henüz katılımcı yok</p>;
   }
 
   const renderAvatar = (avatar) => {
@@ -91,7 +91,7 @@ const ParticipantAvatars = ({ participants, maxVisible = MAX_VISIBLE_PARTICIPANT
         {gosterilecek.map((k, i) => (
           <div
             key={k.odUserId || i}
-            className="w-10 h-10 rounded-full bg-dark-700 border-2 border-dark-900 flex items-center justify-center text-lg overflow-hidden"
+            className="w-10 h-10 rounded-full bg-navy-700 border-2 border-navy-900 flex items-center justify-center text-lg overflow-hidden"
             style={{ zIndex: maxVisible - i }}
           >
             {renderAvatar(k.avatar)}
@@ -99,14 +99,14 @@ const ParticipantAvatars = ({ participants, maxVisible = MAX_VISIBLE_PARTICIPANT
         ))}
         {fazlasi > 0 && (
           <div
-            className="w-10 h-10 rounded-full bg-gold-500/20 border-2 border-dark-900 flex items-center justify-center text-xs font-bold text-gold-500"
+            className="w-10 h-10 rounded-full bg-gold-500/20 border-2 border-navy-900 flex items-center justify-center text-xs font-bold text-gold-500"
             style={{ zIndex: 0 }}
           >
             +{fazlasi}
           </div>
         )}
       </div>
-      <ChevronRightIcon className="w-4 h-4 text-dark-500 ml-2" />
+      <ChevronRightIcon className="w-4 h-4 text-navy-500 ml-2" />
     </button>
   );
 };
@@ -136,11 +136,11 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
   return (
     <div className="fixed inset-0 z-[110] flex items-end justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-dark-900 rounded-t-3xl max-h-[60vh] flex flex-col animate-slide-up">
-        <div className="p-4 border-b border-dark-800 flex items-center justify-between">
+      <div className="relative w-full max-w-lg bg-navy-900 rounded-t-3xl max-h-[60vh] flex flex-col animate-slide-up">
+        <div className="p-4 border-b border-navy-800 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-white">Katılımcılar</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-dark-800 flex items-center justify-center">
-            <XIcon className="w-4 h-4 text-dark-400" />
+          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-navy-800 flex items-center justify-center">
+            <XIcon className="w-4 h-4 text-navy-400" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
@@ -154,7 +154,7 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
                     onClick={() => handleProfilAc(k)}
                     className="w-full flex items-center gap-3 p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-navy-700 flex items-center justify-center text-xl overflow-hidden">
                       {renderAvatar(k.avatar)}
                     </div>
                     <span className="text-white font-medium">
@@ -175,7 +175,7 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
                     onClick={() => handleProfilAc(k)}
                     className="w-full flex items-center gap-3 p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-navy-700 flex items-center justify-center text-xl overflow-hidden">
                       {renderAvatar(k.avatar)}
                     </div>
                     <span className="text-white font-medium">
@@ -300,30 +300,30 @@ const HizliPlanModal = () => {
     <ModalWrapper title="Yeni Plan" onClose={() => setModalAcik(null)}>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Plan Adı</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Plan Adı</label>
           <input type="text" value={baslik} onChange={(e) => setBaslik(e.target.value)} placeholder="Ne yapalım?" className="input-dark" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">Tarih</label>
+            <label className="text-xs font-medium text-navy-400 mb-2 block">Tarih</label>
             <input type="date" value={seciliTarih} onChange={(e) => setSeciliTarih(e.target.value)} min={new Date().toISOString().split('T')[0]} className="input-dark" />
           </div>
           <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">Saat</label>
-            <select value={seciliSaat} onChange={(e) => setSeciliSaat(e.target.value)} className="input-dark bg-dark-800">
+            <label className="text-xs font-medium text-navy-400 mb-2 block">Saat</label>
+            <select value={seciliSaat} onChange={(e) => setSeciliSaat(e.target.value)} className="input-dark bg-navy-800">
               {HOUR_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
 
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Mekan (Opsiyonel)</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Mekan (Opsiyonel)</label>
           <input type="text" value={mekan} onChange={(e) => setMekan(e.target.value)} placeholder="Nerede buluşalım?" className="input-dark" />
         </div>
 
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Kategori</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Kategori</label>
           <div className="flex gap-2 overflow-x-auto hide-scrollbar py-1">
             {PLAN_CATEGORIES.filter(c => c.id !== 'tumu').map(cat => (
               <button
@@ -343,7 +343,7 @@ const HizliPlanModal = () => {
 
         {/* Görünürlük Ayarları */}
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Plan Görünürlüğü</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Plan Görünürlüğü</label>
           <div className="flex gap-2">
             <button
               onClick={() => setVisibility(PLAN_VISIBILITY.PRIVATE)}
@@ -358,14 +358,14 @@ const HizliPlanModal = () => {
               <GlobeIcon className="w-4 h-4" /> Açık
             </button>
           </div>
-          <p className="text-xs text-dark-500 mt-1">
+          <p className="text-xs text-navy-500 mt-1">
             {visibility === PLAN_VISIBILITY.PUBLIC ? 'Herkes keşfette görebilir ve katılım isteği gönderebilir' : 'Sadece davet ettiklerin görebilir'}
           </p>
         </div>
 
         {/* Katılımcı Limiti - Serbest Sayı Girişi */}
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Katılımcı Limiti (Opsiyonel)</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Katılımcı Limiti (Opsiyonel)</label>
           <div className="flex gap-2 items-center">
             <input
               type="number"
@@ -397,7 +397,7 @@ const HizliPlanModal = () => {
               ∞ Limitsiz
             </button>
           </div>
-          <p className="text-xs text-dark-500 mt-1">
+          <p className="text-xs text-navy-500 mt-1">
             {katilimciLimit > 0
               ? `Maksimum ${katilimciLimit} kişi katılabilir`
               : 'Sınırsız katılımcı kabul edilir'}
@@ -406,7 +406,7 @@ const HizliPlanModal = () => {
 
         {/* Plan Fotoğrafı */}
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Plan Fotoğrafı (Opsiyonel)</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Plan Fotoğrafı (Opsiyonel)</label>
           <input
             type="file"
             ref={fotoInputRef}
@@ -419,7 +419,7 @@ const HizliPlanModal = () => {
               <img src={planFoto} alt="Plan" className="w-full h-32 object-cover rounded-xl" />
               <button
                 onClick={() => setPlanFoto(null)}
-                className="absolute top-2 right-2 w-8 h-8 bg-dark-900/80 rounded-full flex items-center justify-center"
+                className="absolute top-2 right-2 w-8 h-8 bg-navy-900/80 rounded-full flex items-center justify-center"
               >
                 <XIcon className="w-5 h-5 text-white" />
               </button>
@@ -427,17 +427,17 @@ const HizliPlanModal = () => {
           ) : (
             <button
               onClick={() => fotoInputRef.current?.click()}
-              className="w-full py-6 border-2 border-dashed border-dark-600 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gold-500/50 transition-colors"
+              className="w-full py-6 border-2 border-dashed border-navy-600 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gold-500/50 transition-colors"
             >
-              <CameraIcon className="w-8 h-8 text-dark-500" />
-              <span className="text-sm text-dark-400">Fotoğraf Ekle</span>
+              <CameraIcon className="w-8 h-8 text-navy-500" />
+              <span className="text-sm text-navy-400">Fotoğraf Ekle</span>
             </button>
           )}
         </div>
 
         {/* Davet Et */}
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Davet Et (Opsiyonel)</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Davet Et (Opsiyonel)</label>
 
           {/* Seçilen kişiler */}
           {secilenArkadaslar.length > 0 && (
@@ -447,7 +447,7 @@ const HizliPlanModal = () => {
                 if (!kisi) return null;
                 return (
                   <div key={id} className="flex items-center gap-2 px-3 py-1.5 bg-gold-500/20 rounded-full border border-gold-500/30">
-                    <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center bg-dark-700">
+                    <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center bg-navy-700">
                       {kisi.avatar?.startsWith('http') || kisi.avatar?.startsWith('data:') ? (
                         <img src={kisi.avatar} alt="" className="w-full h-full object-cover" />
                       ) : <span className="text-sm">{kisi.avatar || '👤'}</span>}
@@ -465,7 +465,7 @@ const HizliPlanModal = () => {
           {/* Arama Kutusu */}
           <div className="space-y-2">
             <div className="relative">
-              <SearchIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-dark-500" />
+              <SearchIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-navy-500" />
               <input
                 type="text"
                 value={aramaMetni}
@@ -488,17 +488,17 @@ const HizliPlanModal = () => {
                     className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${
                       secilenArkadaslar.includes(k.odUserId)
                         ? 'bg-gold-500/20 border border-gold-500/30'
-                        : 'hover:bg-dark-700'
+                        : 'hover:bg-navy-700'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-navy-700 flex items-center justify-center text-xl overflow-hidden">
                       {k.avatar?.startsWith('http') || k.avatar?.startsWith('data:') ? (
                         <img src={k.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (k.avatar || '👤')}
                     </div>
                     <div className="flex-1 text-left">
                       <p className="text-white font-medium">{k.isim}</p>
-                      <p className="text-xs text-dark-400">@{(k.kullaniciAdi || '').replace(/@/g, '')}</p>
+                      <p className="text-xs text-navy-400">@{(k.kullaniciAdi || '').replace(/@/g, '')}</p>
                     </div>
                     {secilenArkadaslar.includes(k.odUserId) && <CheckIcon className="w-5 h-5 text-gold-500" />}
                   </button>
@@ -506,17 +506,17 @@ const HizliPlanModal = () => {
               </div>
             )}
             {aramaMetni.length >= 2 && aramaSonuclari.length === 0 && !aramaYukleniyor && (
-              <p className="text-center py-2 text-dark-400 text-sm">Kullanıcı bulunamadı</p>
+              <p className="text-center py-2 text-navy-400 text-sm">Kullanıcı bulunamadı</p>
             )}
             {!aramaMetni && secilenArkadaslar.length === 0 && (
-              <p className="text-center py-2 text-dark-400 text-xs">Sadece herkese açık hesaplar davet edilebilir</p>
+              <p className="text-center py-2 text-navy-400 text-xs">Sadece herkese açık hesaplar davet edilebilir</p>
             )}
           </div>
         </div>
 
       </div>
 
-      <div className="p-4 border-t border-dark-800">
+      <div className="p-4 border-t border-navy-800">
         <button onClick={handleOlustur} disabled={yukleniyor} className="w-full btn-gold py-4 rounded-xl font-semibold">
           {yukleniyor ? 'Oluşturuluyor...' : 'Plan Oluştur'}
         </button>
@@ -563,7 +563,7 @@ const ArkadaslarModal = () => {
 
   return (
     <ModalWrapper title="Arkadaşlar" onClose={() => setModalAcik(null)}>
-      <div className="p-4 border-b border-dark-800">
+      <div className="p-4 border-b border-navy-800">
         <div className="flex gap-2">
           <button onClick={() => setTab('liste')} className={`flex-1 py-2 rounded-xl font-medium text-sm ${tab === 'liste' ? 'btn-gold' : 'btn-ghost'}`}>Arkadaşlarım</button>
           <button onClick={() => setTab('ara')} className={`flex-1 py-2 rounded-xl font-medium text-sm ${tab === 'ara' ? 'btn-gold' : 'btn-ghost'}`}>Kişi Ara</button>
@@ -574,20 +574,20 @@ const ArkadaslarModal = () => {
         {tab === 'ara' && (
           <>
             <div className="relative mb-4">
-              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500" />
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-navy-500" />
               <input type="text" value={arama} onChange={(e) => setArama(e.target.value)} placeholder="Kullanıcı adı ara..." className="input-dark pl-12" />
             </div>
-            {araniyor && <p className="text-center text-dark-400">Aranıyor...</p>}
+            {araniyor && <p className="text-center text-navy-400">Aranıyor...</p>}
             {aramaSonuclari.length > 0 && (
               <div className="space-y-2">
                 {aramaSonuclari.map(k => (
                   <div key={k.odUserId} className="flex items-center gap-3 p-3 card">
-                    <div className="w-12 h-12 rounded-xl bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+                    <div className="w-12 h-12 rounded-xl bg-navy-700 flex items-center justify-center text-2xl overflow-hidden">
                       {k.avatar?.startsWith('http') || k.avatar?.startsWith('data:') ? (
                         <img src={k.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (k.avatar || '👤')}
                     </div>
-                    <div className="flex-1"><p className="font-medium text-white">{k.isim}</p><p className="text-sm text-dark-400">@{k.kullaniciAdi}</p></div>
+                    <div className="flex-1"><p className="font-medium text-white">{k.isim}</p><p className="text-sm text-navy-400">@{k.kullaniciAdi}</p></div>
                     {arkadasMi(k.odUserId) ? <span className="text-emerald-400 text-sm">Arkadaş</span>
                       : k.istekGonderildi ? <span className="text-gold-500 text-sm">Gönderildi</span>
                       : <button onClick={() => handleIstekGonder(k)} className="btn-gold px-3 py-1.5 rounded-lg text-sm">Ekle</button>}
@@ -603,18 +603,18 @@ const ArkadaslarModal = () => {
             <div className="space-y-2">
               {arkadaslar.map(a => (
                 <div key={a.odUserId} className="flex items-center gap-3 p-3 card">
-                  <div className="w-12 h-12 rounded-xl bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+                  <div className="w-12 h-12 rounded-xl bg-navy-700 flex items-center justify-center text-2xl overflow-hidden">
                     {a.avatar?.startsWith('http') || a.avatar?.startsWith('data:') ? (
                       <img src={a.avatar} alt="" className="w-full h-full object-cover" />
                     ) : (a.avatar || '👤')}
                   </div>
-                  <div className="flex-1"><p className="font-medium text-white">{a.isim}</p><p className="text-sm text-dark-400">@{a.kullaniciAdi}</p></div>
-                  <button onClick={() => handleArkadasSil(a.odUserId)} className="text-dark-500 hover:text-red-400"><TrashIcon className="w-5 h-5" /></button>
+                  <div className="flex-1"><p className="font-medium text-white">{a.isim}</p><p className="text-sm text-navy-400">@{a.kullaniciAdi}</p></div>
+                  <button onClick={() => handleArkadasSil(a.odUserId)} className="text-navy-500 hover:text-red-400"><TrashIcon className="w-5 h-5" /></button>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8"><p className="text-dark-400">Henüz arkadaşın yok</p></div>
+            <div className="text-center py-8"><p className="text-navy-400">Henüz arkadaşın yok</p></div>
           )
         )}
       </div>
@@ -640,8 +640,8 @@ const ArkadasIstekleriModal = () => {
         {bekleyenler.length > 0 ? bekleyenler.map(i => (
           <div key={i.kimden} className="card p-4 mb-3">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-xl bg-dark-700 flex items-center justify-center text-2xl">{i.kimdenAvatar || '👤'}</div>
-              <div className="flex-1"><p className="font-medium text-white">{i.kimdenIsim}</p><p className="text-sm text-dark-400">@{i.kimdenKullaniciAdi}</p></div>
+              <div className="w-12 h-12 rounded-xl bg-navy-700 flex items-center justify-center text-2xl">{i.kimdenAvatar || '👤'}</div>
+              <div className="flex-1"><p className="font-medium text-white">{i.kimdenIsim}</p><p className="text-sm text-navy-400">@{i.kimdenKullaniciAdi}</p></div>
             </div>
             <div className="flex gap-2">
               <button onClick={() => handleKabul(i.kimden)} disabled={yukleniyor === i.kimden} className="flex-1 btn-gold py-2 rounded-xl text-sm font-medium">Kabul Et</button>
@@ -649,7 +649,7 @@ const ArkadasIstekleriModal = () => {
             </div>
           </div>
         )) : (
-          <div className="text-center py-8"><p className="text-dark-400">Bekleyen istek yok</p></div>
+          <div className="text-center py-8"><p className="text-navy-400">Bekleyen istek yok</p></div>
         )}
       </div>
     </ModalWrapper>
@@ -747,7 +747,7 @@ const DetayModal = () => {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Plan Sahibi Bilgisi */}
           <div className="flex items-center gap-3 p-3 card">
-            <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl border-2 border-gold-500/30 overflow-hidden">
+            <div className="w-12 h-12 rounded-full bg-navy-700 flex items-center justify-center text-2xl border-2 border-gold-500/30 overflow-hidden">
               {(() => {
                 const avatar = planSahibi?.avatar || seciliEtkinlik.olusturanAvatar;
                 if (avatar?.startsWith('http') || avatar?.startsWith('data:')) {
@@ -757,7 +757,7 @@ const DetayModal = () => {
               })()}
             </div>
             <div className="flex-1">
-              <p className="text-xs text-dark-400">Plan Sahibi</p>
+              <p className="text-xs text-navy-400">Plan Sahibi</p>
               <p className="font-medium text-white">{planSahibi?.isim || seciliEtkinlik.olusturanIsim || 'Kullanıcı'}</p>
             </div>
             {seciliEtkinlik.visibility === PLAN_VISIBILITY.PUBLIC && (
@@ -769,18 +769,18 @@ const DetayModal = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="card p-3">
-              <p className="text-xs text-dark-400 mb-1">Tarih</p>
+              <p className="text-xs text-navy-400 mb-1">Tarih</p>
               <p className="font-medium text-white">{tarih.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' })}</p>
             </div>
             <div className="card p-3">
-              <p className="text-xs text-dark-400 mb-1">Saat</p>
+              <p className="text-xs text-navy-400 mb-1">Saat</p>
               <p className="font-medium text-white">{seciliEtkinlik.saat}</p>
             </div>
           </div>
 
           {seciliEtkinlik.mekan && seciliEtkinlik.mekan !== 'Belirtilmedi' && (
             <div className="card p-3">
-              <p className="text-xs text-dark-400 mb-1">Mekan</p>
+              <p className="text-xs text-navy-400 mb-1">Mekan</p>
               <p className="font-medium text-white">{seciliEtkinlik.mekan}</p>
             </div>
           )}
@@ -788,14 +788,14 @@ const DetayModal = () => {
           {/* Katılım Durumu - Sadece Varım/Yokum */}
           {!benimPlanim && (
             <div>
-              <p className="text-xs text-dark-400 mb-2">Katılım Durumun</p>
+              <p className="text-xs text-navy-400 mb-2">Katılım Durumun</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => handleKatilim(KATILIM_DURUMLARI.VARIM)}
                   className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all border ${
                     benimDurum === KATILIM_DURUMLARI.VARIM
                       ? 'bg-emerald-500 border-emerald-500 text-white'
-                      : 'border-dark-600 text-dark-300 hover:border-emerald-500/50 hover:text-emerald-400'
+                      : 'border-navy-600 text-navy-300 hover:border-emerald-500/50 hover:text-emerald-400'
                   }`}
                 >
                   {KATILIM_LABELS.varim}
@@ -805,7 +805,7 @@ const DetayModal = () => {
                   className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all border ${
                     benimDurum === KATILIM_DURUMLARI.YOKUM
                       ? 'bg-red-500 border-red-500 text-white'
-                      : 'border-dark-600 text-dark-300 hover:border-red-500/50 hover:text-red-400'
+                      : 'border-navy-600 text-navy-300 hover:border-red-500/50 hover:text-red-400'
                   }`}
                 >
                   {KATILIM_LABELS.yokum}
@@ -816,7 +816,7 @@ const DetayModal = () => {
 
           {/* Katılımcılar - Yuvarlak avatarlar */}
           <div>
-            <p className="text-xs text-dark-400 mb-2">Katılımcılar ({katilimcilar.filter(k => k.durum === KATILIM_DURUMLARI.VARIM).length})</p>
+            <p className="text-xs text-navy-400 mb-2">Katılımcılar ({katilimcilar.filter(k => k.durum === KATILIM_DURUMLARI.VARIM).length})</p>
             <ParticipantAvatars
               participants={katilimcilar}
               maxVisible={MAX_VISIBLE_PARTICIPANTS}
@@ -834,22 +834,22 @@ const DetayModal = () => {
 
           {/* Mesajlar */}
           <div>
-            <p className="text-xs text-dark-400 mb-2">Mesajlar</p>
+            <p className="text-xs text-navy-400 mb-2">Mesajlar</p>
             <div ref={mesajlarRef} className="card p-3 max-h-48 overflow-y-auto space-y-3">
               {(seciliEtkinlik.mesajlar || []).map((m, i) => (
                 <div key={i} className={`flex gap-2 ${m.odUserId === kullanici?.odUserId ? 'flex-row-reverse' : ''}`}>
-                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
+                  <div className="w-8 h-8 rounded-full bg-navy-700 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
                     {m.avatar?.startsWith('http') || m.avatar?.startsWith('data:') ? (
                       <img src={m.avatar} alt="" className="w-full h-full object-cover" />
                     ) : (m.avatar || '👤')}
                   </div>
-                  <div className={`max-w-[70%] px-3 py-2 rounded-xl ${m.odUserId === kullanici?.odUserId ? 'bg-gold-500/20 text-gold-100' : 'bg-dark-700 text-white'}`}>
-                    <p className="text-xs text-dark-400 mb-0.5">{m.isim}</p>
+                  <div className={`max-w-[70%] px-3 py-2 rounded-xl ${m.odUserId === kullanici?.odUserId ? 'bg-gold-500/20 text-gold-100' : 'bg-navy-700 text-white'}`}>
+                    <p className="text-xs text-navy-400 mb-0.5">{m.isim}</p>
                     <p className="text-sm">{m.mesaj}</p>
                   </div>
                 </div>
               ))}
-              {(!seciliEtkinlik.mesajlar || seciliEtkinlik.mesajlar.length === 0) && <p className="text-center text-dark-500 text-sm">Henüz mesaj yok</p>}
+              {(!seciliEtkinlik.mesajlar || seciliEtkinlik.mesajlar.length === 0) && <p className="text-center text-navy-500 text-sm">Henüz mesaj yok</p>}
             </div>
           </div>
 
@@ -876,15 +876,15 @@ const DetayModal = () => {
 
         {/* Mesaj Gönderme - Sadece yetkisi olanlar için */}
         {mesajYazabilir ? (
-          <div className="p-4 border-t border-dark-800">
+          <div className="p-4 border-t border-navy-800">
             <div className="flex gap-2">
               <input type="text" value={mesaj} onChange={(e) => setMesaj(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleMesajGonder()} placeholder="Mesaj yaz..." className="flex-1 input-dark" />
               <button onClick={handleMesajGonder} className="w-12 h-12 btn-gold rounded-xl flex items-center justify-center"><SendIcon className="w-5 h-5" /></button>
             </div>
           </div>
         ) : (
-          <div className="p-4 border-t border-dark-800">
-            <p className="text-center text-dark-500 text-sm">Mesaj yazmak için plana katılmalısın</p>
+          <div className="p-4 border-t border-navy-800">
+            <p className="text-center text-navy-500 text-sm">Mesaj yazmak için plana katılmalısın</p>
           </div>
         )}
       </ModalWrapper>
@@ -937,14 +937,14 @@ const YeniGrupModal = () => {
     <ModalWrapper title="Yeni Grup" onClose={() => setModalAcik(null)}>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Grup Adı</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Grup Adı</label>
           <input type="text" value={isim} onChange={(e) => setIsim(e.target.value)} placeholder="Grup adı" className="input-dark" />
         </div>
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">İkon</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">İkon</label>
           <div className="flex flex-wrap gap-2">
             {GROUP_ICONS.map((e, i) => (
-              <button key={i} onClick={() => setEmoji(e)} className={`w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all ${emoji === e ? 'bg-gold-500/20 border border-gold-500/30 scale-110' : 'bg-dark-800 hover:bg-dark-700'}`}>{e}</button>
+              <button key={i} onClick={() => setEmoji(e)} className={`w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all ${emoji === e ? 'bg-gold-500/20 border border-gold-500/30 scale-110' : 'bg-navy-800 hover:bg-navy-700'}`}>{e}</button>
             ))}
           </div>
         </div>
@@ -952,15 +952,15 @@ const YeniGrupModal = () => {
         {/* Grup Üyeleri Seçimi */}
         {arkadaslar?.length > 0 && (
           <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">Üyeler (Opsiyonel)</label>
+            <label className="text-xs font-medium text-navy-400 mb-2 block">Üyeler (Opsiyonel)</label>
             <div className="card p-3 max-h-40 overflow-y-auto space-y-2">
               {arkadaslar.map(a => (
                 <button
                   key={a.odUserId}
                   onClick={() => uyeToggle(a.odUserId)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenUyeler.includes(a.odUserId) ? 'bg-gold-500/20 border border-gold-500/30' : 'hover:bg-dark-700'}`}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenUyeler.includes(a.odUserId) ? 'bg-gold-500/20 border border-gold-500/30' : 'hover:bg-navy-700'}`}
                 >
-                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-lg overflow-hidden">
+                  <div className="w-8 h-8 rounded-full bg-navy-700 flex items-center justify-center text-lg overflow-hidden">
                     {a.avatar?.startsWith('http') || a.avatar?.startsWith('data:') ? (
                       <img src={a.avatar} alt="" className="w-full h-full object-cover" />
                     ) : (a.avatar || '👤')}
@@ -973,7 +973,7 @@ const YeniGrupModal = () => {
           </div>
         )}
       </div>
-      <div className="p-4 border-t border-dark-800">
+      <div className="p-4 border-t border-navy-800">
         <button onClick={handleOlustur} disabled={yukleniyor} className="w-full btn-gold py-4 rounded-xl font-semibold">{yukleniyor ? 'Oluşturuluyor...' : 'Oluştur'}</button>
       </div>
     </ModalWrapper>
@@ -1207,7 +1207,7 @@ const BildirimlerModal = () => {
       case 'GRUP_DAVET':
         return <span className="text-lg">👥</span>;
       default:
-        return <BellIcon className="w-5 h-5 text-dark-400" />;
+        return <BellIcon className="w-5 h-5 text-navy-400" />;
     }
   };
 
@@ -1229,7 +1229,7 @@ const BildirimlerModal = () => {
   return (
     <ModalWrapper title="Bildirimler" onClose={() => setModalAcik(null)} fullScreen={true}>
       {okunmamisSayisi > 0 && (
-        <div className="px-4 py-2 border-b border-dark-800 flex justify-end">
+        <div className="px-4 py-2 border-b border-navy-800 flex justify-end">
           <button
             onClick={handleTumunuOkunduYap}
             className="text-gold-500 text-sm font-medium"
@@ -1240,7 +1240,7 @@ const BildirimlerModal = () => {
       )}
       <div className="flex-1 overflow-y-auto pb-safe">
         {katilimSorguBildirimleri.length > 0 && (
-          <div className="p-4 border-b border-dark-700">
+          <div className="p-4 border-b border-navy-700">
             <h3 className="text-xs font-semibold text-emerald-500 mb-3 flex items-center gap-2">
               <span>📅</span> Plan Zamanı Geldi
             </h3>
@@ -1256,7 +1256,7 @@ const BildirimlerModal = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-white">{b.mesaj}</p>
-                      <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
+                      <p className="text-xs text-navy-500 mt-1">{formatZaman(b.olusturulma)}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -1282,7 +1282,7 @@ const BildirimlerModal = () => {
         )}
 
         {davetBildirimleri.length > 0 && (
-          <div className="p-4 border-b border-dark-700">
+          <div className="p-4 border-b border-navy-700">
             <h3 className="text-xs font-semibold text-gold-500 mb-3 flex items-center gap-2">
               <span>💝</span> Plan Davetleri
             </h3>
@@ -1292,22 +1292,22 @@ const BildirimlerModal = () => {
                 return (
                   <div
                     key={b.id}
-                    className={`p-3 rounded-xl ${islenmis ? 'bg-dark-800/50 border border-dark-700' : 'bg-gold-500/5 border border-gold-500/20'}`}
+                    className={`p-3 rounded-xl ${islenmis ? 'bg-navy-800/50 border border-navy-700' : 'bg-gold-500/5 border border-gold-500/20'}`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl overflow-hidden ${islenmis ? 'bg-dark-700' : 'bg-gold-500/10'}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl overflow-hidden ${islenmis ? 'bg-navy-700' : 'bg-gold-500/10'}`}>
                         {b.gonderenAvatar?.startsWith('http') || b.gonderenAvatar?.startsWith('data:') ? (
                           <img src={b.gonderenAvatar} alt="" className="w-full h-full object-cover" />
                         ) : (b.gonderenAvatar || '💌')}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${islenmis ? 'text-dark-400' : 'text-white'}`}>
+                        <p className={`text-sm ${islenmis ? 'text-navy-400' : 'text-white'}`}>
                           {islenmis ? islenmis.mesaj : b.mesaj}
                         </p>
-                        <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
+                        <p className="text-xs text-navy-500 mt-1">{formatZaman(b.olusturulma)}</p>
                       </div>
                       {islenmis && (
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${islenmis.durum === 'kabul' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-dark-600 text-dark-400'}`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${islenmis.durum === 'kabul' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-navy-600 text-navy-400'}`}>
                           {islenmis.durum === 'kabul' ? <CheckIcon className="w-4 h-4" /> : <XIcon className="w-4 h-4" />}
                         </div>
                       )}
@@ -1324,7 +1324,7 @@ const BildirimlerModal = () => {
                         <button
                           onClick={() => handleDavetReddet(b)}
                           disabled={islemYapiliyor === b.id}
-                          className="flex-1 bg-dark-700 text-dark-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                          className="flex-1 bg-navy-700 text-navy-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
                         >
                           Yokum ✗
                         </button>
@@ -1338,7 +1338,7 @@ const BildirimlerModal = () => {
         )}
 
         {takipIstekBildirimleri.length > 0 && (
-          <div className="p-4 border-b border-dark-700">
+          <div className="p-4 border-b border-navy-700">
             <h3 className="text-xs font-semibold text-purple-500 mb-3 flex items-center gap-2">
               <span>🙋</span> Takip İstekleri
             </h3>
@@ -1348,22 +1348,22 @@ const BildirimlerModal = () => {
                 return (
                   <div
                     key={b.id}
-                    className={`p-3 rounded-xl ${islenmis ? 'bg-dark-800/50 border border-dark-700' : 'bg-purple-500/5 border border-purple-500/20'}`}
+                    className={`p-3 rounded-xl ${islenmis ? 'bg-navy-800/50 border border-navy-700' : 'bg-purple-500/5 border border-purple-500/20'}`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl overflow-hidden ${islenmis ? 'bg-dark-700' : 'bg-purple-500/10'}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl overflow-hidden ${islenmis ? 'bg-navy-700' : 'bg-purple-500/10'}`}>
                         {b.gonderenAvatar?.startsWith('http') || b.gonderenAvatar?.startsWith('data:') ? (
                           <img src={b.gonderenAvatar} alt="" className="w-full h-full object-cover" />
                         ) : (b.gonderenAvatar || '👤')}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${islenmis ? 'text-dark-400' : 'text-white'}`}>
+                        <p className={`text-sm ${islenmis ? 'text-navy-400' : 'text-white'}`}>
                           {islenmis ? islenmis.mesaj : b.mesaj}
                         </p>
-                        <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
+                        <p className="text-xs text-navy-500 mt-1">{formatZaman(b.olusturulma)}</p>
                       </div>
                       {islenmis && (
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${islenmis.durum === 'kabul' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-dark-600 text-dark-400'}`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${islenmis.durum === 'kabul' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-navy-600 text-navy-400'}`}>
                           {islenmis.durum === 'kabul' ? <CheckIcon className="w-4 h-4" /> : <XIcon className="w-4 h-4" />}
                         </div>
                       )}
@@ -1380,7 +1380,7 @@ const BildirimlerModal = () => {
                         <button
                           onClick={() => handleTakipIstegiReddet(b)}
                           disabled={islemYapiliyor === b.id}
-                          className="flex-1 bg-dark-700 text-dark-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                          className="flex-1 bg-navy-700 text-navy-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
                         >
                           Reddet
                         </button>
@@ -1398,20 +1398,20 @@ const BildirimlerModal = () => {
           <button
             key={b.id}
             onClick={() => handleBildirimTikla(b)}
-            className={`w-full p-4 flex items-start gap-3 text-left border-b border-dark-800/50 transition-colors ${
+            className={`w-full p-4 flex items-start gap-3 text-left border-b border-navy-800/50 transition-colors ${
               b.okundu ? 'bg-transparent' : 'bg-gold-500/5'
-            } hover:bg-dark-800/50`}
+            } hover:bg-navy-800/50`}
           >
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-              b.okundu ? 'bg-dark-800' : 'bg-gold-500/10'
+              b.okundu ? 'bg-navy-800' : 'bg-gold-500/10'
             }`}>
               {getBildirimIkonu(b.tip)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className={`text-sm ${b.okundu ? 'text-dark-300' : 'text-white'}`}>
+              <p className={`text-sm ${b.okundu ? 'text-navy-300' : 'text-white'}`}>
                 {b.mesaj}
               </p>
-              <p className="text-xs text-dark-500 mt-1">
+              <p className="text-xs text-navy-500 mt-1">
                 {formatZaman(b.olusturulma)}
               </p>
             </div>
@@ -1421,8 +1421,8 @@ const BildirimlerModal = () => {
           </button>
         )) : davetBildirimleri.length === 0 && (
           <div className="text-center py-12">
-            <BellIcon className="w-12 h-12 text-dark-600 mx-auto mb-3" />
-            <p className="text-dark-400">Bildirim yok</p>
+            <BellIcon className="w-12 h-12 text-navy-600 mx-auto mb-3" />
+            <p className="text-navy-400">Bildirim yok</p>
           </div>
         )}
       </div>
@@ -1455,11 +1455,11 @@ const AvatarDegistirModal = () => {
         </div>
         <div className="grid grid-cols-5 gap-2">
           {AVATAR_CATEGORIES[avatarKategori].map((a, i) => (
-            <button key={i} onClick={() => setSeciliAvatar(a)} className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${seciliAvatar === a ? 'bg-gold-500/20 border-2 border-gold-500 scale-110' : 'bg-dark-700'}`}>{a}</button>
+            <button key={i} onClick={() => setSeciliAvatar(a)} className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${seciliAvatar === a ? 'bg-gold-500/20 border-2 border-gold-500 scale-110' : 'bg-navy-700'}`}>{a}</button>
           ))}
         </div>
       </div>
-      <div className="p-4 border-t border-dark-800">
+      <div className="p-4 border-t border-navy-800">
         <button onClick={handleKaydet} className="w-full btn-gold py-4 rounded-xl font-semibold">Kaydet</button>
       </div>
     </ModalWrapper>
@@ -1567,10 +1567,10 @@ const ProfilDuzenleModal = () => {
             </div>
           </button>
         </div>
-        <p className="text-center text-xs text-dark-400">Fotoğraf eklemek için tıkla</p>
+        <p className="text-center text-xs text-navy-400">Fotoğraf eklemek için tıkla</p>
 
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">İsim</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">İsim</label>
           <input
             type="text"
             value={isim}
@@ -1581,7 +1581,7 @@ const ProfilDuzenleModal = () => {
         </div>
 
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Kullanıcı Adı</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Kullanıcı Adı</label>
           <input
             type="text"
             value={kullaniciAdi}
@@ -1590,11 +1590,11 @@ const ProfilDuzenleModal = () => {
             maxLength={20}
             className="input-dark"
           />
-          <p className="text-xs text-dark-500 mt-1">Sadece küçük harf, rakam ve alt çizgi</p>
+          <p className="text-xs text-navy-500 mt-1">Sadece küçük harf, rakam ve alt çizgi</p>
         </div>
 
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Biyografi</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Biyografi</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
@@ -1603,11 +1603,11 @@ const ProfilDuzenleModal = () => {
             maxLength={150}
             className="input-dark resize-none"
           />
-          <p className="text-xs text-dark-500 mt-1">{bio.length}/150</p>
+          <p className="text-xs text-navy-500 mt-1">{bio.length}/150</p>
         </div>
       </div>
 
-      <div className="p-4 border-t border-dark-800">
+      <div className="p-4 border-t border-navy-800">
         <button
           onClick={handleKaydet}
           disabled={yukleniyor}
@@ -1655,11 +1655,11 @@ const GizlilikAyarlariModal = () => {
     <div className="flex items-center justify-between p-4 card">
       <div className="flex-1">
         <p className="text-white font-medium">{label}</p>
-        <p className="text-xs text-dark-400 mt-1">{description}</p>
+        <p className="text-xs text-navy-400 mt-1">{description}</p>
       </div>
       <button
         onClick={() => onChange(!value)}
-        className={`w-12 h-7 rounded-full transition-all ${value ? 'bg-gold-500' : 'bg-dark-600'}`}
+        className={`w-12 h-7 rounded-full transition-all ${value ? 'bg-gold-500' : 'bg-navy-600'}`}
       >
         <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${value ? 'translate-x-6' : 'translate-x-1'}`} />
       </button>
@@ -1684,7 +1684,7 @@ const GizlilikAyarlariModal = () => {
         />
       </div>
 
-      <div className="p-4 border-t border-dark-800">
+      <div className="p-4 border-t border-navy-800">
         <button
           onClick={handleKaydet}
           disabled={yukleniyor}
@@ -1741,7 +1741,7 @@ const BildirimAyarlariModal = () => {
       <span className="text-white">{label}</span>
       <button
         onClick={() => setAyarlar(prev => ({ ...prev, [id]: !prev[id] }))}
-        className={`w-12 h-7 rounded-full transition-all ${ayarlar[id] ? 'bg-gold-500' : 'bg-dark-600'}`}
+        className={`w-12 h-7 rounded-full transition-all ${ayarlar[id] ? 'bg-gold-500' : 'bg-navy-600'}`}
       >
         <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${ayarlar[id] ? 'translate-x-6' : 'translate-x-1'}`} />
       </button>
@@ -1759,7 +1759,7 @@ const BildirimAyarlariModal = () => {
         <ToggleItem id="mesajlar" label="Mesajlar" />
       </div>
 
-      <div className="p-4 border-t border-dark-800">
+      <div className="p-4 border-t border-navy-800">
         <button
           onClick={handleKaydet}
           disabled={yukleniyor}
@@ -1849,9 +1849,9 @@ const KullaniciEkleModal = () => {
 
   return (
     <ModalWrapper title="Kullanıcı Ekle" onClose={() => setModalAcik(null)}>
-      <div className="p-4 border-b border-dark-800">
+      <div className="p-4 border-b border-navy-800">
         <div className="relative">
-          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500" />
+          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-navy-500" />
           <input
             type="text"
             value={arama}
@@ -1880,26 +1880,26 @@ const KullaniciEkleModal = () => {
                     onClick={() => { setModalAcik(null); profilAc(k); }}
                     className="flex items-center gap-3 flex-1 min-w-0"
                   >
-                    <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+                    <div className="w-12 h-12 rounded-full bg-navy-700 flex items-center justify-center text-2xl overflow-hidden">
                       {k.avatar?.startsWith('http') || k.avatar?.startsWith('data:') ? (
                         <img src={k.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (k.avatar || '👤')}
                     </div>
                     <div className="flex-1 min-w-0 text-left">
                       <p className="font-medium text-white truncate">{k.isim}</p>
-                      <p className="text-sm text-dark-400 truncate">@{(k.kullaniciAdi || '').replace(/@/g, '')}</p>
+                      <p className="text-sm text-navy-400 truncate">@{(k.kullaniciAdi || '').replace(/@/g, '')}</p>
                     </div>
                   </button>
                   {buttonState === 'takipEdiliyor' ? (
                     <button
                       onClick={() => handleTakiptenCik(k.odUserId)}
                       disabled={islemYapiliyor === k.odUserId}
-                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-dark-700 text-dark-300 hover:bg-dark-600 disabled:opacity-50"
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-navy-700 text-navy-300 hover:bg-navy-600 disabled:opacity-50"
                     >
                       {islemYapiliyor === k.odUserId ? '...' : 'Takip Ediliyor'}
                     </button>
                   ) : buttonState === 'istekGonderildi' ? (
-                    <span className="px-3 py-1.5 rounded-lg text-sm font-medium bg-dark-700 text-gold-500">
+                    <span className="px-3 py-1.5 rounded-lg text-sm font-medium bg-navy-700 text-gold-500">
                       İstek Gönderildi
                     </span>
                   ) : (
@@ -1919,14 +1919,14 @@ const KullaniciEkleModal = () => {
 
         {!araniyor && arama && aramaSonuclari.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-dark-400">Kullanıcı bulunamadı</p>
+            <p className="text-navy-400">Kullanıcı bulunamadı</p>
           </div>
         )}
 
         {!arama && (
           <div className="text-center py-8">
-            <UsersIcon className="w-12 h-12 text-dark-600 mx-auto mb-3" />
-            <p className="text-dark-400">Kullanıcı adı veya isim yazarak ara</p>
+            <UsersIcon className="w-12 h-12 text-navy-600 mx-auto mb-3" />
+            <p className="text-navy-400">Kullanıcı adı veya isim yazarak ara</p>
           </div>
         )}
       </div>
@@ -1995,12 +1995,12 @@ const TakipciListesiModal = () => {
 
   return (
     <ModalWrapper title={tab === 'takipciler' ? 'Takipçiler' : 'Takip Edilenler'} onClose={() => setModalAcik(null)}>
-      <div className="border-b border-dark-800">
+      <div className="border-b border-navy-800">
         <div className="flex">
           <button
             onClick={() => setTab('takipciler')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              tab === 'takipciler' ? 'text-white' : 'text-dark-400'
+              tab === 'takipciler' ? 'text-white' : 'text-navy-400'
             }`}
           >
             Takipçiler ({takipciler.length})
@@ -2011,7 +2011,7 @@ const TakipciListesiModal = () => {
           <button
             onClick={() => setTab('takipEdilenler')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              tab === 'takipEdilenler' ? 'text-white' : 'text-dark-400'
+              tab === 'takipEdilenler' ? 'text-white' : 'text-navy-400'
             }`}
           >
             Takip ({takipEdilenler.length})
@@ -2032,21 +2032,21 @@ const TakipciListesiModal = () => {
             <button
               key={user.odUserId}
               onClick={() => { setModalAcik(null); profilAc(user); }}
-              className="w-full flex items-center gap-3 p-3 card hover:bg-dark-700/50 transition-colors"
+              className="w-full flex items-center gap-3 p-3 card hover:bg-navy-700/50 transition-colors"
             >
-              <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+              <div className="w-12 h-12 rounded-full bg-navy-700 flex items-center justify-center text-2xl overflow-hidden">
                 {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
                   <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                 ) : (user.avatar || '👤')}
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <p className="font-medium text-white truncate">{user.isim}</p>
-                <p className="text-sm text-dark-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
+                <p className="text-sm text-navy-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
               </div>
               {tab === 'takipEdilenler' && (
                 <span
                   onClick={(e) => { e.stopPropagation(); handleTakipToggle(user.odUserId); }}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-dark-700 text-dark-300 hover:bg-dark-600"
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-navy-700 text-navy-300 hover:bg-navy-600"
                 >
                   Takibi Bırak
                 </span>
@@ -2055,8 +2055,8 @@ const TakipciListesiModal = () => {
           ))
         ) : (
           <div className="text-center py-8">
-            <UsersIcon className="w-12 h-12 text-dark-600 mx-auto mb-3" />
-            <p className="text-dark-400">
+            <UsersIcon className="w-12 h-12 text-navy-600 mx-auto mb-3" />
+            <p className="text-navy-400">
               {tab === 'takipciler' ? 'Henüz takipçin yok' : 'Henüz kimseyi takip etmiyorsun'}
             </p>
           </div>
@@ -2128,9 +2128,9 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
       <ModalWrapper title="Erişim Engellendi" onClose={onClose}>
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center">
-            <LockIcon className="w-16 h-16 text-dark-600 mx-auto mb-4" />
+            <LockIcon className="w-16 h-16 text-navy-600 mx-auto mb-4" />
             <p className="text-white font-medium mb-2">Bu hesap gizli</p>
-            <p className="text-dark-400 text-sm">Takipçi ve takip listesini görmek için bu hesabı takip etmelisin.</p>
+            <p className="text-navy-400 text-sm">Takipçi ve takip listesini görmek için bu hesabı takip etmelisin.</p>
           </div>
         </div>
       </ModalWrapper>
@@ -2141,12 +2141,12 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
 
   return (
     <ModalWrapper title={hedefKullaniciData?.isim || 'Kullanıcı'} onClose={onClose}>
-      <div className="border-b border-dark-800">
+      <div className="border-b border-navy-800">
         <div className="flex">
           <button
             onClick={() => setTab('takipciler')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              tab === 'takipciler' ? 'text-white' : 'text-dark-400'
+              tab === 'takipciler' ? 'text-white' : 'text-navy-400'
             }`}
           >
             Takipçiler ({takipciler.length})
@@ -2157,7 +2157,7 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
           <button
             onClick={() => setTab('takipEdilenler')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              tab === 'takipEdilenler' ? 'text-white' : 'text-dark-400'
+              tab === 'takipEdilenler' ? 'text-white' : 'text-navy-400'
             }`}
           >
             Takip ({takipEdilenler.length})
@@ -2178,23 +2178,23 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
             <button
               key={user.odUserId}
               onClick={() => { onClose(); profilAc(user); }}
-              className="w-full flex items-center gap-3 p-3 card hover:bg-dark-700/50 transition-colors"
+              className="w-full flex items-center gap-3 p-3 card hover:bg-navy-700/50 transition-colors"
             >
-              <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+              <div className="w-12 h-12 rounded-full bg-navy-700 flex items-center justify-center text-2xl overflow-hidden">
                 {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
                   <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                 ) : (user.avatar || '👤')}
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <p className="font-medium text-white truncate">{user.isim}</p>
-                <p className="text-sm text-dark-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
+                <p className="text-sm text-navy-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
               </div>
             </button>
           ))
         ) : (
           <div className="text-center py-8">
-            <UsersIcon className="w-12 h-12 text-dark-600 mx-auto mb-3" />
-            <p className="text-dark-400">
+            <UsersIcon className="w-12 h-12 text-navy-600 mx-auto mb-3" />
+            <p className="text-navy-400">
               {tab === 'takipciler' ? 'Henüz takipçi yok' : 'Henüz kimseyi takip etmiyor'}
             </p>
           </div>
@@ -2241,12 +2241,12 @@ const TakipIstekleriModal = () => {
         {bekleyenler.length > 0 ? bekleyenler.map(i => (
           <div key={i.kimden} className="card p-4 mb-3">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl">
+              <div className="w-12 h-12 rounded-full bg-navy-700 flex items-center justify-center text-2xl">
                 {i.kimdenAvatar || '👤'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-white truncate">{i.kimdenIsim}</p>
-                <p className="text-sm text-dark-400 truncate">@{(i.kimdenKullaniciAdi || '').replace(/@/g, '')}</p>
+                <p className="text-sm text-navy-400 truncate">@{(i.kimdenKullaniciAdi || '').replace(/@/g, '')}</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -2268,8 +2268,8 @@ const TakipIstekleriModal = () => {
           </div>
         )) : (
           <div className="text-center py-8">
-            <UsersIcon className="w-12 h-12 text-dark-600 mx-auto mb-3" />
-            <p className="text-dark-400">Bekleyen takip isteği yok</p>
+            <UsersIcon className="w-12 h-12 text-navy-600 mx-auto mb-3" />
+            <p className="text-navy-400">Bekleyen takip isteği yok</p>
           </div>
         )}
       </div>
@@ -2386,7 +2386,7 @@ const HikayeEkleModal = () => {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-dark-600 text-dark-400 hover:border-gold-500 hover:text-gold-500 transition-colors"
+            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-navy-600 text-navy-400 hover:border-gold-500 hover:text-gold-500 transition-colors"
           >
             <ImageIcon className="w-5 h-5" />
             {secilenGorsel ? 'Farklı Görsel Seç' : 'Görsel Ekle'}
@@ -2395,7 +2395,7 @@ const HikayeEkleModal = () => {
 
         {/* Metin Girişi */}
         <div>
-          <label className="text-xs font-medium text-dark-400 mb-2 block">Metin (Opsiyonel)</label>
+          <label className="text-xs font-medium text-navy-400 mb-2 block">Metin (Opsiyonel)</label>
           <textarea
             value={metin}
             onChange={(e) => setMetin(e.target.value)}
@@ -2404,20 +2404,20 @@ const HikayeEkleModal = () => {
             maxLength={150}
             className="input-dark resize-none"
           />
-          <p className="text-xs text-dark-500 mt-1">{metin.length}/150</p>
+          <p className="text-xs text-navy-500 mt-1">{metin.length}/150</p>
         </div>
 
         {/* Arkaplan Rengi (sadece görsel yoksa) */}
         {!secilenGorsel && (
           <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">Arkaplan Rengi</label>
+            <label className="text-xs font-medium text-navy-400 mb-2 block">Arkaplan Rengi</label>
             <div className="flex gap-2">
               {renkler.map((renk) => (
                 <button
                   key={renk}
                   onClick={() => setArkaplanRengi(renk)}
                   className={`w-8 h-8 rounded-full transition-transform ${
-                    arkaplanRengi === renk ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-dark-900' : ''
+                    arkaplanRengi === renk ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-navy-900' : ''
                   }`}
                   style={{ backgroundColor: renk }}
                 />
@@ -2427,7 +2427,7 @@ const HikayeEkleModal = () => {
         )}
       </div>
 
-      <div className="p-4 border-t border-dark-800">
+      <div className="p-4 border-t border-navy-800">
         <button
           onClick={handlePaylas}
           disabled={yukleniyor || (!metin.trim() && !secilenGorsel)}
@@ -2523,8 +2523,8 @@ const DigerKullaniciProfilModal = () => {
   };
 
   const getTakipButonStyle = () => {
-    if (takipDurumu?.takipEdiyor) return 'bg-dark-700 text-white';
-    if (takipDurumu?.istekGonderildi) return 'bg-dark-700 text-dark-400';
+    if (takipDurumu?.takipEdiyor) return 'bg-navy-700 text-white';
+    if (takipDurumu?.istekGonderildi) return 'bg-navy-700 text-navy-400';
     return 'btn-gold';
   };
 
@@ -2556,20 +2556,20 @@ const DigerKullaniciProfilModal = () => {
                 <div className="flex-1 flex justify-around text-center pt-2">
                   <div>
                     <div className="text-xl font-bold text-white">{profilData.planSayisi || 0}</div>
-                    <div className="text-xs text-dark-400">Plan</div>
+                    <div className="text-xs text-navy-400">Plan</div>
                   </div>
                   <div>
                     <div className="text-xl font-bold text-white">{profilData.takipciler?.length || 0}</div>
-                    <div className="text-xs text-dark-400">Takipçi</div>
+                    <div className="text-xs text-navy-400">Takipçi</div>
                   </div>
                   <div>
                     <div className="text-xl font-bold text-white">{profilData.takipEdilenler?.length || 0}</div>
-                    <div className="text-xs text-dark-400">Takip</div>
+                    <div className="text-xs text-navy-400">Takip</div>
                   </div>
                 </div>
               ) : (
                 <div className="flex-1 flex items-center justify-center pt-2">
-                  <div className="flex items-center gap-2 text-dark-400">
+                  <div className="flex items-center gap-2 text-navy-400">
                     <LockIcon className="w-5 h-5" />
                     <span className="text-sm">Gizli Hesap</span>
                   </div>
@@ -2603,11 +2603,11 @@ const DigerKullaniciProfilModal = () => {
           {/* Gizli Profil Uyarısı */}
           {!profilGorunur && (
             <div className="px-4 py-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-dark-800 flex items-center justify-center mx-auto mb-4">
-                <LockIcon className="w-8 h-8 text-dark-500" />
+              <div className="w-16 h-16 rounded-full bg-navy-800 flex items-center justify-center mx-auto mb-4">
+                <LockIcon className="w-8 h-8 text-navy-500" />
               </div>
               <h3 className="font-semibold text-white mb-2">Bu Hesap Gizli</h3>
-              <p className="text-sm text-dark-400">
+              <p className="text-sm text-navy-400">
                 Bu kullanıcının paylaşımlarını görmek için takip et.
               </p>
             </div>
@@ -2617,11 +2617,11 @@ const DigerKullaniciProfilModal = () => {
           {profilGorunur && (
             <>
               {/* Tab Bar */}
-              <div className="flex border-b border-dark-700">
+              <div className="flex border-b border-navy-700">
                 <button
                   onClick={() => setAktifTab('planlar')}
                   className={`flex-1 py-3 text-center font-medium text-xs transition-colors relative ${
-                    aktifTab === 'planlar' ? 'text-white' : 'text-dark-400'
+                    aktifTab === 'planlar' ? 'text-white' : 'text-navy-400'
                   }`}
                 >
                   Planları
@@ -2634,7 +2634,7 @@ const DigerKullaniciProfilModal = () => {
               {/* Planlar */}
               <div className="p-4">
                 {aktifTab === 'planlar' && (
-                  <div className="text-center py-8 text-dark-400">
+                  <div className="text-center py-8 text-navy-400">
                     <p className="text-4xl mb-3">📅</p>
                     <p className="text-sm">Henüz plan yok</p>
                   </div>
@@ -2645,7 +2645,7 @@ const DigerKullaniciProfilModal = () => {
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-dark-400">Kullanıcı bulunamadı</p>
+          <p className="text-navy-400">Kullanıcı bulunamadı</p>
         </div>
       )}
     </ModalWrapper>

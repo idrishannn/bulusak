@@ -10,8 +10,8 @@ const Toast = ({ toast, onClose }) => {
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] animate-fade-up">
       <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg backdrop-blur-xl ${
         isSuccess 
-          ? 'bg-dark-800/90 border border-gold-500/30' 
-          : 'bg-dark-800/90 border border-red-500/30'
+          ? 'bg-navy-800/90 border border-gold-500/30' 
+          : 'bg-navy-800/90 border border-red-500/30'
       }`}>
         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
           isSuccess ? 'bg-gold-500/20' : 'bg-red-500/20'

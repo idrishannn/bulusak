@@ -83,14 +83,14 @@ const Takvim = () => {
         disabled={gecmisMi}
         className={`h-10 rounded-lg transition-all text-xs font-medium overflow-hidden ${
           gecmisMi
-            ? isDark ? 'bg-dark-800/30 cursor-not-allowed' : 'bg-gray-100 cursor-not-allowed'
+            ? isDark ? 'bg-navy-900/30 cursor-not-allowed' : 'bg-slate-100 cursor-not-allowed'
             : etkinlikVar
-              ? 'bg-gradient-to-br from-gold-500 to-gold-600 text-dark-900 shadow-gold'
+              ? 'bg-gradient-to-br from-gold-500 to-gold-600 text-navy-950 shadow-gold'
               : musait
                 ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
                 : isDark
-                  ? 'bg-dark-800/50 hover:bg-dark-700/50 border border-dark-700/50'
-                  : 'bg-gray-100 hover:bg-gray-200 border border-gray-200'
+                  ? 'bg-navy-800/50 hover:bg-navy-700/50 border border-navy-700/40'
+                  : 'bg-slate-100 hover:bg-slate-200 border border-slate-200'
         }`}
       >
         {etkinlikVar && (
@@ -101,7 +101,7 @@ const Takvim = () => {
               className="w-6 h-6 rounded-full mx-auto object-cover border-2 border-white/50"
             />
           ) : (
-            <div className="w-6 h-6 rounded-full mx-auto bg-dark-900/30 flex items-center justify-center text-[10px] font-bold text-dark-900">
+            <div className="w-6 h-6 rounded-full mx-auto bg-navy-950/30 flex items-center justify-center text-[10px] font-bold text-navy-950">
               {olusturan?.isim?.charAt(0) || ilkEtkinlik?.baslik?.charAt(0) || 'P'}
             </div>
           )
@@ -132,7 +132,7 @@ const Takvim = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={oncekiHafta}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-dark-700 hover:bg-dark-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-navy-800 hover:bg-navy-700' : 'bg-slate-100 hover:bg-slate-200'} transition-colors active:scale-95`}
               >
                 <ChevronLeftIcon className={`w-4 h-4 ${themeClasses.textSecondary}`} />
               </button>
@@ -146,7 +146,7 @@ const Takvim = () => {
               )}
               <button
                 onClick={sonrakiHafta}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-dark-700 hover:bg-dark-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-navy-800 hover:bg-navy-700' : 'bg-slate-100 hover:bg-slate-200'} transition-colors active:scale-95`}
               >
                 <ChevronRightIcon className={`w-4 h-4 ${themeClasses.textSecondary}`} />
               </button>
@@ -197,7 +197,7 @@ const Takvim = () => {
                     onClick={() => setSeciliGrup(grup)}
                     className="w-full card-hover p-4 flex items-center gap-3"
                   >
-                    <div className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-700' : 'bg-gray-100'} flex items-center justify-center text-xl`}>
+                    <div className={`w-10 h-10 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center text-xl`}>
                       {grup.emoji || '👥'}
                     </div>
                     <div className="flex-1 text-left">

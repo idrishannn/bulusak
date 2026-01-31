@@ -7,7 +7,7 @@ const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setModalAcik } = useUI();
-  const { themeClasses } = useTheme();
+  const { themeClasses, isDark } = useTheme();
 
   const tabs = [
     { path: '/', icon: HomeIcon, label: 'Ana Sayfa' },
@@ -20,7 +20,6 @@ const BottomNav = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
       <div className="max-w-lg mx-auto px-4 pb-2">
-        {/* İyileştirilmiş aralık ve hizalama - butonlar birbirine değmiyor */}
         <div className={`${themeClasses.glass} rounded-2xl px-3 py-2 flex items-center justify-between`}>
           {tabs.map((tab, index) => {
             const isActive = location.pathname === tab.path;
@@ -33,7 +32,7 @@ const BottomNav = () => {
                   onClick={() => setModalAcik('hizliPlan')}
                   className="relative -mt-8 mx-2"
                 >
-                  <div className="w-14 h-14 btn-gold rounded-2xl flex items-center justify-center animate-pulse-gold shadow-lg shadow-gold-500/30">
+                  <div className="w-14 h-14 btn-gold rounded-2xl flex items-center justify-center animate-pulse-gold shadow-lg shadow-gold-500/25">
                     <Icon className="w-7 h-7" />
                   </div>
                 </button>
@@ -44,7 +43,7 @@ const BottomNav = () => {
               <button
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
-                className={`flex flex-col items-center justify-center py-2 px-3 min-w-[60px] rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-2 px-3 min-w-[60px] rounded-xl transition-all duration-200 active:scale-95 ${
                   isActive ? 'bg-gold-500/10' : ''
                 }`}
               >

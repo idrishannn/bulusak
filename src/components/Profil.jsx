@@ -108,7 +108,7 @@ const Profil = () => {
           setSeciliEtkinlik(plan);
           setModalAcik('detay');
         }}
-        className={`w-full rounded-2xl overflow-hidden ${isDark ? 'bg-dark-800' : 'bg-white'} shadow-sm border ${isDark ? 'border-dark-700' : 'border-gray-100'} text-left transition-all hover:shadow-md`}
+        className={`w-full rounded-2xl overflow-hidden ${isDark ? 'bg-navy-900' : 'bg-white'} shadow-sm border ${isDark ? 'border-navy-700/40' : 'border-slate-100'} text-left transition-all hover:shadow-md active:scale-[0.99]`}
       >
         {/* Plan Header - Instagram post header tarzı */}
         <div className="p-3 flex items-center gap-3">
@@ -148,7 +148,7 @@ const Profil = () => {
                 {katilimcilar.slice(0, 4).map((k, i) => (
                   <div
                     key={i}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs border-2 ${isDark ? 'border-dark-800 bg-dark-700' : 'border-white bg-gray-100'}`}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs border-2 ${isDark ? 'border-navy-900 bg-navy-800' : 'border-white bg-slate-100'}`}
                     style={{ zIndex: 4 - i }}
                   >
                     {k.avatar || k.isim?.charAt(0) || '?'}
@@ -156,7 +156,7 @@ const Profil = () => {
                 ))}
                 {katilimcilar.length > 4 && (
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 ${isDark ? 'border-dark-800 bg-dark-600 text-dark-300' : 'border-white bg-gray-200 text-gray-600'}`}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 ${isDark ? 'border-navy-900 bg-navy-700 text-navy-300' : 'border-white bg-slate-200 text-slate-600'}`}
                     style={{ zIndex: 0 }}
                   >
                     +{katilimcilar.length - 4}
@@ -180,7 +180,7 @@ const Profil = () => {
           </h1>
           <button
             onClick={() => setMenuAcik(true)}
-            className={`w-10 h-10 rounded-xl ${isDark ? 'hover:bg-dark-700' : 'hover:bg-gray-100'} flex items-center justify-center transition-colors`}
+            className={`w-10 h-10 rounded-xl ${isDark ? 'hover:bg-navy-800' : 'hover:bg-slate-100'} flex items-center justify-center transition-colors active:scale-95`}
           >
             <MenuIcon className={`w-6 h-6 ${themeClasses.text}`} />
           </button>
@@ -200,7 +200,7 @@ const Profil = () => {
             >
               <div className={`w-full h-full rounded-full flex items-center justify-center ${
                 benimHikayelerim?.length > 0
-                  ? (isDark ? 'bg-dark-900' : 'bg-white') + ' p-0.5'
+                  ? (isDark ? 'bg-navy-950' : 'bg-white') + ' p-0.5'
                   : ''
               }`}>
                 <div className={`w-full h-full rounded-full flex items-center justify-center ${
@@ -242,14 +242,14 @@ const Profil = () => {
 
         {kullanici?.bio && (
           <div className="mb-4">
-            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{kullanici.bio}</p>
+            <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{kullanici.bio}</p>
           </div>
         )}
 
         {/* Profil Düzenle Butonu */}
         <button
           onClick={() => setModalAcik('profilDuzenle')}
-          className={`w-full py-2 rounded-lg font-medium text-sm mb-6 ${isDark ? 'bg-dark-700 text-white hover:bg-dark-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} transition-colors`}
+          className={`w-full py-2 rounded-lg font-medium text-sm mb-6 ${isDark ? 'bg-navy-800 text-slate-100 hover:bg-navy-700' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'} transition-colors active:scale-[0.99]`}
         >
           Profili Düzenle
         </button>
@@ -339,9 +339,9 @@ const Profil = () => {
               gruplar.map(grup => (
                 <div
                   key={grup.id}
-                  className={`p-4 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-white'} border ${isDark ? 'border-dark-700' : 'border-gray-100'} flex items-center gap-3`}
+                  className={`p-4 rounded-xl ${isDark ? 'bg-navy-900' : 'bg-white'} border ${isDark ? 'border-navy-700/40' : 'border-slate-100'} flex items-center gap-3`}
                 >
-                  <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-dark-700' : 'bg-gray-100'} flex items-center justify-center text-xl`}>
+                  <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center text-xl`}>
                     {grup.emoji || '👥'}
                   </div>
                   <div className="flex-1">
@@ -379,11 +379,11 @@ const Profil = () => {
                         setModalAcik('detay');
                       }
                     }}
-                    className={`w-full rounded-2xl overflow-hidden ${isDark ? 'bg-dark-800' : 'bg-white'} shadow-sm border ${isDark ? 'border-dark-700' : 'border-gray-100'} text-left transition-all hover:shadow-md`}
+                    className={`w-full rounded-2xl overflow-hidden ${isDark ? 'bg-navy-900' : 'bg-white'} shadow-sm border ${isDark ? 'border-navy-700/40' : 'border-slate-100'} text-left transition-all hover:shadow-md active:scale-[0.99]`}
                   >
                     <div className="p-4 flex items-center gap-4">
                       <div className="relative">
-                        <div className={`w-16 h-16 rounded-xl overflow-hidden ${isDark ? 'bg-dark-700' : 'bg-gray-100'}`}>
+                        <div className={`w-16 h-16 rounded-xl overflow-hidden ${isDark ? 'bg-navy-800' : 'bg-slate-100'}`}>
                           {ilkHikaye?.tip === 'image' ? (
                             <img src={ilkHikaye.icerik} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -393,7 +393,7 @@ const Profil = () => {
                           )}
                         </div>
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-gold-500 rounded-full flex items-center justify-center">
-                          <PinIcon className="w-3 h-3 text-dark-900" />
+                          <PinIcon className="w-3 h-3 text-navy-950" />
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -428,14 +428,14 @@ const Profil = () => {
       {/* Hamburger Menü - Sağ Üst 3 Çizgi */}
       {menuAcik && (
         <div className="fixed inset-0 z-[100]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMenuAcik(false)} />
-          <div className={`absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] ${isDark ? 'bg-dark-900' : 'bg-white'} shadow-2xl animate-slide-left safe-top`}>
+          <div className="absolute inset-0 bg-navy-950/70 backdrop-blur-sm" onClick={() => setMenuAcik(false)} />
+          <div className={`absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] ${isDark ? 'bg-navy-900' : 'bg-white'} shadow-2xl animate-slide-left safe-top`}>
             {/* Menü Header */}
             <div className={`p-4 border-b ${themeClasses.border} flex items-center justify-between`}>
               <h2 className={`text-lg font-bold ${themeClasses.text}`}>Menü</h2>
               <button
                 onClick={() => setMenuAcik(false)}
-                className={`w-10 h-10 rounded-xl ${isDark ? 'hover:bg-dark-700' : 'hover:bg-gray-100'} flex items-center justify-center`}
+                className={`w-10 h-10 rounded-xl ${isDark ? 'hover:bg-navy-800' : 'hover:bg-slate-100'} flex items-center justify-center transition-colors`}
               >
                 <XIcon className={`w-5 h-5 ${themeClasses.text}`} />
               </button>
@@ -466,10 +466,10 @@ const Profil = () => {
                 <button
                   key={i}
                   onClick={item.action}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl ${isDark ? 'hover:bg-dark-800' : 'hover:bg-gray-50'} transition-colors`}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl ${isDark ? 'hover:bg-navy-800' : 'hover:bg-slate-50'} transition-colors`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-700' : 'bg-gray-100'} flex items-center justify-center`}>
+                    <div className={`w-10 h-10 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center`}>
                       <item.icon className={`w-5 h-5 ${themeClasses.iconSecondary}`} />
                     </div>
                     <span className={`${themeClasses.text} font-medium`}>{item.label}</span>
@@ -499,8 +499,8 @@ const Profil = () => {
 
       {cikisDialogAcik && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCikisDialogAcik(false)} />
-          <div className={`relative w-full max-w-sm ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-2xl p-6 border ${isDark ? 'border-dark-700' : 'border-gray-200'}`}>
+          <div className="absolute inset-0 bg-navy-950/70 backdrop-blur-sm" onClick={() => setCikisDialogAcik(false)} />
+          <div className={`relative w-full max-w-sm ${isDark ? 'bg-navy-900' : 'bg-white'} rounded-2xl p-6 border ${isDark ? 'border-navy-700/40' : 'border-slate-200'}`}>
             <h3 className={`text-lg font-semibold ${themeClasses.text} text-center mb-2`}>Çıkış Yap?</h3>
             <p className={`text-sm ${themeClasses.textMuted} text-center mb-6`}>
               Hesabınızdan çıkış yapmak istiyor musunuz?
@@ -508,7 +508,7 @@ const Profil = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => setCikisDialogAcik(false)}
-                className={`flex-1 py-3 rounded-xl font-medium ${isDark ? 'bg-dark-700 text-white hover:bg-dark-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-colors`}
+                className={`flex-1 py-3 rounded-xl font-medium ${isDark ? 'bg-navy-800 text-slate-100 hover:bg-navy-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} transition-colors`}
               >
                 İptal
               </button>

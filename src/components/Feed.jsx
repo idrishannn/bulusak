@@ -103,11 +103,11 @@ const PlanKarti = ({ plan, onClick, showCover = false }) => {
             }}
           />
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/30 to-transparent" />
 
           {/* Kategori Badge */}
           {kategori && kategori.id !== 'tumu' && (
-            <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-semibold bg-dark-900/80 backdrop-blur-sm text-white border border-dark-700/50 flex items-center gap-1`}>
+            <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-semibold bg-navy-950/70 backdrop-blur-sm text-slate-100 border border-navy-700/40 flex items-center gap-1`}>
               <span>{kategori.emoji}</span>
               <span>{kategori.label}</span>
             </div>
@@ -116,7 +116,7 @@ const PlanKarti = ({ plan, onClick, showCover = false }) => {
           {/* Bookmark Butonu */}
           <button
             onClick={handleBookmark}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-dark-900/80 backdrop-blur-sm flex items-center justify-center text-white hover:text-gold-500 transition-colors"
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-navy-950/70 backdrop-blur-sm flex items-center justify-center text-slate-100 hover:text-gold-500 transition-colors active:scale-95"
           >
             <BookmarkIcon className="w-4 h-4" filled={bookmarked} />
           </button>
@@ -124,7 +124,7 @@ const PlanKarti = ({ plan, onClick, showCover = false }) => {
           {/* Alt Bilgiler (overlay üstünde) */}
           <div className="absolute bottom-0 left-0 right-0 p-3">
             <h3 className="font-semibold text-white text-base mb-1 line-clamp-1">{plan.baslik}</h3>
-            <div className="flex items-center gap-3 text-xs text-dark-300">
+            <div className="flex items-center gap-3 text-xs text-navy-200">
               <span className="flex items-center gap-1">
                 <ClockIcon className="w-3.5 h-3.5" />
                 {tarihStr} · {plan.saat}
@@ -191,7 +191,7 @@ const PlanKarti = ({ plan, onClick, showCover = false }) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-dark-700' : 'bg-gray-200'}`}>
+            <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-navy-800' : 'bg-slate-200'}`}>
               <span className={`text-lg font-semibold ${themeClasses.textSecondary}`}>
                 {olusturan?.isim?.charAt(0) || '?'}
               </span>
@@ -313,11 +313,11 @@ const KonumSecici = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full max-w-lg ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-t-3xl max-h-[85vh] flex flex-col animate-slide-up`}>
+      <div className="absolute inset-0 bg-navy-950/70 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative w-full max-w-lg ${isDark ? 'bg-navy-900' : 'bg-white'} rounded-t-3xl max-h-[85vh] flex flex-col animate-slide-up`}>
         <div className={`p-4 border-b ${themeClasses.border} flex items-center justify-between`}>
           <h2 className={`text-lg font-semibold ${themeClasses.text}`}>Konum Ayarları</h2>
-          <button onClick={onClose} className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}>
+          <button onClick={onClose} className={`w-10 h-10 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center transition-colors active:scale-95`}>
             <span className={themeClasses.textMuted}>✕</span>
           </button>
         </div>
@@ -335,12 +335,12 @@ const KonumSecici = ({ onClose }) => {
                 step="1"
                 value={seciliYaricap}
                 onChange={(e) => setSeciliYaricap(parseInt(e.target.value))}
-                className="w-full h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-gold-500"
+                className="w-full h-2 bg-navy-700 rounded-lg appearance-none cursor-pointer accent-gold-500"
                 style={{
-                  background: `linear-gradient(to right, #D4AF37 0%, #D4AF37 ${(seciliYaricap / 90) * 100}%, ${isDark ? '#374151' : '#e5e7eb'} ${(seciliYaricap / 90) * 100}%, ${isDark ? '#374151' : '#e5e7eb'} 100%)`
+                  background: `linear-gradient(to right, #D4AF37 0%, #D4AF37 ${(seciliYaricap / 90) * 100}%, ${isDark ? '#1e4a7a' : '#e2e8f0'} ${(seciliYaricap / 90) * 100}%, ${isDark ? '#1e4a7a' : '#e2e8f0'} 100%)`
                 }}
               />
-              <div className="flex justify-between text-xs text-dark-500 mt-1">
+              <div className="flex justify-between text-xs text-navy-400 mt-1">
                 <span>1 km</span>
                 <span>45 km</span>
                 <span>90 km</span>
@@ -355,15 +355,15 @@ const KonumSecici = ({ onClose }) => {
               value={aramaMetni}
               onChange={(e) => setAramaMetni(e.target.value)}
               placeholder="Şehir veya ilçe adı yazın..."
-              className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-dark-800 text-white' : 'bg-gray-100 text-gray-900'} outline-none focus:ring-2 focus:ring-gold-500/30`}
+              className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-navy-800 text-slate-100' : 'bg-slate-100 text-slate-900'} outline-none focus:ring-2 focus:ring-gold-500/30 transition-all`}
             />
             {filtrelenmisKonumlar.length > 0 && (
-              <div className={`mt-2 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-50'} overflow-hidden`}>
+              <div className={`mt-2 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-50'} overflow-hidden`}>
                 {filtrelenmisKonumlar.map(k => (
                   <button
                     key={k.id}
                     onClick={() => handleKonumSec(k)}
-                    className={`w-full p-3 flex items-center gap-2 text-left ${isDark ? 'hover:bg-dark-700' : 'hover:bg-gray-100'} transition-colors`}
+                    className={`w-full p-3 flex items-center gap-2 text-left ${isDark ? 'hover:bg-navy-700' : 'hover:bg-slate-100'} transition-colors`}
                   >
                     <LocationIcon className="w-4 h-4 text-gold-500" />
                     <span className={themeClasses.text}>{k.name}</span>
@@ -390,7 +390,7 @@ const KonumSecici = ({ onClose }) => {
                     className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${
                       seciliKonum?.id === il.id || seciliKonum?.ilId === il.id
                         ? 'bg-gold-500/20 border border-gold-500/30'
-                        : isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'
+                        : isDark ? 'bg-navy-800 hover:bg-navy-700' : 'bg-slate-100 hover:bg-slate-200'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -401,7 +401,7 @@ const KonumSecici = ({ onClose }) => {
                       {seciliKonum?.id === il.id && <span className="text-xs text-gold-500">Seçili</span>}
                       <button
                         onClick={(e) => { e.stopPropagation(); handleKonumSec(il); }}
-                        className={`px-2 py-1 rounded text-xs ${isDark ? 'bg-dark-700 text-dark-300' : 'bg-gray-200 text-gray-600'}`}
+                        className={`px-2 py-1 rounded text-xs ${isDark ? 'bg-navy-700 text-navy-300' : 'bg-slate-200 text-slate-600'} transition-colors`}
                       >
                         İl Seç
                       </button>
@@ -427,7 +427,7 @@ const KonumSecici = ({ onClose }) => {
                             className={`p-2 rounded-lg text-sm text-left transition-all ${
                               isSelected
                                 ? 'bg-gold-500/20 text-gold-500 border border-gold-500/30'
-                                : isDark ? 'bg-dark-700 text-dark-300 hover:bg-dark-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                : isDark ? 'bg-navy-700 text-navy-300 hover:bg-navy-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                           >
                             {ilce}
@@ -452,7 +452,7 @@ const KonumSecici = ({ onClose }) => {
         </div>
 
         <div className={`p-4 border-t ${themeClasses.border} flex gap-2`}>
-          <button onClick={handleTemizle} className={`flex-1 py-3 rounded-xl font-medium ${isDark ? 'bg-dark-800 text-dark-300' : 'bg-gray-200 text-gray-700'}`}>
+          <button onClick={handleTemizle} className={`flex-1 py-3 rounded-xl font-medium ${isDark ? 'bg-navy-800 text-navy-300' : 'bg-slate-200 text-slate-700'} transition-colors active:scale-[0.98]`}>
             Temizle
           </button>
           <button onClick={handleUygula} className="flex-1 btn-gold py-3 rounded-xl font-semibold">
@@ -539,15 +539,15 @@ const Feed = () => {
       <Stories />
 
       <div className="px-4 mb-4">
-        <div className={`flex gap-2 p-1 ${isDark ? 'bg-dark-800' : 'bg-gray-200'} rounded-xl`}>
+        <div className={`flex gap-2 p-1 ${isDark ? 'bg-navy-800/60' : 'bg-slate-200'} rounded-xl`}>
           {FEED_TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => feedDegistir(tab.id)}
               className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
                 feedKaynagi === tab.id
-                  ? 'bg-gold-500 text-dark-900'
-                  : isDark ? 'text-dark-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                  ? 'bg-gold-500 text-navy-950'
+                  : isDark ? 'text-navy-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               {tab.label}
@@ -562,7 +562,7 @@ const Feed = () => {
             className={`w-full mt-3 p-3 rounded-xl flex items-center justify-between transition-all ${
               kesfetMerkezKonum
                 ? 'bg-gold-500/10 border border-gold-500/30'
-                : isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'
+                : isDark ? 'bg-navy-800/60 hover:bg-navy-700/60' : 'bg-slate-100 hover:bg-slate-200'
             }`}
           >
             <div className="flex items-center gap-2">
