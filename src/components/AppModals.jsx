@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth, useData, useUI, useTheme } from '../context';
 import { XIcon, SearchIcon, CheckIcon, ChevronRightIcon, SendIcon, ClockIcon, LocationIcon, UsersIcon, TrashIcon, EditIcon, GlobeIcon, LockIcon, BellIcon, CameraIcon, ImageIcon } from './Icons';
 import { kullaniciAra, arkadasIstegiGonder, arkadasSil, arkadasIstegiKabulEt, arkadasIstegiReddet } from '../services/arkadasService';
-import { mesajEkle, etkinlikSil, etkinlikGuncelle, planiTamamla } from '../services/etkinlikService';
+import { mesajEkle, etkinlikSil, etkinlikGuncelle, planiTamamla, planKatilimOnayla, planKatilimReddet } from '../services/etkinlikService';
 import PlanHikayeler from './PlanHikayeler';
 import { bildirimOlustur } from '../services/bildirimService';
 import { bildirimOkunduIsaretle, tumBildirimleriOkunduIsaretle, BILDIRIM_TIPLERI } from '../services/bildirimService';
@@ -930,7 +930,6 @@ const BildirimlerModal = () => {
 
   const okunmamisSayisi = bildirimler?.filter(b => !b.okundu).length || 0;
 
-  // Davet türündeki bildirimleri ayır (aksiyonlu olanlar)
   const davetBildirimleri = bildirimler?.filter(b =>
     !b.okundu && (
       b.tip === BILDIRIM_TIPLERI.PLAN_DAVET ||
@@ -939,10 +938,15 @@ const BildirimlerModal = () => {
     )
   ) || [];
 
+  const katilimSorguBildirimleri = bildirimler?.filter(b =>
+    !b.okundu && b.tip === BILDIRIM_TIPLERI.PLAN_KATILIM_SORGUSU
+  ) || [];
+
   const digerBildirimler = bildirimler?.filter(b =>
     b.okundu || (
       b.tip !== BILDIRIM_TIPLERI.PLAN_DAVET &&
       b.tip !== BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI &&
+      b.tip !== BILDIRIM_TIPLERI.PLAN_KATILIM_SORGUSU &&
       b.tip !== 'GRUP_DAVET'
     )
   ) || [];
@@ -978,16 +982,41 @@ const BildirimlerModal = () => {
     setIslemYapiliyor(null);
   };
 
-  // Davet Reddet
   const handleDavetReddet = async (bildirim) => {
     setIslemYapiliyor(bildirim.id);
     try {
       if (bildirim.tip === BILDIRIM_TIPLERI.PLAN_DAVET && bildirim.planId) {
-        // Daveti reddet
         await katilimDurumuGuncelle(bildirim.planId, KATILIM_DURUMLARI.YOKUM);
         bildirimGoster('Daveti reddettin', 'success');
       }
-      // Bildirimi okundu yap
+      await bildirimOkunduIsaretle(bildirim.id);
+    } catch (error) {
+      bildirimGoster('İşlem başarısız', 'error');
+    }
+    setIslemYapiliyor(null);
+  };
+
+  const handleKatildim = async (bildirim) => {
+    setIslemYapiliyor(bildirim.id);
+    try {
+      if (bildirim.planId) {
+        await planKatilimOnayla(bildirim.planId, kullanici.odUserId, kullanici);
+        bildirimGoster('Katılım onaylandı! Plan profiline eklendi.', 'success');
+      }
+      await bildirimOkunduIsaretle(bildirim.id);
+    } catch (error) {
+      bildirimGoster('İşlem başarısız', 'error');
+    }
+    setIslemYapiliyor(null);
+  };
+
+  const handleKatilmadim = async (bildirim) => {
+    setIslemYapiliyor(bildirim.id);
+    try {
+      if (bildirim.planId) {
+        await planKatilimReddet(bildirim.planId, kullanici.odUserId);
+        bildirimGoster('Plan listenden kaldırıldı.', 'success');
+      }
       await bildirimOkunduIsaretle(bildirim.id);
     } catch (error) {
       bildirimGoster('İşlem başarısız', 'error');
@@ -1038,6 +1067,8 @@ const BildirimlerModal = () => {
         return <span className="text-lg">💌</span>;
       case BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI:
         return <span className="text-lg">🙋</span>;
+      case BILDIRIM_TIPLERI.PLAN_KATILIM_SORGUSU:
+        return <span className="text-lg">📅</span>;
       case BILDIRIM_TIPLERI.PLAN_GUNCELLEME:
         return <ClockIcon className="w-5 h-5 text-gold-500" />;
       case BILDIRIM_TIPLERI.YENI_MESAJ:
@@ -1080,7 +1111,48 @@ const BildirimlerModal = () => {
         </div>
       )}
       <div className="flex-1 overflow-y-auto pb-safe">
-        {/* Davet Merkezi - Aksiyonlu Bildirimler */}
+        {katilimSorguBildirimleri.length > 0 && (
+          <div className="p-4 border-b border-dark-700">
+            <h3 className="text-xs font-semibold text-emerald-500 mb-3 flex items-center gap-2">
+              <span>📅</span> Plan Zamanı Geldi
+            </h3>
+            <div className="space-y-3">
+              {katilimSorguBildirimleri.map(b => (
+                <div
+                  key={b.id}
+                  className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl"
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                      {getBildirimIkonu(b.tip)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white">{b.mesaj}</p>
+                      <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleKatildim(b)}
+                      disabled={islemYapiliyor === b.id}
+                      className="flex-1 bg-emerald-500 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      {islemYapiliyor === b.id ? '...' : 'Katıldım'}
+                    </button>
+                    <button
+                      onClick={() => handleKatilmadim(b)}
+                      disabled={islemYapiliyor === b.id}
+                      className="flex-1 bg-red-500/20 text-red-400 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      Katılmadım
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {davetBildirimleri.length > 0 && (
           <div className="p-4 border-b border-dark-700">
             <h3 className="text-xs font-semibold text-gold-500 mb-3 flex items-center gap-2">
@@ -1101,7 +1173,6 @@ const BildirimlerModal = () => {
                       <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
                     </div>
                   </div>
-                  {/* Kabul/Reddet Aksiyonları */}
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleDavetKabul(b)}

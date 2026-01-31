@@ -4,6 +4,7 @@ import { ClockIcon, UsersIcon } from './Icons';
 import EmptyState from './EmptyState';
 import { SkeletonCard } from './Skeleton';
 import { KATILIM_DURUMLARI } from '../constants';
+import { kullaniciPlanReddettimi } from '../services/etkinlikService';
 
 const PLAN_TABS = [
   { id: 'benim', label: 'Planlarım' },
@@ -76,16 +77,18 @@ const Planlar = () => {
   const { themeClasses, isDark } = useTheme();
   const [aktifTab, setAktifTab] = useState('benim');
 
-  // Benim oluşturduğum planlar
-  const benimPlanlarim = etkinlikler?.filter(e => e.olusturanId === kullanici?.odUserId) || [];
+  const reddedilmemisEtkinlikler = etkinlikler?.filter(e =>
+    !kullaniciPlanReddettimi(e, kullanici?.odUserId)
+  ) || [];
 
-  // Katıldığım planlar: Benim oluşturmadığım ama participantIds veya davetliler içinde olduğum
-  const katildigimPlanlar = etkinlikler?.filter(e => {
+  const benimPlanlarim = reddedilmemisEtkinlikler.filter(e => e.olusturanId === kullanici?.odUserId);
+
+  const katildigimPlanlar = reddedilmemisEtkinlikler.filter(e => {
     if (e.olusturanId === kullanici?.odUserId) return false;
     if (e.participantIds?.includes(kullanici?.odUserId)) return true;
     if (e.davetliler?.includes(kullanici?.odUserId)) return true;
     return false;
-  }) || [];
+  });
 
   const aktivPlanlar = aktifTab === 'benim' ? benimPlanlarim : katildigimPlanlar;
   const planSayisi = aktifTab === 'benim' ? benimPlanlarim.length : katildigimPlanlar.length;
