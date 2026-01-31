@@ -1,12 +1,13 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useData, useUI, useTheme } from '../context';
 import {
   ChevronRightIcon, BellIcon, UsersIcon, LogoutIcon, EditIcon,
   ClipboardIcon, SettingsIcon, MenuIcon, LockIcon, LocationIcon,
-  SunIcon, MoonIcon, XIcon, PlusIcon
+  SunIcon, MoonIcon, XIcon, PlusIcon, StoryIcon, PinIcon
 } from './Icons';
 import Logo from './Logo';
+import { kullanicininPlanHikayeleriniGetir } from '../services/planHikayeService';
 
 const Profil = () => {
   const navigate = useNavigate();
@@ -18,7 +19,21 @@ const Profil = () => {
   const [aktifTab, setAktifTab] = useState('planlar');
   const [cikisDialogAcik, setCikisDialogAcik] = useState(false);
   const [cikisYukleniyor, setCikisYukleniyor] = useState(false);
+  const [anilar, setAnilar] = useState({});
+  const [anilarYukleniyor, setAnilarYukleniyor] = useState(false);
   const cikisDebounceRef = useRef(false);
+
+  useEffect(() => {
+    if (aktifTab === 'anilar' && kullanici?.odUserId) {
+      setAnilarYukleniyor(true);
+      kullanicininPlanHikayeleriniGetir(kullanici.odUserId).then(result => {
+        if (result.success) {
+          setAnilar(result.hikayeler);
+        }
+        setAnilarYukleniyor(false);
+      });
+    }
+  }, [aktifTab, kullanici?.odUserId]);
 
   const temizKullaniciAdi = (kullaniciAdi) => {
     if (!kullaniciAdi) return '';
@@ -244,7 +259,7 @@ const Profil = () => {
           Profili Düzenle
         </button>
 
-        {/* Tab Bar - Planlar / Gruplar */}
+        {/* Tab Bar - Planlar / Gruplar / Anılar */}
         <div className={`flex border-b ${themeClasses.border} mb-4`}>
           <button
             onClick={() => setAktifTab('planlar')}
@@ -265,6 +280,17 @@ const Profil = () => {
           >
             Gruplarım
             {aktifTab === 'gruplar' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold-500" />
+            )}
+          </button>
+          <button
+            onClick={() => setAktifTab('anilar')}
+            className={`flex-1 py-3 text-center font-medium text-sm transition-colors relative ${
+              aktifTab === 'anilar' ? themeClasses.text : themeClasses.textMuted
+            }`}
+          >
+            Anılar
+            {aktifTab === 'anilar' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold-500" />
             )}
           </button>
@@ -309,6 +335,70 @@ const Profil = () => {
                 <p className="text-4xl mb-3">👥</p>
                 <p className="font-medium">Henüz grup yok</p>
                 <p className="text-sm mt-1">Arkadaşlarınla gruplar oluştur</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {aktifTab === 'anilar' && (
+          <div className="space-y-3">
+            {anilarYukleniyor ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : Object.keys(anilar).length > 0 ? (
+              Object.entries(anilar).map(([planId, hikayeler]) => {
+                const ilkHikaye = hikayeler[0];
+                const plan = etkinlikler?.find(e => e.id === planId);
+                return (
+                  <button
+                    key={planId}
+                    onClick={() => {
+                      if (plan) {
+                        setSeciliEtkinlik(plan);
+                        setModalAcik('detay');
+                      }
+                    }}
+                    className={`w-full rounded-2xl overflow-hidden ${isDark ? 'bg-dark-800' : 'bg-white'} shadow-sm border ${isDark ? 'border-dark-700' : 'border-gray-100'} text-left transition-all hover:shadow-md`}
+                  >
+                    <div className="p-4 flex items-center gap-4">
+                      <div className="relative">
+                        <div className={`w-16 h-16 rounded-xl overflow-hidden ${isDark ? 'bg-dark-700' : 'bg-gray-100'}`}>
+                          {ilkHikaye?.tip === 'image' ? (
+                            <img src={ilkHikaye.icerik} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <StoryIcon className="w-6 h-6 text-gold-500" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gold-500 rounded-full flex items-center justify-center">
+                          <PinIcon className="w-3 h-3 text-dark-900" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`font-semibold ${themeClasses.text} truncate`}>
+                          {plan?.baslik || 'Plan'}
+                        </h3>
+                        <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
+                          {hikayeler.length} sabit hikaye
+                        </p>
+                        {plan?.tarih && (
+                          <p className={`text-xs ${themeClasses.textMuted}`}>
+                            {new Date(plan.startAt || plan.tarih).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronRightIcon className={`w-5 h-5 ${themeClasses.textMuted}`} />
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <div className={`text-center py-12 ${themeClasses.textMuted}`}>
+                <p className="text-4xl mb-3">📷</p>
+                <p className="font-medium">Henüz anı yok</p>
+                <p className="text-sm mt-1">Plan hikayelerini sabitle ve burada görüntüle</p>
               </div>
             )}
           </div>

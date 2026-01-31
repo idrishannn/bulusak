@@ -213,8 +213,17 @@ export const NOTIFICATION_TYPES = {
   PLAN_YORUM: 'plan_yorum',
   PLAN_KATILIM_ISTEGI: 'plan_katilim_istegi',
   PLAN_KATILIM_ONAY: 'plan_katilim_onay',
-  PLAN_KATILIM_RED: 'plan_katilim_red'
+  PLAN_KATILIM_RED: 'plan_katilim_red',
+  PLAN_BASLADI: 'plan_basladi',
+  PLAN_HIKAYE_EKLENDI: 'plan_hikaye_eklendi',
+  PLAN_HIKAYE_ETIKETLENDI: 'plan_hikaye_etiketlendi',
+  PLAN_HIKAYE_SURE_BITMEK_UZERE: 'plan_hikaye_sure_bitmek_uzere'
 };
+
+// Plan Hikaye Sabitleri
+export const PLAN_HIKAYE_SURESI = 24 * 60 * 60 * 1000;
+export const PLAN_HIKAYE_MAX_SABITLEME = 5;
+export const PLAN_HIKAYE_MAX_ADET = 10;
 
 // Storage Keys
 export const STORAGE_KEYS = {
