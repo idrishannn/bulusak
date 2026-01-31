@@ -83,6 +83,9 @@ export const okunmamisBildirimSayisi = async (kullaniciId) => {
 export const BILDIRIM_TIPLERI = {
   ARKADAS_ISTEGI: 'arkadas_istegi',
   ARKADAS_KABUL: 'arkadas_kabul',
+  TAKIP_ISTEGI: 'takip_istegi',
+  TAKIP_KABUL: 'takip_kabul',
+  YENI_TAKIPCI: 'yeni_takipci',
   YENI_MESAJ: 'yeni_mesaj',
   HIKAYE_IZLENDI: 'hikaye_izlendi',
   HIKAYE_TEPKI: 'hikaye_tepki',
@@ -102,6 +105,12 @@ export const bildirimMesaji = (tip, veri) => {
       return `${veri.kimdenIsim} sana arkadaşlık isteği gönderdi`;
     case BILDIRIM_TIPLERI.ARKADAS_KABUL:
       return `${veri.kimIsim} arkadaşlık isteğini kabul etti`;
+    case BILDIRIM_TIPLERI.TAKIP_ISTEGI:
+      return `${veri.gonderenIsim || veri.kimdenIsim} seni takip etmek istiyor`;
+    case BILDIRIM_TIPLERI.TAKIP_KABUL:
+      return `${veri.gonderenIsim || veri.kimIsim} takip isteğini kabul etti`;
+    case BILDIRIM_TIPLERI.YENI_TAKIPCI:
+      return `${veri.gonderenIsim || veri.kimdenIsim} seni takip etmeye başladı`;
     case BILDIRIM_TIPLERI.YENI_MESAJ:
       return `${veri.kimdenIsim}: ${veri.mesajOnizleme}`;
     case BILDIRIM_TIPLERI.HIKAYE_IZLENDI:

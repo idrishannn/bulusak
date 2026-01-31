@@ -22,15 +22,15 @@ export const kullaniciAra = async (aramaMetni) => {
     const kucukHarf = aramaMetni.toLowerCase().replace('@', '');
     const usersRef = collection(db, 'users');
     const snapshot = await getDocs(usersRef);
-    
+
     const kullanicilar = [];
-    
+
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
       const lower = data.kullaniciAdiLower || data.kullaniciAdiKucuk || '';
       const kullaniciAdi = (data.kullaniciAdi || '').toLowerCase().replace('@', '');
       const isim = (data.isim || '').toLowerCase();
-      
+
       if (lower.includes(kucukHarf) || kullaniciAdi.includes(kucukHarf) || isim.includes(kucukHarf)) {
         kullanicilar.push({
           id: docSnap.id,
@@ -47,67 +47,234 @@ export const kullaniciAra = async (aramaMetni) => {
   }
 };
 
-export const arkadasIstegiGonder = async (gonderen, aliciId) => {
+export const takipDurumuGetir = async (kullaniciId, hedefId) => {
+  if (!kullaniciId || !hedefId) return { takipEdiyor: false, istekGonderildi: false };
+
+  try {
+    const hedefRef = doc(db, 'users', hedefId);
+    const hedefDoc = await getDoc(hedefRef);
+
+    if (!hedefDoc.exists()) return { takipEdiyor: false, istekGonderildi: false };
+
+    const hedefData = hedefDoc.data();
+    const takipEdiyor = hedefData.takipciler?.includes(kullaniciId) || hedefData.arkadaslar?.includes(kullaniciId);
+    const istekGonderildi = hedefData.takipIstekleri?.some(i => i.kimden === kullaniciId && i.durum === 'bekliyor') ||
+                           hedefData.arkadasIstekleri?.some(i => i.kimden === kullaniciId && i.durum === 'bekliyor');
+
+    return { takipEdiyor, istekGonderildi };
+  } catch (error) {
+    return { takipEdiyor: false, istekGonderildi: false };
+  }
+};
+
+export const takipEt = async (gonderen, aliciId) => {
   if (!gonderen?.odUserId || !aliciId) {
     return { success: false, error: 'Geçersiz kullanıcı' };
   }
   if (gonderen.odUserId === aliciId) {
-    return { success: false, error: 'Kendine istek gönderemezsin!' };
+    return { success: false, error: 'Kendini takip edemezsin!' };
   }
 
   try {
     const aliciRef = doc(db, 'users', aliciId);
     const aliciDoc = await getDoc(aliciRef);
-    
+
     if (!aliciDoc.exists()) {
       return { success: false, error: 'Kullanıcı bulunamadı' };
     }
 
     const aliciData = aliciDoc.data();
-    
-    if (aliciData.arkadaslar?.includes(gonderen.odUserId)) {
-      return { success: false, error: 'Zaten arkadaşsınız!' };
+
+    const zadenTakipEdiyor = aliciData.takipciler?.includes(gonderen.odUserId) || aliciData.arkadaslar?.includes(gonderen.odUserId);
+    if (zadenTakipEdiyor) {
+      return { success: false, error: 'Zaten takip ediyorsun!' };
     }
 
-    const mevcutIstek = aliciData.arkadasIstekleri?.find(
-      i => i.kimden === gonderen.odUserId && i.durum === 'bekliyor'
-    );
-    
+    const mevcutIstek = aliciData.takipIstekleri?.find(i => i.kimden === gonderen.odUserId && i.durum === 'bekliyor') ||
+                        aliciData.arkadasIstekleri?.find(i => i.kimden === gonderen.odUserId && i.durum === 'bekliyor');
     if (mevcutIstek) {
       return { success: false, error: 'Zaten istek gönderilmiş!' };
     }
 
-    const yeniIstek = {
-      kimden: gonderen.odUserId,
-      kimdenIsim: gonderen.isim || 'Kullanıcı',
-      kimdenAvatar: gonderen.avatar || '👤',
-      kimdenKullaniciAdi: gonderen.kullaniciAdi || '@kullanici',
-      tarih: new Date().toISOString(),
-      durum: 'bekliyor'
-    };
+    const gizliHesap = aliciData.profilGizlilik === 'private';
 
-    await updateDoc(aliciRef, {
-      arkadasIstekleri: arrayUnion(yeniIstek)
+    if (gizliHesap) {
+      const yeniIstek = {
+        kimden: gonderen.odUserId,
+        kimdenIsim: gonderen.isim || 'Kullanıcı',
+        kimdenAvatar: gonderen.avatar || '👤',
+        kimdenKullaniciAdi: gonderen.kullaniciAdi || '@kullanici',
+        tarih: new Date().toISOString(),
+        durum: 'bekliyor',
+        tip: 'takip'
+      };
+
+      await updateDoc(aliciRef, {
+        takipIstekleri: arrayUnion(yeniIstek)
+      });
+
+      const bildirimAyarlari = aliciData.bildirimAyarlari || {};
+      if (bildirimAyarlari.takipIstekleri !== false) {
+        try {
+          await bildirimOlustur(
+            aliciId,
+            BILDIRIM_TIPLERI.TAKIP_ISTEGI,
+            {
+              mesaj: `${gonderen.isim || 'Bir kullanıcı'} seni takip etmek istiyor`,
+              gonderenId: gonderen.odUserId,
+              gonderenIsim: gonderen.isim,
+              gonderenAvatar: gonderen.avatar
+            }
+          );
+        } catch (e) {}
+      }
+
+      return { success: true, message: 'Takip isteği gönderildi!', istekGonderildi: true };
+    } else {
+      const gonderenRef = doc(db, 'users', gonderen.odUserId);
+
+      await updateDoc(aliciRef, {
+        takipciler: arrayUnion(gonderen.odUserId),
+        arkadaslar: arrayUnion(gonderen.odUserId)
+      });
+
+      await updateDoc(gonderenRef, {
+        takipEdilenler: arrayUnion(aliciId),
+        arkadaslar: arrayUnion(aliciId)
+      });
+
+      try {
+        await bildirimOlustur(
+          aliciId,
+          BILDIRIM_TIPLERI.YENI_TAKIPCI,
+          {
+            mesaj: `${gonderen.isim || 'Bir kullanıcı'} seni takip etmeye başladı`,
+            gonderenId: gonderen.odUserId,
+            gonderenIsim: gonderen.isim,
+            gonderenAvatar: gonderen.avatar
+          }
+        );
+      } catch (e) {}
+
+      return { success: true, message: 'Takip edildi!', takipEdildi: true };
+    }
+  } catch (error) {
+    console.error('Takip hatası:', error);
+    return { success: false, error: 'Takip edilemedi' };
+  }
+};
+
+export const takipIstegiKabulEt = async (kullanici, istekGonderenId) => {
+  if (!kullanici?.odUserId || !istekGonderenId) {
+    return { success: false, error: 'Geçersiz kullanıcı' };
+  }
+
+  try {
+    const kullaniciRef = doc(db, 'users', kullanici.odUserId);
+    const gonderenRef = doc(db, 'users', istekGonderenId);
+    const kullaniciDoc = await getDoc(kullaniciRef);
+    const kullaniciData = kullaniciDoc.data();
+
+    const guncellenmisIstekler = (kullaniciData.takipIstekleri || []).filter(
+      i => !(i.kimden === istekGonderenId && i.durum === 'bekliyor')
+    );
+
+    await updateDoc(kullaniciRef, {
+      takipIstekleri: guncellenmisIstekler,
+      takipciler: arrayUnion(istekGonderenId),
+      arkadaslar: arrayUnion(istekGonderenId)
+    });
+
+    await updateDoc(gonderenRef, {
+      takipEdilenler: arrayUnion(kullanici.odUserId),
+      arkadaslar: arrayUnion(kullanici.odUserId)
     });
 
     try {
       await bildirimOlustur(
-        aliciId,
-        BILDIRIM_TIPLERI.ARKADAS_ISTEGI,
+        istekGonderenId,
+        BILDIRIM_TIPLERI.TAKIP_KABUL,
         {
-          mesaj: `${gonderen.isim || 'Bir kullanıcı'} sana arkadaşlık isteği gönderdi`,
-          gonderenId: gonderen.odUserId,
-          gonderenIsim: gonderen.isim,
-          gonderenAvatar: gonderen.avatar
+          mesaj: `${kullanici.isim || 'Bir kullanıcı'} takip isteğini kabul etti`,
+          gonderenId: kullanici.odUserId,
+          gonderenIsim: kullanici.isim,
+          gonderenAvatar: kullanici.avatar
         }
       );
     } catch (e) {}
 
-    return { success: true, message: 'İstek gönderildi! 🎉' };
+    return { success: true, message: 'Takip isteği kabul edildi!' };
   } catch (error) {
-    console.error('İstek gönderme hatası:', error);
-    return { success: false, error: 'İstek gönderilemedi' };
+    console.error('Kabul hatası:', error);
+    return { success: false, error: 'Kabul edilemedi' };
   }
+};
+
+export const takipIstegiReddet = async (kullanici, istekGonderenId) => {
+  if (!kullanici?.odUserId || !istekGonderenId) {
+    return { success: false, error: 'Geçersiz kullanıcı' };
+  }
+
+  try {
+    const kullaniciRef = doc(db, 'users', kullanici.odUserId);
+    const kullaniciDoc = await getDoc(kullaniciRef);
+    const kullaniciData = kullaniciDoc.data();
+
+    const guncellenmisIstekler = (kullaniciData.takipIstekleri || []).filter(
+      i => !(i.kimden === istekGonderenId && i.durum === 'bekliyor')
+    );
+
+    await updateDoc(kullaniciRef, {
+      takipIstekleri: guncellenmisIstekler
+    });
+
+    return { success: true, message: 'Takip isteği reddedildi' };
+  } catch (error) {
+    console.error('Reddetme hatası:', error);
+    return { success: false, error: 'Reddedilemedi' };
+  }
+};
+
+export const takiptenCik = async (kullanici, hedefId) => {
+  if (!kullanici?.odUserId || !hedefId) {
+    return { success: false, error: 'Geçersiz kullanıcı' };
+  }
+
+  try {
+    const kullaniciRef = doc(db, 'users', kullanici.odUserId);
+    const hedefRef = doc(db, 'users', hedefId);
+
+    await updateDoc(kullaniciRef, {
+      takipEdilenler: arrayRemove(hedefId),
+      arkadaslar: arrayRemove(hedefId)
+    });
+
+    await updateDoc(hedefRef, {
+      takipciler: arrayRemove(kullanici.odUserId),
+      arkadaslar: arrayRemove(kullanici.odUserId)
+    });
+
+    return { success: true, message: 'Takipten çıkıldı' };
+  } catch (error) {
+    console.error('Takipten çıkma hatası:', error);
+    return { success: false, error: 'Takipten çıkılamadı' };
+  }
+};
+
+export const takipIstekleriniDinle = (userId, callback) => {
+  if (!userId) return () => {};
+  const userRef = doc(db, 'users', userId);
+  return onSnapshot(userRef, (doc) => {
+    if (doc.exists()) {
+      const data = doc.data();
+      const bekleyenIstekler = (data.takipIstekleri || []).filter(i => i.durum === 'bekliyor');
+      callback(bekleyenIstekler);
+    }
+  });
+};
+
+export const arkadasIstegiGonder = async (gonderen, aliciId) => {
+  return await takipEt(gonderen, aliciId);
 };
 
 export const arkadasIstegiKabulEt = async (kullanici, istekGonderenId) => {

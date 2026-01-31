@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth, DataProvider, UIProvider, useUI, ThemeProvider, useTheme } from './context';
-import { SplashScreen, Header, BottomNav, Toast, Feed, Takvim, Planlar, Profil, Mesajlar, AuthScreens, AppModals, Ayarlar } from './components';
+import { SplashScreen, Header, BottomNav, Toast, Feed, Takvim, Planlar, Profil, AuthScreens, AppModals, Ayarlar } from './components';
 
 const AppContent = () => {
   const { girisYapildi, yukleniyor } = useAuth();
@@ -22,7 +22,6 @@ const AppContent = () => {
               <Route path="/takvim" element={<Takvim />} />
               <Route path="/planlar" element={<Planlar />} />
               <Route path="/profil" element={<Profil />} />
-              <Route path="/mesajlar" element={<Mesajlar />} />
               <Route path="/ayarlar" element={<Ayarlar />} />
             </Routes>
           </main>
