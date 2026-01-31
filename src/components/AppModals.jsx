@@ -955,22 +955,26 @@ const BildirimlerModal = () => {
   ) || [];
 
   const takipIstekBildirimleri = bildirimler?.filter(b =>
-    !b.okundu && b.tip === BILDIRIM_TIPLERI.TAKIP_ISTEGI
+    b.tip === BILDIRIM_TIPLERI.TAKIP_ISTEGI && (!b.okundu || islenmisBildirimler[b.id])
   ) || [];
 
   const katilimSorguBildirimleri = bildirimler?.filter(b =>
     !b.okundu && b.tip === BILDIRIM_TIPLERI.PLAN_KATILIM_SORGUSU
   ) || [];
 
-  const digerBildirimler = bildirimler?.filter(b =>
-    b.okundu || (
+  const digerBildirimler = bildirimler?.filter(b => {
+    // İşlenmiş takip isteklerini hariç tut
+    if (b.tip === BILDIRIM_TIPLERI.TAKIP_ISTEGI && islenmisBildirimler[b.id]) {
+      return false;
+    }
+    return b.okundu || (
       b.tip !== BILDIRIM_TIPLERI.PLAN_DAVET &&
       b.tip !== BILDIRIM_TIPLERI.PLAN_KATILIM_ISTEGI &&
       b.tip !== BILDIRIM_TIPLERI.PLAN_KATILIM_SORGUSU &&
       b.tip !== BILDIRIM_TIPLERI.TAKIP_ISTEGI &&
       b.tip !== 'GRUP_DAVET'
-    )
-  ) || [];
+    );
+  }) || [];
 
   const handleTumunuOkunduYap = async () => {
     if (kullanici?.odUserId) {

@@ -55,11 +55,10 @@ export const bildirimleriDinle = (kullaniciId, callback) => {
   }
 
   const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
+  // Sadece aliciId ile filtrele - index gerektirmez
   const q = query(
     bildirimRef,
-    where('aliciId', '==', kullaniciId),
-    orderBy('olusturulma', 'desc'),
-    limit(50)
+    where('aliciId', '==', kullaniciId)
   );
 
   return onSnapshot(q,
@@ -69,11 +68,13 @@ export const bildirimleriDinle = (kullaniciId, callback) => {
         ...doc.data(),
         olusturulma: doc.data().olusturulma?.toDate?.() || new Date()
       }));
-      callback(bildirimler);
+      // JavaScript'te sırala (en yeni önce)
+      bildirimler.sort((a, b) => b.olusturulma - a.olusturulma);
+      // Son 50 bildirim
+      callback(bildirimler.slice(0, 50));
     },
     (error) => {
       console.error('Bildirim dinleme hatası:', error);
-      // Index hatası olabilir - hata mesajında index link'i olur
       callback([]);
     }
   );
