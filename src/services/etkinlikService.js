@@ -12,7 +12,8 @@ import {
   orderBy,
   limit,
   startAfter,
-  getDocs
+  getDocs,
+  getDoc
 } from 'firebase/firestore';
 import { bildirimOlustur, BILDIRIM_TIPLERI } from './bildirimService';
 
@@ -166,6 +167,36 @@ export const etkinlikleriDinle = (userId, callback) => {
   }
 };
 
+// Tek bir etkinliği gerçek zamanlı dinle
+export const etkinlikDinle = (etkinlikId, callback) => {
+  try {
+    if (!etkinlikId) {
+      callback(null);
+      return () => {};
+    }
+
+    const etkinlikRef = doc(db, 'events', etkinlikId);
+
+    return onSnapshot(etkinlikRef, (docSnap) => {
+      if (docSnap.exists()) {
+        callback({
+          id: docSnap.id,
+          ...docSnap.data()
+        });
+      } else {
+        callback(null);
+      }
+    }, (error) => {
+      console.error('Etkinlik dinleme hatası:', error);
+      callback(null);
+    });
+  } catch (error) {
+    console.error('Etkinlik dinleme hatası:', error);
+    callback(null);
+    return () => {};
+  }
+};
+
 export const etkinlikSil = async (etkinlikId) => {
   try {
     await deleteDoc(doc(db, 'events', etkinlikId));
@@ -214,7 +245,18 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
   try {
     const etkinlikRef = doc(db, 'events', etkinlikId);
 
-    const katilimci = {
+    // Mevcut etkinliği al
+    const etkinlikDoc = await getDoc(etkinlikRef);
+
+    if (!etkinlikDoc.exists()) {
+      return { success: false, error: 'Etkinlik bulunamadı' };
+    }
+
+    const mevcutData = etkinlikDoc.data();
+    let katilimcilar = mevcutData.katilimcilar || [];
+    let participantIds = mevcutData.participantIds || [];
+
+    const yeniKatilimci = {
       odUserId,
       isim: kullaniciData?.isim || 'Kullanıcı',
       avatar: kullaniciData?.avatar || '👤',
@@ -222,8 +264,27 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
       guncellemeTarihi: new Date().toISOString()
     };
 
+    // Mevcut katılımcıyı bul ve güncelle veya yeni ekle
+    const mevcutIndex = katilimcilar.findIndex(k => k.odUserId === odUserId);
+    if (mevcutIndex >= 0) {
+      katilimcilar[mevcutIndex] = { ...katilimcilar[mevcutIndex], ...yeniKatilimci };
+    } else {
+      katilimcilar.push(yeniKatilimci);
+    }
+
+    // participantIds güncelle: Varım ise ekle, Yokum ise çıkar
+    if (durum === 'varim') {
+      if (!participantIds.includes(odUserId)) {
+        participantIds.push(odUserId);
+      }
+    } else if (durum === 'yokum') {
+      participantIds = participantIds.filter(id => id !== odUserId);
+    }
+
     await updateDoc(etkinlikRef, {
-      [`katilimDurumlari.${odUserId}`]: katilimci
+      katilimcilar: katilimcilar,
+      participantIds: participantIds,
+      [`katilimDurumlari.${odUserId}`]: yeniKatilimci
     });
 
     return { success: true };

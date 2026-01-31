@@ -208,7 +208,9 @@ const Profil = () => {
                     ? 'bg-gradient-to-br from-gold-500/30 to-gold-600/20'
                     : ''
                 }`}>
-                  {kullanici?.avatar ? (
+                  {kullanici?.avatar?.startsWith('http') || kullanici?.avatar?.startsWith('data:') ? (
+                    <img src={kullanici.avatar} alt="Profil" className="w-full h-full object-cover rounded-full" />
+                  ) : kullanici?.avatar ? (
                     <span className="text-4xl">{kullanici.avatar}</span>
                   ) : (
                     <Logo size="md" className="opacity-50" />
@@ -442,8 +444,10 @@ const Profil = () => {
             {/* Kullanıcı Bilgisi */}
             <div className={`p-4 border-b ${themeClasses.border}`}>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-500/30 to-gold-600/20 border-2 border-gold-500/30 flex items-center justify-center">
-                  {kullanici?.avatar ? (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-500/30 to-gold-600/20 border-2 border-gold-500/30 flex items-center justify-center overflow-hidden">
+                  {kullanici?.avatar?.startsWith('http') || kullanici?.avatar?.startsWith('data:') ? (
+                    <img src={kullanici.avatar} alt="Profil" className="w-full h-full object-cover" />
+                  ) : kullanici?.avatar ? (
                     <span className="text-2xl">{kullanici.avatar}</span>
                   ) : (
                     <Logo size="sm" className="opacity-50" />

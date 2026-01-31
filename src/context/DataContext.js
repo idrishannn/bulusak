@@ -131,7 +131,7 @@ export const DataProvider = ({ children }) => {
   };
 
   const katilimDurumuGuncelle = async (etkinlikId, durum) => {
-    await katilimDurumuGuncelleDB(etkinlikId, kullanici, durum);
+    await katilimDurumuGuncelleDB(etkinlikId, kullanici?.odUserId, kullanici, durum);
     return { success: true };
   };
 

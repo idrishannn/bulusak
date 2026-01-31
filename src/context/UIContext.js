@@ -11,10 +11,17 @@ export const UIProvider = ({ children }) => {
   const [seciliZaman, setSeciliZaman] = useState(null);
   const [bildirimler, setBildirimler] = useState([]);
   const [toast, setToast] = useState(null);
+  const [hedefKullanici, setHedefKullanici] = useState(null);
 
   const bildirimGoster = useCallback((message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  // Başka bir kullanıcının profilini aç
+  const profilAc = useCallback((kullanici) => {
+    setHedefKullanici(kullanici);
+    setModalAcik('digerProfil');
   }, []);
 
   const value = {
@@ -23,7 +30,8 @@ export const UIProvider = ({ children }) => {
     seciliGrup, setSeciliGrup,
     seciliZaman, setSeciliZaman,
     bildirimler, setBildirimler,
-    toast, bildirimGoster
+    toast, bildirimGoster,
+    hedefKullanici, setHedefKullanici, profilAc
   };
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
