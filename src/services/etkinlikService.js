@@ -244,7 +244,18 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
   try {
     const etkinlikRef = doc(db, 'events', etkinlikId);
 
-    const katilimci = {
+    // Mevcut etkinliği al
+    const { getDoc } = await import('firebase/firestore');
+    const etkinlikDoc = await getDoc(etkinlikRef);
+
+    if (!etkinlikDoc.exists()) {
+      return { success: false, error: 'Etkinlik bulunamadı' };
+    }
+
+    const mevcutData = etkinlikDoc.data();
+    let katilimcilar = mevcutData.katilimcilar || [];
+
+    const yeniKatilimci = {
       odUserId,
       isim: kullaniciData?.isim || 'Kullanıcı',
       avatar: kullaniciData?.avatar || '👤',
@@ -252,8 +263,17 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
       guncellemeTarihi: new Date().toISOString()
     };
 
+    // Mevcut katılımcıyı bul ve güncelle veya yeni ekle
+    const mevcutIndex = katilimcilar.findIndex(k => k.odUserId === odUserId);
+    if (mevcutIndex >= 0) {
+      katilimcilar[mevcutIndex] = { ...katilimcilar[mevcutIndex], ...yeniKatilimci };
+    } else {
+      katilimcilar.push(yeniKatilimci);
+    }
+
     await updateDoc(etkinlikRef, {
-      [`katilimDurumlari.${odUserId}`]: katilimci
+      katilimcilar: katilimcilar,
+      [`katilimDurumlari.${odUserId}`]: yeniKatilimci
     });
 
     return { success: true };
