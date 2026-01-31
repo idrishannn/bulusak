@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useData, useUI, useTheme } from '../context';
-import { XIcon, SearchIcon, CheckIcon, ChevronRightIcon, SendIcon, ClockIcon, LocationIcon, UsersIcon, TrashIcon, EditIcon, GlobeIcon, LockIcon, BellIcon, CameraIcon, ImageIcon } from './Icons';
+import { XIcon, SearchIcon, CheckIcon, ChevronRightIcon, ChevronLeftIcon, SendIcon, ClockIcon, UsersIcon, TrashIcon, EditIcon, GlobeIcon, LockIcon, BellIcon, CameraIcon, ImageIcon } from './Icons';
 import { kullaniciAra, arkadasIstegiGonder, arkadasSil, arkadasIstegiKabulEt, arkadasIstegiReddet } from '../services/arkadasService';
 import { mesajEkle, etkinlikSil, etkinlikGuncelle, planiTamamla, planKatilimOnayla, planKatilimReddet } from '../services/etkinlikService';
 import PlanHikayeler from './PlanHikayeler';
@@ -14,7 +14,7 @@ import {
   MAX_VISIBLE_PARTICIPANTS, PLAN_CATEGORIES, PLAN_STATUS
 } from '../constants';
 
-const ModalWrapper = ({ children, onClose, title, fullScreen = false }) => {
+const ModalWrapper = ({ children, onClose, onBack, title, fullScreen = false }) => {
   useEffect(() => {
     const originalStyle = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -27,7 +27,14 @@ const ModalWrapper = ({ children, onClose, title, fullScreen = false }) => {
     return (
       <div className="fixed inset-0 z-[100] bg-dark-900 flex flex-col">
         <div className="p-4 border-b border-dark-800 flex items-center justify-between safe-top">
-          <h2 className="text-lg font-semibold text-white">{title}</h2>
+          <div className="flex items-center gap-3">
+            {onBack && (
+              <button onClick={onBack} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center">
+                <ChevronLeftIcon className="w-5 h-5 text-dark-400" />
+              </button>
+            )}
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
+          </div>
           <button onClick={onClose} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center">
             <XIcon className="w-5 h-5 text-dark-400" />
           </button>
@@ -42,7 +49,14 @@ const ModalWrapper = ({ children, onClose, title, fullScreen = false }) => {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-dark-900 rounded-t-3xl max-h-[90vh] flex flex-col animate-slide-up">
         <div className="p-4 border-b border-dark-800 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">{title}</h2>
+          <div className="flex items-center gap-3">
+            {onBack && (
+              <button onClick={onBack} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center">
+                <ChevronLeftIcon className="w-5 h-5 text-dark-400" />
+              </button>
+            )}
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
+          </div>
           <button onClick={onClose} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center">
             <XIcon className="w-5 h-5 text-dark-400" />
           </button>
@@ -1232,43 +1246,6 @@ const BildirimlerModal = () => {
   );
 };
 
-const BucketListModal = () => {
-  const { bucketList, bucketListEkle, bucketListToggle, bucketListSil } = useData();
-  const { modalAcik, setModalAcik, bildirimGoster } = useUI();
-  const [yeniItem, setYeniItem] = useState('');
-
-  if (modalAcik !== 'bucketList') return null;
-
-  const handleEkle = () => {
-    if (!yeniItem.trim()) return;
-    bucketListEkle({ baslik: yeniItem });
-    setYeniItem('');
-    bildirimGoster('Eklendi!', 'success');
-  };
-
-  return (
-    <ModalWrapper title="Bucket List" onClose={() => setModalAcik(null)}>
-      <div className="p-4 border-b border-dark-800">
-        <div className="flex gap-2">
-          <input type="text" value={yeniItem} onChange={(e) => setYeniItem(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleEkle()} placeholder="Yapmak istediğin bir şey..." className="flex-1 input-dark" />
-          <button onClick={handleEkle} className="btn-gold px-4 rounded-xl">Ekle</button>
-        </div>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {bucketList?.map(item => (
-          <div key={item.id} className={`flex items-center gap-3 p-3 rounded-xl ${item.tamamlandi ? 'bg-emerald-500/10' : 'card'}`}>
-            <button onClick={() => bucketListToggle(item.id)} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${item.tamamlandi ? 'bg-emerald-500 border-emerald-500' : 'border-dark-600'}`}>
-              {item.tamamlandi && <CheckIcon className="w-3 h-3 text-white" />}
-            </button>
-            <span className={`flex-1 ${item.tamamlandi ? 'line-through text-dark-500' : 'text-white'}`}>{item.baslik}</span>
-            <button onClick={() => bucketListSil(item.id)} className="text-dark-500 hover:text-red-400"><TrashIcon className="w-4 h-4" /></button>
-          </div>
-        ))}
-      </div>
-    </ModalWrapper>
-  );
-};
-
 const AvatarDegistirModal = () => {
   const { seciliAvatar, setSeciliAvatar, avatarKategori, setAvatarKategori, avatarGuncelle } = useAuth();
   const { modalAcik, setModalAcik, bildirimGoster } = useUI();
@@ -1500,6 +1477,7 @@ const GizlilikAyarlariModal = () => {
 };
 
 const BildirimAyarlariModal = () => {
+  const navigate = useNavigate();
   const { kullanici } = useAuth();
   const { modalAcik, setModalAcik, bildirimGoster } = useUI();
   const [ayarlar, setAyarlar] = useState({
@@ -1519,6 +1497,11 @@ const BildirimAyarlariModal = () => {
   }, [modalAcik, kullanici]);
 
   if (modalAcik !== 'bildirimAyarlari') return null;
+
+  const handleGeriDon = () => {
+    setModalAcik(null);
+    navigate('/profil', { state: { menuAcik: true } });
+  };
 
   const handleKaydet = async () => {
     setYukleniyor(true);
@@ -1545,7 +1528,7 @@ const BildirimAyarlariModal = () => {
   );
 
   return (
-    <ModalWrapper title="Bildirim Ayarları" onClose={() => setModalAcik(null)}>
+    <ModalWrapper title="Bildirim Ayarları" onBack={handleGeriDon} onClose={() => setModalAcik(null)}>
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         <ToggleItem id="planDavetleri" label="Plan Davetleri" />
         <ToggleItem id="planHatirlatici" label="Plan Hatırlatıcıları" />
@@ -1647,22 +1630,6 @@ const TakipciListesiModal = () => {
             </p>
           </div>
         )}
-      </div>
-    </ModalWrapper>
-  );
-};
-
-const KonumAyarlariModal = () => {
-  const { modalAcik, setModalAcik } = useUI();
-
-  if (modalAcik !== 'konumAyarlari') return null;
-
-  return (
-    <ModalWrapper title="Konum Ayarları" onClose={() => setModalAcik(null)}>
-      <div className="flex-1 overflow-y-auto p-4">
-        <p className="text-dark-400 text-center py-8">
-          Konum ayarları Keşfet sayfasından yapılabilir.
-        </p>
       </div>
     </ModalWrapper>
   );
@@ -1839,13 +1806,11 @@ const AppModals = () => (
     <DetayModal />
     <YeniGrupModal />
     <BildirimlerModal />
-    <BucketListModal />
     <AvatarDegistirModal />
     <ProfilDuzenleModal />
     <GizlilikAyarlariModal />
     <BildirimAyarlariModal />
     <TakipciListesiModal />
-    <KonumAyarlariModal />
     <HikayeEkleModal />
   </>
 );
