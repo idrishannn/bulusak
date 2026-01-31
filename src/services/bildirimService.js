@@ -6,12 +6,14 @@ import {
 
 export const bildirimOlustur = async (aliciId, tip, veri) => {
   if (!aliciId) {
+    console.error('bildirimOlustur: aliciId yok!', { tip, veri });
     return { success: false, error: 'Alıcı ID gerekli' };
   }
 
   try {
     const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
 
+    // Duplicate kontrolü
     if (veri.gonderenId) {
       const duplicateQuery = query(
         bildirimRef,
@@ -23,6 +25,7 @@ export const bildirimOlustur = async (aliciId, tip, veri) => {
       );
       const existingDocs = await getDocs(duplicateQuery);
       if (!existingDocs.empty) {
+        console.log('bildirimOlustur: Duplicate bildirim atlandı', { aliciId, tip });
         return { success: true, duplicate: true };
       }
     }
@@ -35,14 +38,22 @@ export const bildirimOlustur = async (aliciId, tip, veri) => {
       olusturulma: serverTimestamp()
     };
 
+    console.log('bildirimOlustur: Bildirim oluşturuluyor', { aliciId, tip });
     await addDoc(bildirimRef, bildirim);
     return { success: true };
   } catch (error) {
+    console.error('bildirimOlustur hatası:', error);
     return { success: false, error: error.message };
   }
 };
 
 export const bildirimleriDinle = (kullaniciId, callback) => {
+  if (!kullaniciId) {
+    console.warn('bildirimleriDinle: kullaniciId yok!');
+    callback([]);
+    return () => {};
+  }
+
   const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
   const q = query(
     bildirimRef,
@@ -50,15 +61,22 @@ export const bildirimleriDinle = (kullaniciId, callback) => {
     orderBy('olusturulma', 'desc'),
     limit(50)
   );
-  
-  return onSnapshot(q, (snapshot) => {
-    const bildirimler = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      olusturulma: doc.data().olusturulma?.toDate?.() || new Date()
-    }));
-    callback(bildirimler);
-  });
+
+  return onSnapshot(q,
+    (snapshot) => {
+      const bildirimler = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        olusturulma: doc.data().olusturulma?.toDate?.() || new Date()
+      }));
+      callback(bildirimler);
+    },
+    (error) => {
+      console.error('Bildirim dinleme hatası:', error);
+      // Index hatası olabilir - hata mesajında index link'i olur
+      callback([]);
+    }
+  );
 };
 
 export const bildirimOkunduIsaretle = async (bildirimId) => {

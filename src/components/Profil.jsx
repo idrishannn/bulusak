@@ -224,11 +224,11 @@ const Profil = () => {
               <div className={`text-xs ${themeClasses.textMuted}`}>Plan</div>
             </div>
             <button onClick={() => setModalAcik('takipciListesi')} className="text-center">
-              <div className={`text-xl font-bold ${themeClasses.text}`}>{arkadaslar?.length || 0}</div>
+              <div className={`text-xl font-bold ${themeClasses.text}`}>{kullanici?.takipciler?.length || 0}</div>
               <div className={`text-xs ${themeClasses.textMuted}`}>Takipçi</div>
             </button>
-            <button onClick={() => setModalAcik('takipciListesi')} className="text-center">
-              <div className={`text-xl font-bold ${themeClasses.text}`}>{arkadaslar?.length || 0}</div>
+            <button onClick={() => setModalAcik('takipListesi')} className="text-center">
+              <div className={`text-xl font-bold ${themeClasses.text}`}>{kullanici?.takipEdilenler?.length || 0}</div>
               <div className={`text-xs ${themeClasses.textMuted}`}>Takip</div>
             </button>
           </div>

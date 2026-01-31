@@ -1810,33 +1810,51 @@ const KullaniciEkleModal = () => {
 
 const TakipciListesiModal = () => {
   const { kullanici } = useAuth();
-  const { arkadaslar } = useData();
   const { modalAcik, setModalAcik, bildirimGoster } = useUI();
   const [tab, setTab] = useState('takipciler');
-  const [hedefKullanici, setHedefKullanici] = useState(null);
-  const [listeYukleniyor, setListeYukleniyor] = useState(false);
-  const [gizliHesap, setGizliHesap] = useState(false);
-  const [takipEdiyor, setTakipEdiyor] = useState(false);
-  const [erisimVar, setErisimVar] = useState(true);
+  const [takipciler, setTakipciler] = useState([]);
+  const [takipEdilenler, setTakipEdilenler] = useState([]);
+  const [yukleniyor, setYukleniyor] = useState(true);
 
   useEffect(() => {
-    if (modalAcik === 'takipciListesi' || modalAcik === 'takipListesi') {
-      setHedefKullanici(kullanici);
-      setErisimVar(true);
-      setGizliHesap(kullanici?.profilGizlilik === 'private');
+    if (modalAcik === 'takipciListesi') {
+      setTab('takipciler');
+    } else if (modalAcik === 'takipListesi') {
+      setTab('takipEdilenler');
     }
-  }, [modalAcik, kullanici]);
+  }, [modalAcik]);
 
   useEffect(() => {
-    if (modalAcik === 'takipciListesiDiger' && kullanici) {
-      setListeYukleniyor(true);
-    }
+    const yukle = async () => {
+      if (!kullanici?.odUserId || (modalAcik !== 'takipciListesi' && modalAcik !== 'takipListesi')) return;
+
+      setYukleniyor(true);
+
+      // Takipçileri yükle
+      const takipciIds = kullanici.takipciler || [];
+      const takipciListesi = [];
+      for (const id of takipciIds.slice(0, 50)) {
+        const info = await kullaniciBilgisiGetir(id);
+        if (info) takipciListesi.push({ ...info, odUserId: id });
+      }
+      setTakipciler(takipciListesi);
+
+      // Takip edilenleri yükle
+      const takipEdilenIds = kullanici.takipEdilenler || [];
+      const takipEdilenListesi = [];
+      for (const id of takipEdilenIds.slice(0, 50)) {
+        const info = await kullaniciBilgisiGetir(id);
+        if (info) takipEdilenListesi.push({ ...info, odUserId: id });
+      }
+      setTakipEdilenler(takipEdilenListesi);
+
+      setYukleniyor(false);
+    };
+
+    yukle();
   }, [modalAcik, kullanici]);
 
   if (modalAcik !== 'takipciListesi' && modalAcik !== 'takipListesi') return null;
-
-  const takipciler = arkadaslar || [];
-  const takipEdilenler = arkadaslar || [];
 
   const handleTakipToggle = async (userId) => {
     const result = await takiptenCik(kullanici, userId);
@@ -1879,24 +1897,31 @@ const TakipciListesiModal = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {gosterilecekListe.map(user => (
-          <div key={user.odUserId} className="flex items-center gap-3 p-3 card">
-            <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl">
-              {user.avatar || '👤'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-white truncate">{user.isim}</p>
-              <p className="text-sm text-dark-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
-            </div>
-            <button
-              onClick={() => handleTakipToggle(user.odUserId)}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-dark-700 text-dark-300 hover:bg-dark-600"
-            >
-              Kaldır
-            </button>
+        {yukleniyor ? (
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
           </div>
-        ))}
-        {gosterilecekListe.length === 0 && (
+        ) : gosterilecekListe.length > 0 ? (
+          gosterilecekListe.map(user => (
+            <div key={user.odUserId} className="flex items-center gap-3 p-3 card">
+              <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl">
+                {user.avatar || '👤'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-white truncate">{user.isim}</p>
+                <p className="text-sm text-dark-400 truncate">@{(user.kullaniciAdi || '').replace(/@/g, '')}</p>
+              </div>
+              {tab === 'takipEdilenler' && (
+                <button
+                  onClick={() => handleTakipToggle(user.odUserId)}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-dark-700 text-dark-300 hover:bg-dark-600"
+                >
+                  Takibi Bırak
+                </button>
+              )}
+            </div>
+          ))
+        ) : (
           <div className="text-center py-8">
             <UsersIcon className="w-12 h-12 text-dark-600 mx-auto mb-3" />
             <p className="text-dark-400">
