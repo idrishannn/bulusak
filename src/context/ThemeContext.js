@@ -46,96 +46,80 @@ export const ThemeProvider = ({ children }) => {
   const isDark = theme === THEMES.DARK;
   const isLight = theme === THEMES.LIGHT;
 
-  // Tactile Scrapbook Design System - Neumorphism + Collage
+  // Instagram-style Design System - Flat, Clean, Modern
   const themeClasses = {
-    // Arka plan - Neumorphic surfaces
-    bg: isDark ? 'bg-navy-950' : 'bg-neu-100',
-    bgSecondary: isDark ? 'bg-navy-900' : 'bg-white',
-    bgTertiary: isDark ? 'bg-navy-800' : 'bg-neu-50',
-    bgCard: isDark ? 'bg-navy-900/50' : 'bg-white',
-    bgHover: isDark ? 'hover:bg-navy-800/50' : 'hover:bg-neu-100',
-    bgActive: isDark ? 'bg-navy-800/60' : 'bg-neu-100',
-    bgInput: isDark ? 'bg-navy-900/60' : 'bg-neu-50',
-    bgOverlay: isDark ? 'bg-navy-950/85' : 'bg-white/95',
-    bgSubtle: isDark ? 'bg-navy-800/40' : 'bg-neu-100/80',
+    // Arka plan - Instagram style surfaces
+    bg: isDark ? 'bg-surface-primary' : 'bg-slate-50',
+    bgSecondary: isDark ? 'bg-surface-secondary' : 'bg-white',
+    bgTertiary: isDark ? 'bg-surface-tertiary' : 'bg-slate-100',
+    bgCard: isDark ? 'bg-surface-secondary' : 'bg-white',
+    bgHover: isDark ? 'hover:bg-surface-tertiary' : 'hover:bg-slate-100',
+    bgActive: isDark ? 'bg-surface-elevated' : 'bg-slate-100',
+    bgInput: isDark ? 'bg-surface-tertiary' : 'bg-slate-100',
+    bgOverlay: isDark ? 'bg-black/80' : 'bg-white/95',
+    bgSubtle: isDark ? 'bg-surface-tertiary/50' : 'bg-slate-50',
 
-    // Metin renkleri
-    text: isDark ? 'text-slate-100' : 'text-slate-900',
-    textPrimary: isDark ? 'text-slate-100' : 'text-slate-900',
-    textSecondary: isDark ? 'text-navy-300' : 'text-slate-600',
-    textMuted: isDark ? 'text-navy-400' : 'text-neu-500',
-    textTertiary: isDark ? 'text-navy-500' : 'text-neu-400',
-    textInverse: isDark ? 'text-navy-950' : 'text-white',
+    // Metin renkleri - Instagram hierarchy
+    text: isDark ? 'text-dark-50' : 'text-slate-900',
+    textPrimary: isDark ? 'text-dark-50' : 'text-slate-900',
+    textSecondary: isDark ? 'text-dark-100' : 'text-slate-600',
+    textMuted: isDark ? 'text-dark-200' : 'text-slate-500',
+    textTertiary: isDark ? 'text-dark-300' : 'text-slate-400',
+    textInverse: isDark ? 'text-black' : 'text-white',
 
-    // Başlık hiyerarşisi - Collage style mixed fonts
-    headingPrimary: isDark ? 'text-slate-100 font-bold heading-display' : 'text-slate-900 font-bold heading-display',
-    headingSecondary: isDark ? 'text-slate-200 font-semibold' : 'text-slate-800 font-semibold',
-    headingTertiary: isDark ? 'text-navy-300 font-medium' : 'text-slate-700 font-medium',
+    // Başlık hiyerarşisi - Clean Instagram style
+    headingPrimary: isDark ? 'text-dark-50 font-semibold' : 'text-slate-900 font-semibold',
+    headingSecondary: isDark ? 'text-dark-50 font-medium' : 'text-slate-800 font-medium',
+    headingTertiary: isDark ? 'text-dark-100 font-medium' : 'text-slate-700 font-medium',
 
-    // Border
-    border: isDark ? 'border-navy-700/40' : 'border-neu-200',
-    borderInput: isDark ? 'border-navy-700/50' : 'border-neu-200',
-    borderSubtle: isDark ? 'border-navy-800/30' : 'border-neu-100',
-    borderStrong: isDark ? 'border-navy-600' : 'border-neu-300',
+    // Border - Subtle Instagram style
+    border: isDark ? 'border-surface-border' : 'border-slate-200',
+    borderInput: isDark ? 'border-surface-borderLight' : 'border-slate-300',
+    borderSubtle: isDark ? 'border-surface-border/50' : 'border-slate-100',
+    borderStrong: isDark ? 'border-surface-borderLight' : 'border-slate-300',
 
-    // Glass effect with neumorphic touch
+    // Glass effect
     glass: isDark
-      ? 'bg-navy-900/70 backdrop-blur-xl border-navy-700/40 rounded-2xl'
-      : 'bg-white/85 backdrop-blur-xl border-cream-200/80 rounded-2xl',
+      ? 'bg-surface-secondary/90 backdrop-blur-xl border-surface-border rounded-ig-md'
+      : 'bg-white/90 backdrop-blur-xl border-slate-200 rounded-ig-md',
 
-    // Neumorphic Card
+    // Flat Card - Instagram style
     card: 'card',
-    cardHover: 'card-hover',
-    cardActive: isDark
-      ? 'bg-navy-800/70 border-navy-600'
-      : 'bg-neu-100 border-neu-300',
+    cardFlat: 'card-flat',
+    cardHover: isDark ? 'hover:bg-surface-tertiary' : 'hover:bg-slate-50',
+    cardActive: isDark ? 'bg-surface-elevated' : 'bg-slate-100',
 
-    // Neumorphic Buttons
+    // Buttons - Instagram style
+    btnPrimary: 'btn-primary',
+    btnSecondary: 'btn-secondary',
     btnGhost: 'btn-ghost',
-    btnDark: 'btn-dark',
-    btnSubtle: 'btn-subtle',
-    btnNeu: isDark ? 'btn-neu-dark' : 'btn-neu',
+    btnDanger: 'btn-danger',
 
-    // Icon renkleri
-    iconPrimary: isDark ? 'text-slate-100' : 'text-slate-800',
-    iconSecondary: isDark ? 'text-navy-400' : 'text-neu-500',
-    iconMuted: isDark ? 'text-navy-500' : 'text-neu-400',
-    iconActive: 'text-gold-500',
-
-    // Neumorphic surfaces
-    neuSurface: isDark ? 'neu-surface-dark' : 'neu-surface',
-    neuInset: isDark ? 'neu-inset-dark' : 'neu-inset',
+    // Icon renkleri - Instagram style
+    iconPrimary: isDark ? 'text-dark-50' : 'text-slate-900',
+    iconSecondary: isDark ? 'text-dark-200' : 'text-slate-500',
+    iconMuted: isDark ? 'text-dark-300' : 'text-slate-400',
+    iconActive: isDark ? 'text-dark-50' : 'text-slate-900',
 
     // Özel durumlar
     menuItem: 'menu-item',
     divider: 'divider',
 
-    // Modal - Neumorphic
+    // Modal - Instagram style
     modalBg: 'modal-content',
     modalOverlay: 'modal-overlay',
 
-    // Neumorphic Input
-    input: 'input-dark',
-    inputEnhanced: 'input-enhanced',
-    inputFocus: 'focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20',
+    // Input - Instagram style
+    input: 'input-field',
+    inputFocus: 'focus:border-ig-blue focus:ring-1 focus:ring-ig-blue/20',
 
-    // Shadow
-    shadow: isDark ? 'shadow-neu-dark-md' : 'shadow-neu-md',
-    shadowLg: isDark ? 'shadow-neu-dark-lg' : 'shadow-neu-lg',
+    // Shadow - Minimal
+    shadow: isDark ? 'shadow-none' : 'shadow-card-light',
+    shadowLg: isDark ? 'shadow-ig' : 'shadow-ig-md',
 
     // Ring (focus states)
-    ring: 'ring-gold-500/20',
-    ringOffset: isDark ? 'ring-offset-navy-900' : 'ring-offset-white',
-
-    // Collage/Scrapbook elements
-    sticker: 'sticker',
-    stickerGold: 'sticker-gold',
-    collageTilt: 'collage-tilt',
-    collageTiltRight: 'collage-tilt-right',
-    photoFrame: 'photo-frame',
-    polaroid: 'polaroid',
-    paperTorn: 'paper-torn',
-    labelHandwritten: 'label-handwritten',
+    ring: 'ring-ig-blue/30',
+    ringOffset: isDark ? 'ring-offset-surface-primary' : 'ring-offset-white',
 
     // Empty state
     emptyState: 'empty-state',
@@ -146,7 +130,6 @@ export const ThemeProvider = ({ children }) => {
     // Section headers
     sectionHeader: 'section-header',
     sectionHeaderLabel: 'section-header-label',
-    sectionHeaderLine: 'section-header-line',
 
     // List items
     listItem: 'list-item',
@@ -156,26 +139,26 @@ export const ThemeProvider = ({ children }) => {
     iconBtn: 'icon-btn',
     iconBtnGhost: 'icon-btn-ghost',
 
-    // Tabs
+    // Tabs - Instagram style
     tabItem: 'tab-item',
     tabItemActive: 'tab-item-active',
     tabItemInactive: 'tab-item-inactive',
 
-    // Category chips
-    categoryChip: 'category-chip',
-    categoryChipActive: 'category-chip-active',
-    categoryChipInactive: 'category-chip-inactive',
+    // Chips - Instagram style
+    chip: 'chip',
+    chipActive: 'chip-active',
+    chipInactive: 'chip-inactive',
 
     // Toast
     toast: 'toast',
 
-    // Toggle
+    // Toggle - Instagram style
     toggleTrack: 'toggle-track',
     toggleThumb: 'toggle-thumb',
 
-    // Textures
-    texturePaper: 'texture-paper',
-    textureGrain: 'texture-grain',
+    // Follow button
+    followBtn: 'follow-btn',
+    followBtnSecondary: 'follow-btn-secondary',
   };
 
   const value = {

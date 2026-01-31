@@ -1,32 +1,51 @@
 import React from 'react';
 
+// Instagram-style icons - minimal outline with uniform stroke
+// Active: filled/solid, Inactive: outline
+
 export const HomeIcon = ({ className = "w-6 h-6", active }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke={active ? "#d4af37" : "currentColor"} strokeWidth={active ? 2.5 : 1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+  <svg className={className} viewBox="0 0 24 24" strokeWidth={1.5}>
+    {active ? (
+      <path fill="currentColor" d="M12 2.4l-9.6 8.4v11.2h7.2v-7.2h4.8v7.2h7.2V10.8L12 2.4z" />
+    ) : (
+      <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M3 10.5L12 3l9 7.5V21a1.5 1.5 0 01-1.5 1.5h-5.25v-6.75a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v6.75H4.5A1.5 1.5 0 013 21V10.5z" />
+    )}
   </svg>
 );
 
 export const CalendarIcon = ({ className = "w-6 h-6", active }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke={active ? "#d4af37" : "currentColor"} strokeWidth={active ? 2.5 : 1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+  <svg className={className} viewBox="0 0 24 24" strokeWidth={1.5}>
+    {active ? (
+      <path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z" />
+    ) : (
+      <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M8 4V2m8 2V2M3 8h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
+    )}
   </svg>
 );
 
 export const PlusIcon = ({ className = "w-6 h-6" }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
   </svg>
 );
 
 export const ClipboardIcon = ({ className = "w-6 h-6", active }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke={active ? "#d4af37" : "currentColor"} strokeWidth={active ? 2.5 : 1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+  <svg className={className} viewBox="0 0 24 24" strokeWidth={1.5}>
+    {active ? (
+      <path fill="currentColor" d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+    ) : (
+      <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9h6m-6 4h6m-6-8h6" />
+    )}
   </svg>
 );
 
 export const UserIcon = ({ className = "w-6 h-6", active }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke={active ? "#d4af37" : "currentColor"} strokeWidth={active ? 2.5 : 1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+  <svg className={className} viewBox="0 0 24 24" strokeWidth={1.5}>
+    {active ? (
+      <path fill="currentColor" d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z" />
+    ) : (
+      <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
+    )}
   </svg>
 );
 

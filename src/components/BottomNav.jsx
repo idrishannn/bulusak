@@ -19,10 +19,13 @@ const BottomNav = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
-      <div className="max-w-lg mx-auto px-4 pb-3">
-        {/* Neumorphic navigation bar */}
-        <div className={`${themeClasses.card} px-2 py-2.5 flex items-center justify-between`}>
-          {tabs.map((tab, index) => {
+      <div className="max-w-lg mx-auto">
+        {/* Instagram-style flat navigation bar */}
+        <div className={`
+          ${isDark ? 'bg-surface-primary border-surface-border' : 'bg-white border-slate-200'}
+          border-t px-2 py-1.5 flex items-center justify-around
+        `}>
+          {tabs.map((tab) => {
             const isActive = location.pathname === tab.path;
             const Icon = tab.icon;
 
@@ -31,11 +34,14 @@ const BottomNav = () => {
                 <button
                   key={tab.path}
                   onClick={() => setModalAcik('hizliPlan')}
-                  className="relative -mt-10 mx-2"
+                  className="p-2 transition-transform active:scale-90"
                 >
-                  {/* Neumorphic gold action button */}
-                  <div className="w-14 h-14 btn-gold rounded-2xl flex items-center justify-center">
-                    <Icon className="w-7 h-7" />
+                  {/* Instagram-style create button */}
+                  <div className={`
+                    w-7 h-7 rounded-ig flex items-center justify-center
+                    ${isDark ? 'border-2 border-dark-50' : 'border-2 border-slate-900'}
+                  `}>
+                    <PlusIcon className="w-5 h-5" />
                   </div>
                 </button>
               );
@@ -45,28 +51,16 @@ const BottomNav = () => {
               <button
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
-                className={`flex flex-col items-center justify-center py-2 px-3 min-w-[60px] rounded-2xl transition-all duration-200 ${
-                  isActive
-                    ? isDark
-                      ? 'neu-inset-dark'
-                      : 'neu-inset'
-                    : ''
-                }`}
-                style={!isActive ? {
-                  background: isDark
-                    ? 'linear-gradient(145deg, #163d5a, #122f48)'
-                    : 'linear-gradient(145deg, #ffffff, #e6e6e6)',
-                  boxShadow: isDark
-                    ? '3px 3px 6px #0a1f36, -3px -3px 6px #103564'
-                    : '3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff'
-                } : {}}
+                className={`
+                  flex flex-col items-center justify-center p-2 min-w-[56px]
+                  transition-all duration-150 active:opacity-60
+                  ${isActive
+                    ? isDark ? 'text-dark-50' : 'text-slate-900'
+                    : isDark ? 'text-dark-300' : 'text-slate-400'
+                  }
+                `}
               >
                 <Icon className="w-6 h-6" active={isActive} />
-                <span className={`text-[10px] mt-1.5 font-medium whitespace-nowrap ${
-                  isActive ? 'text-gold-500' : themeClasses.textMuted
-                }`}>
-                  {tab.label}
-                </span>
               </button>
             );
           })}
