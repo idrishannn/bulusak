@@ -1279,8 +1279,10 @@ const BildirimlerModal = () => {
                     className={`p-3 rounded-xl ${islenmis ? 'bg-dark-800/50 border border-dark-700' : 'bg-gold-500/5 border border-gold-500/20'}`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${islenmis ? 'bg-dark-700' : 'bg-gold-500/10'}`}>
-                        {b.gonderenAvatar || '💌'}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl overflow-hidden ${islenmis ? 'bg-dark-700' : 'bg-gold-500/10'}`}>
+                        {b.gonderenAvatar?.startsWith('http') || b.gonderenAvatar?.startsWith('data:') ? (
+                          <img src={b.gonderenAvatar} alt="" className="w-full h-full object-cover" />
+                        ) : (b.gonderenAvatar || '💌')}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm ${islenmis ? 'text-dark-400' : 'text-white'}`}>
@@ -1333,8 +1335,10 @@ const BildirimlerModal = () => {
                     className={`p-3 rounded-xl ${islenmis ? 'bg-dark-800/50 border border-dark-700' : 'bg-purple-500/5 border border-purple-500/20'}`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${islenmis ? 'bg-dark-700' : 'bg-purple-500/10'}`}>
-                        {b.gonderenAvatar || '👤'}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl overflow-hidden ${islenmis ? 'bg-dark-700' : 'bg-purple-500/10'}`}>
+                        {b.gonderenAvatar?.startsWith('http') || b.gonderenAvatar?.startsWith('data:') ? (
+                          <img src={b.gonderenAvatar} alt="" className="w-full h-full object-cover" />
+                        ) : (b.gonderenAvatar || '👤')}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm ${islenmis ? 'text-dark-400' : 'text-white'}`}>
