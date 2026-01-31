@@ -2140,7 +2140,7 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
   const gosterilecekListe = tab === 'takipciler' ? takipciler : takipEdilenler;
 
   return (
-    <ModalWrapper title={hedefKullanici?.isim || 'Kullanıcı'} onClose={onClose}>
+    <ModalWrapper title={hedefKullaniciData?.isim || 'Kullanıcı'} onClose={onClose}>
       <div className="border-b border-dark-800">
         <div className="flex">
           <button
