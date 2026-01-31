@@ -33,7 +33,8 @@ export const COLLECTIONS = {
   FRIEND_REQUESTS: 'friendRequests',
   KONUSMALAR: 'konusmalar',
   HIKAYELER: 'hikayeler',
-  BILDIRIMLER: 'bildirimler'
+  BILDIRIMLER: 'bildirimler',
+  PLAN_HIKAYELERI: 'planHikayeleri'
 };
 
 export default app;

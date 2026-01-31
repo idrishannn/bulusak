@@ -88,7 +88,11 @@ export const BILDIRIM_TIPLERI = {
   HIKAYE_TEPKI: 'hikaye_tepki',
   PLAN_DAVET: 'plan_davet',
   PLAN_GUNCELLEME: 'plan_guncelleme',
-  PLAN_YORUM: 'plan_yorum'
+  PLAN_YORUM: 'plan_yorum',
+  PLAN_BASLADI: 'plan_basladi',
+  PLAN_HIKAYE_EKLENDI: 'plan_hikaye_eklendi',
+  PLAN_HIKAYE_ETIKETLENDI: 'plan_hikaye_etiketlendi',
+  PLAN_HIKAYE_SURE_BITMEK_UZERE: 'plan_hikaye_sure_bitmek_uzere'
 };
 
 export const bildirimMesaji = (tip, veri) => {
@@ -109,6 +113,14 @@ export const bildirimMesaji = (tip, veri) => {
       return `"${veri.planBaslik}" planı güncellendi`;
     case BILDIRIM_TIPLERI.PLAN_YORUM:
       return `${veri.kimdenIsim} "${veri.planBaslik}" planına yorum yaptı`;
+    case BILDIRIM_TIPLERI.PLAN_BASLADI:
+      return `"${veri.planBaslik}" başladı! Hikaye yükleyebilirsin`;
+    case BILDIRIM_TIPLERI.PLAN_HIKAYE_EKLENDI:
+      return `${veri.kimdenIsim} "${veri.planBaslik}" planına hikaye ekledi`;
+    case BILDIRIM_TIPLERI.PLAN_HIKAYE_ETIKETLENDI:
+      return `${veri.kimdenIsim} seni bir plan hikayesinde etiketledi`;
+    case BILDIRIM_TIPLERI.PLAN_HIKAYE_SURE_BITMEK_UZERE:
+      return `"${veri.planBaslik}" için hikaye yüklemek için son 1 saat!`;
     default:
       return 'Yeni bildirim';
   }

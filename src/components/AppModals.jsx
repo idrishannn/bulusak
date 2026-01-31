@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth, useData, useUI, useTheme } from '../context';
 import { XIcon, SearchIcon, CheckIcon, ChevronRightIcon, SendIcon, ClockIcon, LocationIcon, UsersIcon, TrashIcon, EditIcon, GlobeIcon, LockIcon, BellIcon, CameraIcon, ImageIcon } from './Icons';
 import { kullaniciAra, arkadasIstegiGonder, arkadasSil, arkadasIstegiKabulEt, arkadasIstegiReddet } from '../services/arkadasService';
-import { mesajEkle, etkinlikSil, etkinlikGuncelle } from '../services/etkinlikService';
+import { mesajEkle, etkinlikSil, etkinlikGuncelle, planiTamamla } from '../services/etkinlikService';
+import PlanHikayeler from './PlanHikayeler';
+import { bildirimOlustur } from '../services/bildirimService';
 import { bildirimOkunduIsaretle, tumBildirimleriOkunduIsaretle, BILDIRIM_TIPLERI } from '../services/bildirimService';
 import { profilGuncelle } from '../services/authService';
 import {
@@ -583,6 +585,8 @@ const DetayModal = () => {
   const [mesaj, setMesaj] = useState('');
   const [katilimcilarModalAcik, setKatilimcilarModalAcik] = useState(false);
   const [silmeOnay, setSilmeOnay] = useState(false);
+  const [tamamlamaOnay, setTamamlamaOnay] = useState(false);
+  const [tamamlaniyorYukleniyor, setTamamlaniyorYukleniyor] = useState(false);
 
   if (modalAcik !== 'detay' || !seciliEtkinlik) return null;
 
@@ -627,6 +631,44 @@ const DetayModal = () => {
     }
     setSilmeOnay(false);
   };
+
+  const handlePlaniTamamla = async () => {
+    if (tamamlaniyorYukleniyor) return;
+    setTamamlaniyorYukleniyor(true);
+    const result = await planiTamamla(seciliEtkinlik.id, kullanici.odUserId);
+    if (result.success) {
+      bildirimGoster('Plan tamamlandı! Artık hikaye yükleyebilirsiniz.', 'success');
+      setSeciliEtkinlik(prev => ({
+        ...prev,
+        status: 'completed',
+        hikayelerBaslangic: new Date().toISOString()
+      }));
+      const digerKatilimcilar = (seciliEtkinlik.participantIds || []).filter(id => id !== kullanici.odUserId);
+      for (const aliciId of digerKatilimcilar) {
+        await bildirimOlustur(aliciId, BILDIRIM_TIPLERI.PLAN_BASLADI, {
+          kimdenId: kullanici.odUserId,
+          kimdenIsim: kullanici.isim,
+          planId: seciliEtkinlik.id,
+          planBaslik: seciliEtkinlik.baslik,
+          mesaj: `"${seciliEtkinlik.baslik}" başladı! Hikaye yükleyebilirsin`
+        });
+      }
+    } else {
+      bildirimGoster(result.error || 'Bir hata oluştu', 'error');
+    }
+    setTamamlaniyorYukleniyor(false);
+    setTamamlamaOnay(false);
+  };
+
+  const planBasladiMi = () => {
+    if (seciliEtkinlik.hikayelerBaslangic) return true;
+    const planTarihi = new Date(seciliEtkinlik.startAt || seciliEtkinlik.tarih);
+    const planSaati = seciliEtkinlik.saat ? seciliEtkinlik.saat.split(':') : ['12', '00'];
+    planTarihi.setHours(parseInt(planSaati[0]), parseInt(planSaati[1]), 0, 0);
+    return new Date() >= planTarihi;
+  };
+
+  const planTamamlanabilirMi = benimPlanim && !seciliEtkinlik.hikayelerBaslangic && seciliEtkinlik.status !== 'completed';
 
   return (
     <>
@@ -705,6 +747,14 @@ const DetayModal = () => {
             />
           </div>
 
+          {/* Plan Hikayeleri */}
+          {planBasladiMi() && (
+            <PlanHikayeler
+              plan={seciliEtkinlik}
+              katilimcilar={katilimcilar}
+            />
+          )}
+
           {/* Mesajlar */}
           <div>
             <p className="text-xs text-dark-400 mb-2">Mesajlar</p>
@@ -721,6 +771,30 @@ const DetayModal = () => {
               {(!seciliEtkinlik.mesajlar || seciliEtkinlik.mesajlar.length === 0) && <p className="text-center text-dark-500 text-sm">Henüz mesaj yok</p>}
             </div>
           </div>
+
+          {/* Planı Tamamla Butonu (Sadece plan sahibi ve henüz başlamamış planlar için) */}
+          {planTamamlanabilirMi && (
+            <div className="pt-2">
+              {tamamlamaOnay ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handlePlaniTamamla}
+                    disabled={tamamlaniyorYukleniyor}
+                    className="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-medium text-sm disabled:opacity-50"
+                  >
+                    {tamamlaniyorYukleniyor ? 'Tamamlanıyor...' : 'Evet, Tamamla'}
+                  </button>
+                  <button onClick={() => setTamamlamaOnay(false)} className="flex-1 btn-ghost py-3 rounded-xl font-medium text-sm">
+                    Vazgeç
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setTamamlamaOnay(true)} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-emerald-400 hover:bg-emerald-500/10 transition-all btn-ghost">
+                  <CheckIcon className="w-4 h-4" /> Planı Tamamla
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Plan Sil Butonu (Sadece plan sahibi için) */}
           {benimPlanim && (

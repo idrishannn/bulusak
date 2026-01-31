@@ -331,3 +331,22 @@ export const katildigimPlanlariFiltrele = (etkinlikler, userId) => {
     return false;
   });
 };
+
+export const planiTamamla = async (etkinlikId, kullaniciId) => {
+  try {
+    const etkinlikRef = doc(db, 'events', etkinlikId);
+    const simdi = new Date();
+
+    await updateDoc(etkinlikRef, {
+      status: 'completed',
+      hikayelerBaslangic: simdi.toISOString(),
+      hikayelerBitis: new Date(simdi.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      tamamlanmaZamani: simdi.toISOString()
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Plan tamamlama hatası:', error);
+    return { success: false, error: error.message };
+  }
+};
