@@ -4,7 +4,7 @@ import { useAuth, useData, useUI, useTheme } from '../context';
 import { XIcon, SearchIcon, CheckIcon, ChevronRightIcon, ChevronLeftIcon, SendIcon, ClockIcon, UsersIcon, TrashIcon, EditIcon, GlobeIcon, LockIcon, BellIcon, CameraIcon, ImageIcon } from './Icons';
 import { kullaniciAra, arkadasIstegiGonder, arkadasSil, arkadasIstegiKabulEt, arkadasIstegiReddet, takipEt, takiptenCik, takipDurumuGetir, takipIstegiKabulEt, takipIstegiReddet } from '../services/arkadasService';
 import { kullaniciBilgisiGetir } from '../services/userService';
-import { mesajEkle, etkinlikSil, etkinlikGuncelle, planiTamamla, planKatilimOnayla, planKatilimReddet } from '../services/etkinlikService';
+import { mesajEkle, etkinlikSil, etkinlikGuncelle, planiTamamla, planKatilimOnayla, planKatilimReddet, etkinlikDinle } from '../services/etkinlikService';
 import PlanHikayeler from './PlanHikayeler';
 import { bildirimOlustur } from '../services/bildirimService';
 import { bildirimOkunduIsaretle, tumBildirimleriOkunduIsaretle, BILDIRIM_TIPLERI } from '../services/bildirimService';
@@ -78,16 +78,23 @@ const ParticipantAvatars = ({ participants, maxVisible = MAX_VISIBLE_PARTICIPANT
     return <p className="text-dark-500 text-sm">Henüz katılımcı yok</p>;
   }
 
+  const renderAvatar = (avatar) => {
+    if (avatar?.startsWith('http') || avatar?.startsWith('data:')) {
+      return <img src={avatar} alt="" className="w-full h-full object-cover" />;
+    }
+    return avatar || '👤';
+  };
+
   return (
     <button onClick={onPress} className="flex items-center">
       <div className="flex -space-x-3">
         {gosterilecek.map((k, i) => (
           <div
             key={k.odUserId || i}
-            className="w-10 h-10 rounded-full bg-dark-700 border-2 border-dark-900 flex items-center justify-center text-lg"
+            className="w-10 h-10 rounded-full bg-dark-700 border-2 border-dark-900 flex items-center justify-center text-lg overflow-hidden"
             style={{ zIndex: maxVisible - i }}
           >
-            {k.avatar || '👤'}
+            {renderAvatar(k.avatar)}
           </div>
         ))}
         {fazlasi > 0 && (
@@ -111,6 +118,13 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
   const varimOlanlar = participants?.filter(k => k.durum === KATILIM_DURUMLARI.VARIM) || [];
   const yokumOlanlar = participants?.filter(k => k.durum === KATILIM_DURUMLARI.YOKUM) || [];
 
+  const renderAvatar = (avatar) => {
+    if (avatar?.startsWith('http') || avatar?.startsWith('data:')) {
+      return <img src={avatar} alt="" className="w-full h-full object-cover" />;
+    }
+    return avatar || '👤';
+  };
+
   return (
     <div className="fixed inset-0 z-[110] flex items-end justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
@@ -128,8 +142,8 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
               <div className="space-y-2">
                 {varimOlanlar.map((k, i) => (
                   <div key={k.odUserId || i} className="flex items-center gap-3 p-2 rounded-xl bg-emerald-500/10">
-                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl">
-                      {k.avatar || '👤'}
+                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl overflow-hidden">
+                      {renderAvatar(k.avatar)}
                     </div>
                     <span className="text-white font-medium">
                       {k.odUserId === currentUserId ? 'Sen' : k.isim || 'Katılımcı'}
@@ -145,8 +159,8 @@ const KatilimcilarModal = ({ isOpen, onClose, participants, currentUserId }) => 
               <div className="space-y-2">
                 {yokumOlanlar.map((k, i) => (
                   <div key={k.odUserId || i} className="flex items-center gap-3 p-2 rounded-xl bg-red-500/10">
-                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl">
-                      {k.avatar || '👤'}
+                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl overflow-hidden">
+                      {renderAvatar(k.avatar)}
                     </div>
                     <span className="text-white font-medium">
                       {k.odUserId === currentUserId ? 'Sen' : k.isim || 'Katılımcı'}
@@ -621,6 +635,30 @@ const DetayModal = () => {
   const [silmeOnay, setSilmeOnay] = useState(false);
   const [tamamlamaOnay, setTamamlamaOnay] = useState(false);
   const [tamamlaniyorYukleniyor, setTamamlaniyorYukleniyor] = useState(false);
+  const mesajlarRef = useRef(null);
+
+  // Gerçek zamanlı etkinlik dinleme
+  useEffect(() => {
+    if (modalAcik !== 'detay' || !seciliEtkinlik?.id) return;
+
+    const unsubscribe = etkinlikDinle(seciliEtkinlik.id, (guncelEtkinlik) => {
+      if (guncelEtkinlik) {
+        setSeciliEtkinlik(prev => ({
+          ...prev,
+          ...guncelEtkinlik
+        }));
+      }
+    });
+
+    return () => unsubscribe();
+  }, [modalAcik, seciliEtkinlik?.id]);
+
+  // Mesajlar değiştiğinde en alta scroll
+  useEffect(() => {
+    if (mesajlarRef.current) {
+      mesajlarRef.current.scrollTop = mesajlarRef.current.scrollHeight;
+    }
+  }, [seciliEtkinlik?.mesajlar]);
 
   if (modalAcik !== 'detay' || !seciliEtkinlik) return null;
 
@@ -649,9 +687,10 @@ const DetayModal = () => {
       bildirimGoster('Bu plana mesaj yazma yetkin yok', 'error');
       return;
     }
-    await mesajEkle(seciliEtkinlik.id, { odUserId: kullanici.odUserId, isim: kullanici.isim, avatar: kullanici.avatar, mesaj: mesaj.trim() });
-    setSeciliEtkinlik(prev => ({ ...prev, mesajlar: [...(prev.mesajlar || []), { odUserId: kullanici.odUserId, isim: kullanici.isim, avatar: kullanici.avatar, mesaj: mesaj.trim(), zaman: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) }] }));
-    setMesaj('');
+    const mesajMetni = mesaj.trim();
+    setMesaj(''); // Hemen temizle
+    await mesajEkle(seciliEtkinlik.id, { odUserId: kullanici.odUserId, isim: kullanici.isim, avatar: kullanici.avatar, mesaj: mesajMetni });
+    // Real-time listener otomatik güncelleyecek
   };
 
   const handlePlanSil = async () => {
@@ -710,8 +749,14 @@ const DetayModal = () => {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Plan Sahibi Bilgisi */}
           <div className="flex items-center gap-3 p-3 card">
-            <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl border-2 border-gold-500/30">
-              {planSahibi?.avatar || seciliEtkinlik.olusturanAvatar || '👤'}
+            <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl border-2 border-gold-500/30 overflow-hidden">
+              {(() => {
+                const avatar = planSahibi?.avatar || seciliEtkinlik.olusturanAvatar;
+                if (avatar?.startsWith('http') || avatar?.startsWith('data:')) {
+                  return <img src={avatar} alt="" className="w-full h-full object-cover" />;
+                }
+                return avatar || '👤';
+              })()}
             </div>
             <div className="flex-1">
               <p className="text-xs text-dark-400">Plan Sahibi</p>
@@ -792,10 +837,14 @@ const DetayModal = () => {
           {/* Mesajlar */}
           <div>
             <p className="text-xs text-dark-400 mb-2">Mesajlar</p>
-            <div className="card p-3 max-h-48 overflow-y-auto space-y-3">
+            <div ref={mesajlarRef} className="card p-3 max-h-48 overflow-y-auto space-y-3">
               {(seciliEtkinlik.mesajlar || []).map((m, i) => (
                 <div key={i} className={`flex gap-2 ${m.odUserId === kullanici?.odUserId ? 'flex-row-reverse' : ''}`}>
-                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-sm flex-shrink-0">{m.avatar || '👤'}</div>
+                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
+                    {m.avatar?.startsWith('http') || m.avatar?.startsWith('data:') ? (
+                      <img src={m.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (m.avatar || '👤')}
+                  </div>
                   <div className={`max-w-[70%] px-3 py-2 rounded-xl ${m.odUserId === kullanici?.odUserId ? 'bg-gold-500/20 text-gold-100' : 'bg-dark-700 text-white'}`}>
                     <p className="text-xs text-dark-400 mb-0.5">{m.isim}</p>
                     <p className="text-sm">{m.mesaj}</p>
@@ -1442,16 +1491,34 @@ const ProfilDuzenleModal = () => {
   const [kullaniciAdi, setKullaniciAdi] = useState('');
   const [bio, setBio] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [profilFoto, setProfilFoto] = useState(null);
+  const fotoInputRef = useRef(null);
 
   useEffect(() => {
     if (modalAcik === 'profilDuzenle' && kullanici) {
       setIsim(kullanici.isim || '');
       setKullaniciAdi((kullanici.kullaniciAdi || '').replace(/@/g, ''));
       setBio(kullanici.bio || '');
+      setProfilFoto(kullanici.avatar?.startsWith('data:') || kullanici.avatar?.startsWith('http') ? kullanici.avatar : null);
     }
   }, [modalAcik, kullanici]);
 
   if (modalAcik !== 'profilDuzenle') return null;
+
+  const handleFotoSec = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        bildirimGoster('Fotoğraf 5MB\'dan küçük olmalı', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProfilFoto(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleKaydet = async () => {
     if (!isim.trim()) {
@@ -1470,12 +1537,17 @@ const ProfilDuzenleModal = () => {
     setYukleniyor(true);
     try {
       const temizKullaniciAdi = kullaniciAdi.toLowerCase().replace(/@/g, '').replace(/[^a-z0-9_]/g, '');
-      await profilGuncelle(kullanici.odUserId, {
+      const guncellenecekVeri = {
         isim: isim.trim(),
         kullaniciAdi: temizKullaniciAdi,
         kullaniciAdiLower: temizKullaniciAdi,
         bio: bio.trim()
-      });
+      };
+      // Fotoğraf seçildiyse ekle
+      if (profilFoto) {
+        guncellenecekVeri.avatar = profilFoto;
+      }
+      await profilGuncelle(kullanici.odUserId, guncellenecekVeri);
       bildirimGoster('Profil güncellendi!', 'success');
       setModalAcik(null);
     } catch (error) {
@@ -1488,18 +1560,32 @@ const ProfilDuzenleModal = () => {
     <ModalWrapper title="Profili Düzenle" onClose={() => setModalAcik(null)}>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div className="flex justify-center mb-4">
+          <input
+            type="file"
+            ref={fotoInputRef}
+            onChange={handleFotoSec}
+            accept="image/*"
+            className="hidden"
+          />
           <button
-            onClick={() => setModalAcik('avatarDegistir')}
+            onClick={() => fotoInputRef.current?.click()}
             className="relative"
           >
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gold-500/30 to-gold-600/20 border-2 border-gold-500/50 flex items-center justify-center">
-              <span className="text-5xl">{kullanici?.avatar || '👤'}</span>
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gold-500/30 to-gold-600/20 border-2 border-gold-500/50 flex items-center justify-center overflow-hidden">
+              {profilFoto ? (
+                <img src={profilFoto} alt="Profil" className="w-full h-full object-cover" />
+              ) : kullanici?.avatar?.startsWith('http') || kullanici?.avatar?.startsWith('data:') ? (
+                <img src={kullanici.avatar} alt="Profil" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-5xl">{kullanici?.avatar || '👤'}</span>
+              )}
             </div>
             <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-gold-500 rounded-full flex items-center justify-center">
               <CameraIcon className="w-4 h-4 text-dark-900" />
             </div>
           </button>
         </div>
+        <p className="text-center text-xs text-dark-400">Fotoğraf eklemek için tıkla</p>
 
         <div>
           <label className="text-xs font-medium text-dark-400 mb-2 block">İsim</label>
