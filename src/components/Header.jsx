@@ -30,12 +30,7 @@ const Header = () => {
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo size="sm" />
-            <div>
-              <Wordmark size="sm" className="mb-0.5" />
-              <h1 className={`${themeClasses.text} font-semibold`}>
-                {kullanici?.isim?.split(' ')[0] || 'Kullanıcı'}
-              </h1>
-            </div>
+            <Wordmark size="sm" />
           </div>
 
           <div className="flex items-center gap-2">
