@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useTheme } from '../context';
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, LockIcon, GlobeIcon } from './Icons';
+import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, LockIcon, GlobeIcon, XIcon } from './Icons';
 import { THEMES, PROFILE_PRIVACY } from '../constants';
 import { profilGuncelle } from '../services/userService';
 
@@ -89,16 +89,23 @@ const Ayarlar = () => {
 
   return (
     <div className={`min-h-screen ${themeClasses.bg} pb-32`}>
-      {/* Header */}
       <div className={`sticky top-0 z-10 ${themeClasses.glass} border-b ${themeClasses.border} p-4`}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/profil', { state: { menuAcik: true } })}
+              className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}
+            >
+              <ChevronLeftIcon className={`w-5 h-5 ${themeClasses.text}`} />
+            </button>
+            <h1 className={`text-lg font-semibold ${themeClasses.text}`}>Ayarlar</h1>
+          </div>
           <button
-            onClick={() => navigate('/profil', { state: { menuAcik: true } })}
+            onClick={() => navigate('/profil')}
             className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}
           >
-            <ChevronLeftIcon className={`w-5 h-5 ${themeClasses.text}`} />
+            <XIcon className={`w-5 h-5 ${themeClasses.text}`} />
           </button>
-          <h1 className={`text-lg font-semibold ${themeClasses.text}`}>Ayarlar</h1>
         </div>
       </div>
 
