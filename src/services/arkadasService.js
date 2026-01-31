@@ -91,14 +91,16 @@ export const arkadasIstegiGonder = async (gonderen, aliciId) => {
     });
 
     try {
-      await bildirimOlustur({
-        aliciId: aliciId,
-        tip: BILDIRIM_TIPLERI.ARKADAS_ISTEGI,
-        mesaj: `${gonderen.isim || 'Bir kullanıcı'} sana arkadaşlık isteği gönderdi`,
-        gonderenId: gonderen.odUserId,
-        gonderenIsim: gonderen.isim,
-        gonderenAvatar: gonderen.avatar
-      });
+      await bildirimOlustur(
+        aliciId,
+        BILDIRIM_TIPLERI.ARKADAS_ISTEGI,
+        {
+          mesaj: `${gonderen.isim || 'Bir kullanıcı'} sana arkadaşlık isteği gönderdi`,
+          gonderenId: gonderen.odUserId,
+          gonderenIsim: gonderen.isim,
+          gonderenAvatar: gonderen.avatar
+        }
+      );
     } catch (e) {}
 
     return { success: true, message: 'İstek gönderildi! 🎉' };
@@ -133,14 +135,16 @@ export const arkadasIstegiKabulEt = async (kullanici, istekGonderenId) => {
     });
 
     try {
-      await bildirimOlustur({
-        aliciId: istekGonderenId,
-        tip: BILDIRIM_TIPLERI.ARKADAS_KABUL,
-        mesaj: `${kullanici.isim || 'Bir kullanıcı'} arkadaşlık isteğini kabul etti`,
-        gonderenId: kullanici.odUserId,
-        gonderenIsim: kullanici.isim,
-        gonderenAvatar: kullanici.avatar
-      });
+      await bildirimOlustur(
+        istekGonderenId,
+        BILDIRIM_TIPLERI.ARKADAS_KABUL,
+        {
+          mesaj: `${kullanici.isim || 'Bir kullanıcı'} arkadaşlık isteğini kabul etti`,
+          gonderenId: kullanici.odUserId,
+          gonderenIsim: kullanici.isim,
+          gonderenAvatar: kullanici.avatar
+        }
+      );
     } catch (e) {}
 
     return { success: true, message: 'Arkadaşlık kabul edildi! 🎉' };
