@@ -4,7 +4,7 @@ import { useAuth, useData, useUI, useTheme } from '../context';
 import { XIcon, SearchIcon, CheckIcon, ChevronRightIcon, ChevronLeftIcon, SendIcon, ClockIcon, UsersIcon, TrashIcon, EditIcon, GlobeIcon, LockIcon, BellIcon, CameraIcon, ImageIcon } from './Icons';
 import { kullaniciAra, arkadasIstegiGonder, arkadasSil, arkadasIstegiKabulEt, arkadasIstegiReddet, takipEt, takiptenCik, takipDurumuGetir, takipIstegiKabulEt, takipIstegiReddet } from '../services/arkadasService';
 import { kullaniciBilgisiGetir } from '../services/userService';
-import { mesajEkle, etkinlikSil, etkinlikGuncelle, planiTamamla, planKatilimOnayla, planKatilimReddet, etkinlikDinle } from '../services/etkinlikService';
+import { mesajEkle, etkinlikSil, etkinlikGuncelle, planiTamamla, planKatilimOnayla, planKatilimReddet } from '../services/etkinlikService';
 import PlanHikayeler from './PlanHikayeler';
 import { bildirimOlustur } from '../services/bildirimService';
 import { bildirimOkunduIsaretle, tumBildirimleriOkunduIsaretle, BILDIRIM_TIPLERI } from '../services/bildirimService';
@@ -642,44 +642,28 @@ const ArkadasIstekleriModal = () => {
 
 const DetayModal = () => {
   const { kullanici } = useAuth();
-  const { katilimDurumuGuncelle } = useData();
+  const { katilimDurumuGuncelle, etkinlikler } = useData();
   const { modalAcik, setModalAcik, seciliEtkinlik, setSeciliEtkinlik, bildirimGoster } = useUI();
   const [mesaj, setMesaj] = useState('');
   const [katilimcilarModalAcik, setKatilimcilarModalAcik] = useState(false);
   const [silmeOnay, setSilmeOnay] = useState(false);
   const mesajlarRef = useRef(null);
-  const unsubscribeRef = useRef(null);
 
-  // Gerçek zamanlı etkinlik dinleme
+  // DataContext'teki etkinlikler değiştiğinde seciliEtkinlik'i güncelle
   useEffect(() => {
-    // Önceki listener'ı temizle
-    if (unsubscribeRef.current) {
-      unsubscribeRef.current();
-      unsubscribeRef.current = null;
-    }
-
     if (modalAcik !== 'detay' || !seciliEtkinlik?.id) return;
 
-    const etkinlikId = seciliEtkinlik.id;
-    let isActive = true;
-
-    unsubscribeRef.current = etkinlikDinle(etkinlikId, (guncelEtkinlik) => {
-      if (isActive && guncelEtkinlik) {
-        setSeciliEtkinlik(prev => {
-          if (prev?.id !== etkinlikId) return prev;
+    const guncelEtkinlik = etkinlikler?.find(e => e.id === seciliEtkinlik.id);
+    if (guncelEtkinlik) {
+      setSeciliEtkinlik(prev => {
+        // Sadece değişiklik varsa güncelle
+        if (JSON.stringify(prev) !== JSON.stringify(guncelEtkinlik)) {
           return { ...prev, ...guncelEtkinlik };
-        });
-      }
-    });
-
-    return () => {
-      isActive = false;
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
-      }
-    };
-  }, [modalAcik, seciliEtkinlik?.id, setSeciliEtkinlik]);
+        }
+        return prev;
+      });
+    }
+  }, [etkinlikler, modalAcik, seciliEtkinlik?.id, setSeciliEtkinlik]);
 
   // Mesajlar değiştiğinde en alta scroll
   useEffect(() => {
