@@ -431,7 +431,11 @@ const HizliPlanModal = () => {
                 if (!kisi) return null;
                 return (
                   <div key={id} className="flex items-center gap-2 px-3 py-1.5 bg-gold-500/20 rounded-full border border-gold-500/30">
-                    <span className="text-sm">{kisi.avatar || '👤'}</span>
+                    <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center bg-dark-700">
+                      {kisi.avatar?.startsWith('http') || kisi.avatar?.startsWith('data:') ? (
+                        <img src={kisi.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : <span className="text-sm">{kisi.avatar || '👤'}</span>}
+                    </div>
                     <span className="text-sm text-white">{kisi.isim}</span>
                     <button onClick={() => arkadasToggle(id)} className="text-gold-500 hover:text-white">
                       <XIcon className="w-4 h-4" />
@@ -471,8 +475,10 @@ const HizliPlanModal = () => {
                         : 'hover:bg-dark-700'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl">
-                      {k.avatar || '👤'}
+                    <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center text-xl overflow-hidden">
+                      {k.avatar?.startsWith('http') || k.avatar?.startsWith('data:') ? (
+                        <img src={k.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (k.avatar || '👤')}
                     </div>
                     <div className="flex-1 text-left">
                       <p className="text-white font-medium">{k.isim}</p>
@@ -560,7 +566,11 @@ const ArkadaslarModal = () => {
               <div className="space-y-2">
                 {aramaSonuclari.map(k => (
                   <div key={k.odUserId} className="flex items-center gap-3 p-3 card">
-                    <div className="w-12 h-12 rounded-xl bg-dark-700 flex items-center justify-center text-2xl">{k.avatar || '👤'}</div>
+                    <div className="w-12 h-12 rounded-xl bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+                      {k.avatar?.startsWith('http') || k.avatar?.startsWith('data:') ? (
+                        <img src={k.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (k.avatar || '👤')}
+                    </div>
                     <div className="flex-1"><p className="font-medium text-white">{k.isim}</p><p className="text-sm text-dark-400">@{k.kullaniciAdi}</p></div>
                     {arkadasMi(k.odUserId) ? <span className="text-emerald-400 text-sm">Arkadaş</span>
                       : k.istekGonderildi ? <span className="text-gold-500 text-sm">Gönderildi</span>
@@ -577,7 +587,11 @@ const ArkadaslarModal = () => {
             <div className="space-y-2">
               {arkadaslar.map(a => (
                 <div key={a.odUserId} className="flex items-center gap-3 p-3 card">
-                  <div className="w-12 h-12 rounded-xl bg-dark-700 flex items-center justify-center text-2xl">{a.avatar || '👤'}</div>
+                  <div className="w-12 h-12 rounded-xl bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+                    {a.avatar?.startsWith('http') || a.avatar?.startsWith('data:') ? (
+                      <img src={a.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (a.avatar || '👤')}
+                  </div>
                   <div className="flex-1"><p className="font-medium text-white">{a.isim}</p><p className="text-sm text-dark-400">@{a.kullaniciAdi}</p></div>
                   <button onClick={() => handleArkadasSil(a.odUserId)} className="text-dark-500 hover:text-red-400"><TrashIcon className="w-5 h-5" /></button>
                 </div>
@@ -930,7 +944,11 @@ const YeniGrupModal = () => {
                   onClick={() => uyeToggle(a.odUserId)}
                   className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${secilenUyeler.includes(a.odUserId) ? 'bg-gold-500/20 border border-gold-500/30' : 'hover:bg-dark-700'}`}
                 >
-                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-lg">{a.avatar || '👤'}</div>
+                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-lg overflow-hidden">
+                    {a.avatar?.startsWith('http') || a.avatar?.startsWith('data:') ? (
+                      <img src={a.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (a.avatar || '👤')}
+                  </div>
                   <span className="flex-1 text-left text-white text-sm">{a.isim}</span>
                   {secilenUyeler.includes(a.odUserId) && <CheckIcon className="w-4 h-4 text-gold-500" />}
                 </button>
@@ -1838,8 +1856,10 @@ const KullaniciEkleModal = () => {
               const buttonState = getButtonState(k.odUserId);
               return (
                 <div key={k.odUserId} className="flex items-center gap-3 p-3 card">
-                  <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl">
-                    {k.avatar || '👤'}
+                  <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+                    {k.avatar?.startsWith('http') || k.avatar?.startsWith('data:') ? (
+                      <img src={k.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (k.avatar || '👤')}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-white truncate">{k.isim}</p>
@@ -1985,8 +2005,10 @@ const TakipciListesiModal = () => {
         ) : gosterilecekListe.length > 0 ? (
           gosterilecekListe.map(user => (
             <div key={user.odUserId} className="flex items-center gap-3 p-3 card">
-              <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl">
-                {user.avatar || '👤'}
+              <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+                {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
+                  <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (user.avatar || '👤')}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-white truncate">{user.isim}</p>
@@ -2125,8 +2147,10 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
         ) : gosterilecekListe.length > 0 ? (
           gosterilecekListe.map(user => (
             <div key={user.odUserId} className="flex items-center gap-3 p-3 card">
-              <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl">
-                {user.avatar || '👤'}
+              <div className="w-12 h-12 rounded-full bg-dark-700 flex items-center justify-center text-2xl overflow-hidden">
+                {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
+                  <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (user.avatar || '👤')}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-white truncate">{user.isim}</p>
