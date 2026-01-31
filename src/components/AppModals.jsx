@@ -2198,7 +2198,7 @@ const DigerKullaniciTakipciModal = ({ hedefUserId, onClose }) => {
               {tab === 'takipciler' ? 'Henüz takipçi yok' : 'Henüz kimseyi takip etmiyor'}
             </p>
           </div>
-        )
+        )}
       </div>
     </ModalWrapper>
   );
