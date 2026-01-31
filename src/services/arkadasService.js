@@ -134,13 +134,11 @@ export const takipEt = async (gonderen, aliciId) => {
       const gonderenRef = doc(db, 'users', gonderen.odUserId);
 
       await updateDoc(aliciRef, {
-        takipciler: arrayUnion(gonderen.odUserId),
-        arkadaslar: arrayUnion(gonderen.odUserId)
+        takipciler: arrayUnion(gonderen.odUserId)
       });
 
       await updateDoc(gonderenRef, {
-        takipEdilenler: arrayUnion(aliciId),
-        arkadaslar: arrayUnion(aliciId)
+        takipEdilenler: arrayUnion(aliciId)
       });
 
       try {
@@ -175,19 +173,26 @@ export const takipIstegiKabulEt = async (kullanici, istekGonderenId) => {
     const kullaniciDoc = await getDoc(kullaniciRef);
     const kullaniciData = kullaniciDoc.data();
 
+    const mevcutTakipciler = kullaniciData.takipciler || [];
+    if (mevcutTakipciler.includes(istekGonderenId)) {
+      const guncellenmisIstekler = (kullaniciData.takipIstekleri || []).filter(
+        i => !(i.kimden === istekGonderenId && i.durum === 'bekliyor')
+      );
+      await updateDoc(kullaniciRef, { takipIstekleri: guncellenmisIstekler });
+      return { success: true, message: 'Zaten takipçin!' };
+    }
+
     const guncellenmisIstekler = (kullaniciData.takipIstekleri || []).filter(
       i => !(i.kimden === istekGonderenId && i.durum === 'bekliyor')
     );
 
     await updateDoc(kullaniciRef, {
       takipIstekleri: guncellenmisIstekler,
-      takipciler: arrayUnion(istekGonderenId),
-      arkadaslar: arrayUnion(istekGonderenId)
+      takipciler: arrayUnion(istekGonderenId)
     });
 
     await updateDoc(gonderenRef, {
-      takipEdilenler: arrayUnion(kullanici.odUserId),
-      arkadaslar: arrayUnion(kullanici.odUserId)
+      takipEdilenler: arrayUnion(kullanici.odUserId)
     });
 
     try {
@@ -203,7 +208,7 @@ export const takipIstegiKabulEt = async (kullanici, istekGonderenId) => {
       );
     } catch (e) {}
 
-    return { success: true, message: 'Takip isteği kabul edildi!' };
+    return { success: true, message: 'Takip isteği kabul edildi!', kabulEdenIsim: kullanici.isim };
   } catch (error) {
     console.error('Kabul hatası:', error);
     return { success: false, error: 'Kabul edilemedi' };
@@ -245,13 +250,11 @@ export const takiptenCik = async (kullanici, hedefId) => {
     const hedefRef = doc(db, 'users', hedefId);
 
     await updateDoc(kullaniciRef, {
-      takipEdilenler: arrayRemove(hedefId),
-      arkadaslar: arrayRemove(hedefId)
+      takipEdilenler: arrayRemove(hedefId)
     });
 
     await updateDoc(hedefRef, {
-      takipciler: arrayRemove(kullanici.odUserId),
-      arkadaslar: arrayRemove(kullanici.odUserId)
+      takipciler: arrayRemove(kullanici.odUserId)
     });
 
     return { success: true, message: 'Takipten çıkıldı' };

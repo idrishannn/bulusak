@@ -5,8 +5,28 @@ import {
 } from 'firebase/firestore';
 
 export const bildirimOlustur = async (aliciId, tip, veri) => {
+  if (!aliciId) {
+    return { success: false, error: 'Alıcı ID gerekli' };
+  }
+
   try {
     const bildirimRef = collection(db, COLLECTIONS.BILDIRIMLER);
+
+    if (veri.gonderenId) {
+      const duplicateQuery = query(
+        bildirimRef,
+        where('aliciId', '==', aliciId),
+        where('tip', '==', tip),
+        where('gonderenId', '==', veri.gonderenId),
+        where('okundu', '==', false),
+        limit(1)
+      );
+      const existingDocs = await getDocs(duplicateQuery);
+      if (!existingDocs.empty) {
+        return { success: true, duplicate: true };
+      }
+    }
+
     const bildirim = {
       aliciId,
       tip,
@@ -14,7 +34,7 @@ export const bildirimOlustur = async (aliciId, tip, veri) => {
       okundu: false,
       olusturulma: serverTimestamp()
     };
-    
+
     await addDoc(bildirimRef, bildirim);
     return { success: true };
   } catch (error) {

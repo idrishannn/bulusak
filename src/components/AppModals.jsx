@@ -940,6 +940,7 @@ const BildirimlerModal = () => {
   const { etkinlikler, katilimDurumuGuncelle } = useData();
   const { modalAcik, setModalAcik, bildirimler, setSeciliEtkinlik, bildirimGoster } = useUI();
   const [islemYapiliyor, setIslemYapiliyor] = useState(null);
+  const [islenmisBildirimler, setIslenmisBildirimler] = useState({});
 
   if (modalAcik !== 'bildirimler') return null;
 
@@ -1082,8 +1083,15 @@ const BildirimlerModal = () => {
   const handleTakipIstegiKabul = async (bildirim) => {
     setIslemYapiliyor(bildirim.id);
     try {
-      await takipIstegiKabulEt(kullanici, bildirim.gonderenId);
+      const result = await takipIstegiKabulEt(kullanici, bildirim.gonderenId);
       await bildirimOkunduIsaretle(bildirim.id);
+      setIslenmisBildirimler(prev => ({
+        ...prev,
+        [bildirim.id]: {
+          durum: 'kabul',
+          mesaj: `Kabul ettin · ${bildirim.gonderenIsim || 'Kullanıcı'} seni takip ediyor`
+        }
+      }));
       bildirimGoster('Takip isteği kabul edildi!', 'success');
     } catch (error) {
       bildirimGoster('İşlem başarısız', 'error');
@@ -1096,6 +1104,13 @@ const BildirimlerModal = () => {
     try {
       await takipIstegiReddet(kullanici, bildirim.gonderenId);
       await bildirimOkunduIsaretle(bildirim.id);
+      setIslenmisBildirimler(prev => ({
+        ...prev,
+        [bildirim.id]: {
+          durum: 'red',
+          mesaj: `${bildirim.gonderenIsim || 'Kullanıcı'} takip isteği reddedildi`
+        }
+      }));
       bildirimGoster('Takip isteği reddedildi', 'success');
     } catch (error) {
       bildirimGoster('İşlem başarısız', 'error');
@@ -1248,38 +1263,50 @@ const BildirimlerModal = () => {
               <span>🙋</span> Takip İstekleri
             </h3>
             <div className="space-y-3">
-              {takipIstekBildirimleri.map(b => (
-                <div
-                  key={b.id}
-                  className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-xl"
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-xl">
-                      {b.gonderenAvatar || '👤'}
+              {takipIstekBildirimleri.map(b => {
+                const islenmis = islenmisBildirimler[b.id];
+                return (
+                  <div
+                    key={b.id}
+                    className={`p-3 rounded-xl ${islenmis ? 'bg-dark-800/50 border border-dark-700' : 'bg-purple-500/5 border border-purple-500/20'}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${islenmis ? 'bg-dark-700' : 'bg-purple-500/10'}`}>
+                        {b.gonderenAvatar || '👤'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm ${islenmis ? 'text-dark-400' : 'text-white'}`}>
+                          {islenmis ? islenmis.mesaj : b.mesaj}
+                        </p>
+                        <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
+                      </div>
+                      {islenmis && (
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${islenmis.durum === 'kabul' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-dark-600 text-dark-400'}`}>
+                          {islenmis.durum === 'kabul' ? <CheckIcon className="w-4 h-4" /> : <XIcon className="w-4 h-4" />}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white">{b.mesaj}</p>
-                      <p className="text-xs text-dark-500 mt-1">{formatZaman(b.olusturulma)}</p>
-                    </div>
+                    {!islenmis && (
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => handleTakipIstegiKabul(b)}
+                          disabled={islemYapiliyor === b.id}
+                          className="flex-1 bg-purple-500 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                          {islemYapiliyor === b.id ? '...' : 'Kabul Et'}
+                        </button>
+                        <button
+                          onClick={() => handleTakipIstegiReddet(b)}
+                          disabled={islemYapiliyor === b.id}
+                          className="flex-1 bg-dark-700 text-dark-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                          Reddet
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleTakipIstegiKabul(b)}
-                      disabled={islemYapiliyor === b.id}
-                      className="flex-1 bg-purple-500 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                    >
-                      {islemYapiliyor === b.id ? '...' : 'Kabul Et'}
-                    </button>
-                    <button
-                      onClick={() => handleTakipIstegiReddet(b)}
-                      disabled={islemYapiliyor === b.id}
-                      className="flex-1 bg-dark-700 text-dark-300 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                    >
-                      Reddet
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
