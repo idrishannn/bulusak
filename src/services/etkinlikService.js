@@ -350,3 +350,53 @@ export const planiTamamla = async (etkinlikId, kullaniciId) => {
     return { success: false, error: error.message };
   }
 };
+
+export const planKatilimOnayla = async (etkinlikId, kullaniciId, kullaniciData) => {
+  try {
+    const etkinlikRef = doc(db, 'events', etkinlikId);
+
+    await updateDoc(etkinlikRef, {
+      [`katilimOnaylari.${kullaniciId}`]: {
+        odUserId: kullaniciId,
+        isim: kullaniciData?.isim || '',
+        avatar: kullaniciData?.avatar || '👤',
+        profildeGoster: true,
+        onayTarihi: new Date().toISOString()
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const planKatilimReddet = async (etkinlikId, kullaniciId) => {
+  try {
+    const etkinlikRef = doc(db, 'events', etkinlikId);
+
+    await updateDoc(etkinlikRef, {
+      [`katilimOnaylari.${kullaniciId}`]: {
+        profildeGoster: false,
+        reddedildi: true,
+        redTarihi: new Date().toISOString()
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const kullaniciPlanOnayliMi = (plan, kullaniciId) => {
+  if (!plan || !kullaniciId) return false;
+  const onay = plan.katilimOnaylari?.[kullaniciId];
+  return onay?.profildeGoster === true;
+};
+
+export const kullaniciPlanReddettimi = (plan, kullaniciId) => {
+  if (!plan || !kullaniciId) return false;
+  const onay = plan.katilimOnaylari?.[kullaniciId];
+  return onay?.reddedildi === true;
+};

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useTheme } from '../context';
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, LockIcon, GlobeIcon, LocationIcon } from './Icons';
-import { THEMES, PROFILE_PRIVACY, LOCATION_RADIUS_OPTIONS, STORAGE_KEYS } from '../constants';
+import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, LockIcon, GlobeIcon } from './Icons';
+import { THEMES, PROFILE_PRIVACY } from '../constants';
 import { profilGuncelle } from '../services/userService';
 
 const Ayarlar = () => {
@@ -15,17 +15,9 @@ const Ayarlar = () => {
     kullanici?.profilGizlilik || PROFILE_PRIVACY.PUBLIC
   );
 
-  // Müsaitlik görünürlüğü
   const [musaitlikGorunur, setMusaitlikGorunur] = useState(
     kullanici?.musaitlikGorunur !== false
   );
-
-  // Konum ayarları
-  const [konumAktif, setKonumAktif] = useState(false);
-  const [konumYaricap, setKonumYaricap] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.LOCATION_RADIUS);
-    return saved ? parseInt(saved, 10) : 25;
-  });
 
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -48,11 +40,6 @@ const Ayarlar = () => {
     if (kullanici?.odUserId) {
       await profilGuncelle(kullanici.odUserId, { musaitlikGorunur: yeniDeger });
     }
-  };
-
-  const handleKonumYaricapDegistir = (yeniDeger) => {
-    setKonumYaricap(yeniDeger);
-    localStorage.setItem(STORAGE_KEYS.LOCATION_RADIUS, yeniDeger.toString());
   };
 
   const SettingSection = ({ title, children }) => (
@@ -106,7 +93,7 @@ const Ayarlar = () => {
       <div className={`sticky top-0 z-10 ${themeClasses.glass} border-b ${themeClasses.border} p-4`}>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/profil', { state: { menuAcik: true } })}
             className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}
           >
             <ChevronLeftIcon className={`w-5 h-5 ${themeClasses.text}`} />
@@ -174,37 +161,6 @@ const Ayarlar = () => {
           >
             <Toggle value={musaitlikGorunur} onChange={handleMusaitlikGorunurDegistir} />
           </SettingRow>
-        </SettingSection>
-
-        {/* Konum Ayarları */}
-        <SettingSection title="KONUM">
-          <SettingRow
-            icon={LocationIcon}
-            label="Konum Bazlı Keşif"
-            description="Yakınındaki planları gör"
-          >
-            <Toggle value={konumAktif} onChange={setKonumAktif} />
-          </SettingRow>
-
-          {konumAktif && (
-            <SettingRow
-              label="Keşif Yarıçapı"
-              description={`${konumYaricap} km içindeki planları gör`}
-              last
-            >
-              <select
-                value={konumYaricap}
-                onChange={(e) => handleKonumYaricapDegistir(parseInt(e.target.value, 10))}
-                className={`${isDark ? 'bg-dark-700 text-white' : 'bg-gray-100 text-gray-900'} rounded-lg px-3 py-1.5 text-sm border-0 outline-none`}
-              >
-                {LOCATION_RADIUS_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </SettingRow>
-          )}
-
-          {!konumAktif && <div className="h-0" />}
         </SettingSection>
 
         {/* Uygulama Bilgisi */}
