@@ -254,6 +254,7 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
 
     const mevcutData = etkinlikDoc.data();
     let katilimcilar = mevcutData.katilimcilar || [];
+    let participantIds = mevcutData.participantIds || [];
 
     const yeniKatilimci = {
       odUserId,
@@ -271,8 +272,18 @@ export const katilimDurumuGuncelleDB = async (etkinlikId, odUserId, kullaniciDat
       katilimcilar.push(yeniKatilimci);
     }
 
+    // participantIds güncelle: Varım ise ekle, Yokum ise çıkar
+    if (durum === 'varim') {
+      if (!participantIds.includes(odUserId)) {
+        participantIds.push(odUserId);
+      }
+    } else if (durum === 'yokum') {
+      participantIds = participantIds.filter(id => id !== odUserId);
+    }
+
     await updateDoc(etkinlikRef, {
       katilimcilar: katilimcilar,
+      participantIds: participantIds,
       [`katilimDurumlari.${odUserId}`]: yeniKatilimci
     });
 

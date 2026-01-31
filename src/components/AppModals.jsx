@@ -776,20 +776,20 @@ const DetayModal = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleKatilim(KATILIM_DURUMLARI.VARIM)}
-                  className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${
+                  className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all border ${
                     benimDurum === KATILIM_DURUMLARI.VARIM
-                      ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
-                      : 'btn-ghost'
+                      ? 'bg-emerald-500 border-emerald-500 text-white'
+                      : 'border-dark-600 text-dark-300 hover:border-emerald-500/50 hover:text-emerald-400'
                   }`}
                 >
                   {KATILIM_LABELS.varim}
                 </button>
                 <button
                   onClick={() => handleKatilim(KATILIM_DURUMLARI.YOKUM)}
-                  className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${
+                  className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all border ${
                     benimDurum === KATILIM_DURUMLARI.YOKUM
-                      ? 'bg-red-500/20 border border-red-500/30 text-red-400'
-                      : 'btn-ghost'
+                      ? 'bg-red-500 border-red-500 text-white'
+                      : 'border-dark-600 text-dark-300 hover:border-red-500/50 hover:text-red-400'
                   }`}
                 >
                   {KATILIM_LABELS.yokum}
