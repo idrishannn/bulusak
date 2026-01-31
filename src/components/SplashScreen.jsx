@@ -4,7 +4,7 @@ import Wordmark from './Wordmark';
 
 const SplashScreen = () => {
   return (
-    <div className="min-h-screen bg-dark-900 flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-navy-900 flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gold-500/10 rounded-full blur-[100px]" />
         <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-gold-600/5 rounded-full blur-[80px]" />
@@ -19,7 +19,7 @@ const SplashScreen = () => {
           <Wordmark size="xl" />
         </div>
 
-        <p className="mt-2 text-dark-400 text-sm font-medium tracking-wide">
+        <p className="mt-2 text-navy-400 text-sm font-medium tracking-wide">
           planla, buluş, yaşa
         </p>
 

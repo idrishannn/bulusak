@@ -53,10 +53,10 @@ const KonusmaListesi = ({ onKonusmaSecildi }) => {
           <button
             key={konusma.id}
             onClick={() => onKonusmaSecildi(konusma, karsiTaraf)}
-            className="w-full flex items-center gap-3 p-4 hover:bg-dark-800/50 transition-colors border-b border-dark-800/50"
+            className="w-full flex items-center gap-3 p-4 hover:bg-navy-800/50 transition-colors border-b border-navy-800/50"
           >
             <div className="relative">
-              <div className="w-12 h-12 rounded-2xl bg-dark-700 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-navy-700 flex items-center justify-center">
                 {karsiTaraf?.avatar ? (
                   <span className="text-2xl">{karsiTaraf.avatar}</span>
                 ) : (
@@ -64,19 +64,19 @@ const KonusmaListesi = ({ onKonusmaSecildi }) => {
                 )}
               </div>
               {karsiTaraf?.online && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-dark-900" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-navy-900" />
               )}
             </div>
             <div className="flex-1 text-left min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <p className={`font-semibold truncate ${okunmamis ? 'text-white' : 'text-dark-300'}`}>
+                <p className={`font-semibold truncate ${okunmamis ? 'text-white' : 'text-navy-300'}`}>
                   {karsiTaraf?.isim || 'Kullanıcı'}
                 </p>
-                <span className="text-xs text-dark-500 flex-shrink-0">
+                <span className="text-xs text-navy-500 flex-shrink-0">
                   {konusma.sonMesajZamani?.toDate?.()?.toLocaleTimeString?.('tr-TR', { hour: '2-digit', minute: '2-digit' }) || ''}
                 </span>
               </div>
-              <p className={`text-sm truncate ${okunmamis ? 'text-white font-medium' : 'text-dark-400'}`}>
+              <p className={`text-sm truncate ${okunmamis ? 'text-white font-medium' : 'text-navy-400'}`}>
                 {konusma.sonMesaj || 'Sohbet başlat'}
               </p>
             </div>
@@ -152,11 +152,11 @@ const SohbetEkrani = ({ konusma, karsiTaraf, onGeri }) => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="glass border-b border-dark-700/50 p-4 flex items-center gap-3">
-        <button onClick={onGeri} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center">
+      <div className="glass border-b border-navy-700/50 p-4 flex items-center gap-3">
+        <button onClick={onGeri} className="w-10 h-10 rounded-xl bg-navy-800 flex items-center justify-center">
           <ChevronLeftIcon className="w-5 h-5 text-white" />
         </button>
-        <div className="w-10 h-10 rounded-xl bg-dark-700 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-navy-700 flex items-center justify-center">
           {karsiTaraf?.avatar ? (
             <span className="text-xl">{karsiTaraf.avatar}</span>
           ) : (
@@ -165,7 +165,7 @@ const SohbetEkrani = ({ konusma, karsiTaraf, onGeri }) => {
         </div>
         <div className="flex-1">
           <p className="font-semibold text-white">{karsiTaraf?.isim || 'Kullanıcı'}</p>
-          <p className="text-xs text-dark-400">
+          <p className="text-xs text-navy-400">
             {yaziyor ? (
               <span className="text-gold-500">yazıyor...</span>
             ) : karsiTaraf?.online ? (
@@ -185,8 +185,8 @@ const SohbetEkrani = ({ konusma, karsiTaraf, onGeri }) => {
               <div className={`max-w-[75%] ${benimMi ? 'message-bubble-sent' : 'message-bubble-received'} px-4 py-2.5 ${mesaj.gonderiliyor ? 'opacity-70' : ''}`}>
                 <p className="text-sm">{mesaj.icerik}</p>
                 <div className={`flex items-center gap-1 mt-1 ${benimMi ? 'justify-end' : 'justify-start'}`}>
-                  <span className={`text-[10px] ${benimMi ? 'text-dark-700' : 'text-dark-500'}`}>{mesaj.zaman}</span>
-                  {benimMi && mesaj.okundu && <span className="text-[10px] text-dark-700">✓✓</span>}
+                  <span className={`text-[10px] ${benimMi ? 'text-navy-700' : 'text-navy-500'}`}>{mesaj.zaman}</span>
+                  {benimMi && mesaj.okundu && <span className="text-[10px] text-navy-700">✓✓</span>}
                 </div>
               </div>
             </div>
@@ -196,9 +196,9 @@ const SohbetEkrani = ({ konusma, karsiTaraf, onGeri }) => {
           <div className="flex justify-start">
             <div className="message-bubble-received px-4 py-3">
               <div className="typing-indicator flex gap-1">
-                <span className="w-2 h-2 bg-dark-400 rounded-full" />
-                <span className="w-2 h-2 bg-dark-400 rounded-full" />
-                <span className="w-2 h-2 bg-dark-400 rounded-full" />
+                <span className="w-2 h-2 bg-navy-400 rounded-full" />
+                <span className="w-2 h-2 bg-navy-400 rounded-full" />
+                <span className="w-2 h-2 bg-navy-400 rounded-full" />
               </div>
             </div>
           </div>
@@ -206,7 +206,7 @@ const SohbetEkrani = ({ konusma, karsiTaraf, onGeri }) => {
         <div ref={scrollRef} />
       </div>
 
-      <div className="p-4 glass border-t border-dark-700/50 safe-bottom">
+      <div className="p-4 glass border-t border-navy-700/50 safe-bottom">
         <div className="flex items-center gap-3">
           <input
             ref={inputRef}
@@ -215,7 +215,7 @@ const SohbetEkrani = ({ konusma, karsiTaraf, onGeri }) => {
             onChange={handleInputChange}
             onKeyPress={(e) => e.key === 'Enter' && handleGonder()}
             placeholder="Mesaj yaz..."
-            className="flex-1 min-w-0 bg-dark-800 border border-dark-600 rounded-full px-4 py-3 text-white placeholder:text-dark-400 focus:border-gold-500/50 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition-all"
+            className="flex-1 min-w-0 bg-navy-800 border border-navy-600 rounded-full px-4 py-3 text-white placeholder:text-navy-400 focus:border-gold-500/50 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition-all"
           />
           <button
             onClick={handleGonder}
@@ -264,7 +264,7 @@ const KullaniciAramaModal = ({ onClose, onKullaniciSec }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-16">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full max-w-lg mx-4 ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-2xl max-h-[70vh] flex flex-col animate-slide-down shadow-2xl`}>
+      <div className={`relative w-full max-w-lg mx-4 ${isDark ? 'bg-navy-900' : 'bg-white'} rounded-2xl max-h-[70vh] flex flex-col animate-slide-down shadow-2xl`}>
         {/* Arama Başlığı */}
         <div className={`p-4 border-b ${themeClasses.border} flex items-center gap-3`}>
           <div className="relative flex-1">
@@ -275,10 +275,10 @@ const KullaniciAramaModal = ({ onClose, onKullaniciSec }) => {
               value={arama}
               onChange={(e) => setArama(e.target.value)}
               placeholder="Kullanıcı ara..."
-              className={`w-full pl-10 pr-4 py-3 rounded-xl ${isDark ? 'bg-dark-800 text-white' : 'bg-gray-100 text-gray-900'} outline-none`}
+              className={`w-full pl-10 pr-4 py-3 rounded-xl ${isDark ? 'bg-navy-800 text-white' : 'bg-slate-100 text-slate-900'} outline-none`}
             />
           </div>
-          <button onClick={onClose} className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}>
+          <button onClick={onClose} className={`w-10 h-10 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center`}>
             <XIcon className={`w-5 h-5 ${themeClasses.textMuted}`} />
           </button>
         </div>
@@ -295,9 +295,9 @@ const KullaniciAramaModal = ({ onClose, onKullaniciSec }) => {
                 <button
                   key={k.odUserId}
                   onClick={() => onKullaniciSec(k)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-dark-800' : 'hover:bg-gray-100'}`}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-navy-800' : 'hover:bg-slate-100'}`}
                 >
-                  <div className={`w-12 h-12 rounded-full ${isDark ? 'bg-dark-700' : 'bg-gray-200'} flex items-center justify-center text-2xl`}>
+                  <div className={`w-12 h-12 rounded-full ${isDark ? 'bg-navy-700' : 'bg-slate-200'} flex items-center justify-center text-2xl`}>
                     {k.avatar || '👤'}
                   </div>
                   <div className="flex-1 text-left">
@@ -367,7 +367,7 @@ const Mesajlar = () => {
         {/* Arama Butonu - Büyüteç */}
         <button
           onClick={() => setAramaAcik(true)}
-          className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-700 hover:bg-dark-600' : 'bg-gray-100 hover:bg-gray-200'} flex items-center justify-center transition-colors`}
+          className={`w-10 h-10 rounded-xl ${isDark ? 'bg-navy-700 hover:bg-navy-600' : 'bg-slate-100 hover:bg-slate-200'} flex items-center justify-center transition-colors`}
         >
           <SearchIcon className={`w-5 h-5 ${themeClasses.textSecondary}`} />
         </button>

@@ -293,12 +293,12 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
             </button>
           )}
           {katilimciMiyim && !hikayeYuklemeAktif && planBasladiMi() && (
-            <span className="text-xs text-dark-500">Süre Doldu</span>
+            <span className="text-xs text-navy-500">Süre Doldu</span>
           )}
         </div>
 
         {hikayeYuklemeAktif && kalanSure > 0 && (
-          <p className="text-xs text-dark-400 mb-3">
+          <p className="text-xs text-navy-400 mb-3">
             Kalan süre: {formatKalanSure(kalanSure)}
           </p>
         )}
@@ -323,9 +323,9 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                     className="flex flex-col items-center gap-1.5 flex-shrink-0"
                   >
                     <div className={`relative w-16 h-16 rounded-2xl ${
-                      gorunebilir ? 'story-ring' : 'border-2 border-dark-600'
+                      gorunebilir ? 'story-ring' : 'border-2 border-navy-600'
                     }`}>
-                      <div className={`w-full h-full rounded-[14px] ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center overflow-hidden ${
+                      <div className={`w-full h-full rounded-[14px] ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center overflow-hidden ${
                         !gorunebilir ? 'opacity-50 blur-[2px]' : ''
                       }`}>
                         <span className="text-2xl">{grup.avatar || '👤'}</span>
@@ -335,12 +335,12 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                       </div>
                       {!gorunebilir && (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <LockIcon className="w-5 h-5 text-dark-400" />
+                          <LockIcon className="w-5 h-5 text-navy-400" />
                         </div>
                       )}
                     </div>
                     <span className={`text-xs font-medium truncate max-w-[64px] ${
-                      gorunebilir ? 'text-dark-300' : 'text-dark-500'
+                      gorunebilir ? 'text-navy-300' : 'text-navy-500'
                     }`}>
                       {grup.isim?.split(' ')[0] || 'Kullanıcı'}
                     </span>
@@ -354,7 +354,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
         {normalHikayeOlanlar.length > 0 && (
           <div>
             {sabitHikayeOlanlar.length > 0 && (
-              <p className="text-xs text-dark-400 mb-2">Son 24 Saat</p>
+              <p className="text-xs text-navy-400 mb-2">Son 24 Saat</p>
             )}
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
               {normalHikayeOlanlar.map((grup) => {
@@ -375,23 +375,23 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                     className="flex flex-col items-center gap-1.5 flex-shrink-0"
                   >
                     <div className={`relative w-16 h-16 rounded-2xl p-[2px] ${
-                      !gorunebilir ? 'border-2 border-dark-600' :
+                      !gorunebilir ? 'border-2 border-navy-600' :
                       izlendi ? 'story-ring-seen' : 'story-ring'
                     }`}>
-                      <div className={`w-full h-full rounded-[14px] ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center overflow-hidden ${
+                      <div className={`w-full h-full rounded-[14px] ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center overflow-hidden ${
                         !gorunebilir ? 'opacity-50 blur-[2px]' : ''
                       }`}>
                         <span className="text-2xl">{grup.avatar || '👤'}</span>
                       </div>
                       {!gorunebilir && (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <LockIcon className="w-5 h-5 text-dark-400" />
+                          <LockIcon className="w-5 h-5 text-navy-400" />
                         </div>
                       )}
                     </div>
                     <span className={`text-xs font-medium truncate max-w-[64px] ${
-                      !gorunebilir ? 'text-dark-500' :
-                      izlendi ? 'text-dark-500' : 'text-dark-300'
+                      !gorunebilir ? 'text-navy-500' :
+                      izlendi ? 'text-navy-500' : 'text-navy-300'
                     }`}>
                       {grup.isim?.split(' ')[0] || 'Kullanıcı'}
                     </span>
@@ -403,22 +403,22 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
         )}
 
         {sabitHikayeOlanlar.length === 0 && normalHikayeOlanlar.length === 0 && (
-          <div className={`text-center py-6 ${isDark ? 'bg-dark-800/50' : 'bg-gray-50'} rounded-xl`}>
+          <div className={`text-center py-6 ${isDark ? 'bg-navy-800/50' : 'bg-slate-50'} rounded-xl`}>
             <p className="text-3xl mb-2">📷</p>
             <p className={`text-sm ${themeClasses.textMuted}`}>Henüz hikaye yok</p>
             {katilimciMiyim && hikayeYuklemeAktif && (
-              <p className="text-xs text-dark-500 mt-1">İlk hikayeyi sen paylaş!</p>
+              <p className="text-xs text-navy-500 mt-1">İlk hikayeyi sen paylaş!</p>
             )}
           </div>
         )}
       </div>
 
       {acikHikaye && (
-        <div className="fixed inset-0 z-[110] bg-dark-950">
+        <div className="fixed inset-0 z-[110] bg-navy-950">
           <div className="absolute top-0 left-0 right-0 z-10 p-4 safe-top">
             <div className="flex gap-1 mb-4">
               {acikHikaye.tumHikayeler.map((_, i) => (
-                <div key={i} className="flex-1 h-1 rounded-full bg-dark-700 overflow-hidden">
+                <div key={i} className="flex-1 h-1 rounded-full bg-navy-700 overflow-hidden">
                   <div
                     className={`h-full bg-white transition-all duration-300 ${
                       i < aktifIndex ? 'w-full' : i === aktifIndex ? 'w-full animate-pulse' : 'w-0'
@@ -430,7 +430,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-navy-700 flex items-center justify-center">
                   <span className="text-lg">{acikHikaye.avatar || '👤'}</span>
                 </div>
                 <div>
@@ -440,7 +440,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                       <PinIcon className="w-3 h-3 text-gold-500" />
                     )}
                   </p>
-                  <p className="text-dark-400 text-xs">
+                  <p className="text-navy-400 text-xs">
                     {acikHikaye.tumHikayeler[aktifIndex]?.olusturulma?.toLocaleTimeString?.('tr-TR', { hour: '2-digit', minute: '2-digit' }) || 'Şimdi'}
                   </p>
                 </div>
@@ -451,24 +451,24 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                   <div className="relative">
                     <button
                       onClick={() => setMenuAcik(!menuAcik)}
-                      className="w-10 h-10 rounded-full bg-dark-800/50 flex items-center justify-center"
+                      className="w-10 h-10 rounded-full bg-navy-800/50 flex items-center justify-center"
                     >
                       <MoreVerticalIcon className="w-5 h-5 text-white" />
                     </button>
                     {menuAcik && (
-                      <div className={`absolute right-0 top-12 w-48 ${isDark ? 'bg-dark-800' : 'bg-white'} rounded-xl shadow-xl border ${isDark ? 'border-dark-700' : 'border-gray-200'} overflow-hidden z-20`}>
+                      <div className={`absolute right-0 top-12 w-48 ${isDark ? 'bg-navy-800' : 'bg-white'} rounded-xl shadow-xl border ${isDark ? 'border-navy-700' : 'border-slate-200'} overflow-hidden z-20`}>
                         {acikHikaye.tumHikayeler[aktifIndex]?.sabitleme ? (
                           <button
                             onClick={handleSabitKaldir}
-                            className={`w-full flex items-center gap-3 p-3 text-left ${isDark ? 'hover:bg-dark-700' : 'hover:bg-gray-50'}`}
+                            className={`w-full flex items-center gap-3 p-3 text-left ${isDark ? 'hover:bg-navy-700' : 'hover:bg-slate-50'}`}
                           >
-                            <PinIcon className="w-4 h-4 text-dark-400" />
+                            <PinIcon className="w-4 h-4 text-navy-400" />
                             <span className={themeClasses.text}>Sabiti Kaldır</span>
                           </button>
                         ) : (
                           <button
                             onClick={handleSabitle}
-                            className={`w-full flex items-center gap-3 p-3 text-left ${isDark ? 'hover:bg-dark-700' : 'hover:bg-gray-50'}`}
+                            className={`w-full flex items-center gap-3 p-3 text-left ${isDark ? 'hover:bg-navy-700' : 'hover:bg-slate-50'}`}
                           >
                             <PinIcon className="w-4 h-4 text-gold-500" />
                             <span className={themeClasses.text}>Sabitle</span>
@@ -476,14 +476,14 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                         )}
                         <button
                           onClick={handleIndir}
-                          className={`w-full flex items-center gap-3 p-3 text-left ${isDark ? 'hover:bg-dark-700' : 'hover:bg-gray-50'}`}
+                          className={`w-full flex items-center gap-3 p-3 text-left ${isDark ? 'hover:bg-navy-700' : 'hover:bg-slate-50'}`}
                         >
-                          <DownloadIcon className="w-4 h-4 text-dark-400" />
+                          <DownloadIcon className="w-4 h-4 text-navy-400" />
                           <span className={themeClasses.text}>İndir</span>
                         </button>
                         <button
                           onClick={handleSil}
-                          className={`w-full flex items-center gap-3 p-3 text-left ${isDark ? 'hover:bg-dark-700' : 'hover:bg-gray-50'}`}
+                          className={`w-full flex items-center gap-3 p-3 text-left ${isDark ? 'hover:bg-navy-700' : 'hover:bg-slate-50'}`}
                         >
                           <TrashIcon className="w-4 h-4 text-red-400" />
                           <span className="text-red-400">Sil</span>
@@ -494,7 +494,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                 )}
                 <button
                   onClick={() => { setAcikHikaye(null); setMenuAcik(false); }}
-                  className="w-10 h-10 rounded-full bg-dark-800/50 flex items-center justify-center"
+                  className="w-10 h-10 rounded-full bg-navy-800/50 flex items-center justify-center"
                 >
                   <XIcon className="w-5 h-5 text-white" />
                 </button>
@@ -535,7 +535,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                   <button
                     key={emoji}
                     onClick={() => handleTepki(emoji)}
-                    className="w-10 h-10 rounded-full bg-dark-800/80 flex items-center justify-center hover:scale-110 transition-transform"
+                    className="w-10 h-10 rounded-full bg-navy-800/80 flex items-center justify-center hover:scale-110 transition-transform"
                   >
                     {emoji}
                   </button>
@@ -547,7 +547,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
           {acikHikaye.odUserId === kullanici?.odUserId && (
             <div className="absolute bottom-0 left-0 right-0 p-4 safe-bottom">
               <div className="glass rounded-2xl p-4">
-                <p className="text-dark-400 text-sm text-center">
+                <p className="text-navy-400 text-sm text-center">
                   {acikHikaye.tumHikayeler[aktifIndex]?.izleyenler?.length || 0} kişi gördü
                 </p>
               </div>
@@ -559,16 +559,16 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
       {gizliProfilPopup && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setGizliProfilPopup(null)} />
-          <div className={`relative w-full max-w-sm ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-2xl p-6 border ${isDark ? 'border-dark-700' : 'border-gray-200'}`}>
+          <div className={`relative w-full max-w-sm ${isDark ? 'bg-navy-900' : 'bg-white'} rounded-2xl p-6 border ${isDark ? 'border-navy-700' : 'border-slate-200'}`}>
             <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 rounded-full bg-dark-700 flex items-center justify-center mb-4">
+              <div className="w-20 h-20 rounded-full bg-navy-700 flex items-center justify-center mb-4">
                 <span className="text-3xl">{gizliProfilPopup.avatar || '👤'}</span>
               </div>
               <h3 className={`font-semibold ${themeClasses.text} mb-1`}>{gizliProfilPopup.isim}</h3>
               <p className={`text-sm ${themeClasses.textMuted} mb-4`}>@{gizliProfilPopup.kullaniciAdi}</p>
 
               <div className="flex items-center gap-2 mb-4">
-                <LockIcon className="w-4 h-4 text-dark-400" />
+                <LockIcon className="w-4 h-4 text-navy-400" />
                 <p className={`text-sm ${themeClasses.textMuted}`}>Bu hesap gizli</p>
               </div>
 
@@ -579,7 +579,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
               {istekGonderildi[gizliProfilPopup.odUserId] ? (
                 <button
                   disabled
-                  className="w-full py-3 rounded-xl font-medium bg-dark-700 text-dark-400"
+                  className="w-full py-3 rounded-xl font-medium bg-navy-700 text-navy-400"
                 >
                   İstek Gönderildi
                 </button>
@@ -594,7 +594,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
 
               <button
                 onClick={() => setGizliProfilPopup(null)}
-                className={`w-full mt-3 py-3 rounded-xl font-medium ${isDark ? 'bg-dark-800 text-dark-300' : 'bg-gray-100 text-gray-700'}`}
+                className={`w-full mt-3 py-3 rounded-xl font-medium ${isDark ? 'bg-navy-800 text-navy-300' : 'bg-slate-100 text-slate-700'}`}
               >
                 Kapat
               </button>
@@ -606,15 +606,15 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
       {hikayeEkleAcik && (
         <div className="fixed inset-0 z-[110] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setHikayeEkleAcik(false); setEtiketlemeAcik(false); }} />
-          <div className={`relative w-full max-w-lg ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-t-3xl p-6 animate-slide-up`}>
-            <div className="w-12 h-1 bg-dark-600 rounded-full mx-auto mb-6" />
+          <div className={`relative w-full max-w-lg ${isDark ? 'bg-navy-900' : 'bg-white'} rounded-t-3xl p-6 animate-slide-up`}>
+            <div className="w-12 h-1 bg-navy-600 rounded-full mx-auto mb-6" />
             <h3 className={`text-lg font-semibold ${themeClasses.text} text-center mb-6`}>Plan Hikayesi Ekle</h3>
 
             {!etiketlemeAcik ? (
               <>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className={`w-full flex items-center justify-center gap-3 p-6 rounded-2xl ${isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'} transition-all mb-4`}
+                  className={`w-full flex items-center justify-center gap-3 p-6 rounded-2xl ${isDark ? 'bg-navy-800 hover:bg-navy-700' : 'bg-slate-100 hover:bg-slate-200'} transition-all mb-4`}
                 >
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
                     <ImageIcon className="w-7 h-7 text-white" />
@@ -628,7 +628,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                 {katilimcilar.length > 1 && (
                   <button
                     onClick={() => setEtiketlemeAcik(true)}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} mb-4`}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-100'} mb-4`}
                   >
                     <span className={themeClasses.text}>Katılımcı Etiketle</span>
                     <span className={themeClasses.textMuted}>
@@ -652,10 +652,10 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
                       className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
                         secilenEtiketler.includes(k.odUserId)
                           ? 'bg-gold-500/20 border border-gold-500/30'
-                          : isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'
+                          : isDark ? 'bg-navy-800 hover:bg-navy-700' : 'bg-slate-100 hover:bg-slate-200'
                       }`}
                     >
-                      <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-navy-700 flex items-center justify-center">
                         <span className="text-lg">{k.avatar || '👤'}</span>
                       </div>
                       <span className={`flex-1 text-left ${themeClasses.text}`}>{k.isim}</span>
@@ -676,7 +676,7 @@ const PlanHikayeler = ({ plan, katilimcilar = [] }) => {
 
             <button
               onClick={() => { setHikayeEkleAcik(false); setEtiketlemeAcik(false); setSecilenEtiketler([]); }}
-              className={`w-full mt-4 py-3 rounded-xl font-medium ${isDark ? 'bg-dark-800 text-dark-300' : 'bg-gray-200 text-gray-700'}`}
+              className={`w-full mt-4 py-3 rounded-xl font-medium ${isDark ? 'bg-navy-800 text-navy-300' : 'bg-slate-200 text-slate-700'}`}
             >
               İptal
             </button>

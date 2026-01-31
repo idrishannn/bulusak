@@ -41,7 +41,7 @@ const PlanKarti = ({ plan, onClick, benimMi }) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-dark-700' : 'bg-gray-200'}`}>
+            <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-navy-700' : 'bg-slate-200'}`}>
               <span className={`text-lg font-semibold ${themeClasses.textSecondary}`}>
                 {olusturan?.isim?.charAt(0) || '?'}
               </span>
@@ -125,7 +125,7 @@ const Planlar = () => {
       </div>
 
       {/* Tab bar */}
-      <div className={`flex gap-2 p-1 ${isDark ? 'bg-dark-800' : 'bg-gray-200'} rounded-xl mb-4`}>
+      <div className={`flex gap-2 p-1 ${isDark ? 'bg-navy-800' : 'bg-slate-200'} rounded-xl mb-4`}>
         {PLAN_TABS.map(tab => (
           <button
             key={tab.id}
@@ -133,7 +133,7 @@ const Planlar = () => {
             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
               aktifTab === tab.id
                 ? 'bg-gold-500 text-dark-900'
-                : isDark ? 'text-dark-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                : isDark ? 'text-navy-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             {tab.label}

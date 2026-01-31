@@ -23,7 +23,7 @@ const Header = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setModalAcik('kullaniciEkle')}
-              className={`relative w-10 h-10 rounded-xl ${isDark ? 'bg-dark-700/50 hover:bg-dark-600/50' : 'bg-gray-100 hover:bg-gray-200'} flex items-center justify-center transition-colors`}
+              className={`relative w-10 h-10 rounded-xl ${isDark ? 'bg-navy-800/50 hover:bg-navy-700/60' : 'bg-slate-100 hover:bg-slate-200'} flex items-center justify-center transition-all duration-200 active:scale-95`}
             >
               <PlusIcon className={`w-5 h-5 ${themeClasses.textSecondary}`} />
             </button>
@@ -33,8 +33,8 @@ const Header = () => {
               className={`relative w-10 h-10 rounded-xl ${
                 okunmamisBildirim > 0
                   ? 'bg-red-500/10 hover:bg-red-500/20'
-                  : isDark ? 'bg-dark-700/50 hover:bg-dark-600/50' : 'bg-gray-100 hover:bg-gray-200'
-              } flex items-center justify-center transition-colors`}
+                  : isDark ? 'bg-navy-800/50 hover:bg-navy-700/60' : 'bg-slate-100 hover:bg-slate-200'
+              } flex items-center justify-center transition-all duration-200 active:scale-95`}
             >
               <HeartIcon
                 className={`w-5 h-5 ${okunmamisBildirim > 0 ? 'text-red-500' : themeClasses.textSecondary}`}

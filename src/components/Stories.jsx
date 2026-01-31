@@ -177,10 +177,10 @@ const Stories = () => {
           <div className={`relative w-16 h-16 rounded-2xl flex items-center justify-center ${
             benimHikayem 
               ? 'story-ring' 
-              : 'border-2 border-dashed border-dark-600'
+              : 'border-2 border-dashed border-navy-600'
           }`}>
             {benimHikayem ? (
-              <div className="w-full h-full rounded-[14px] bg-dark-800 flex items-center justify-center overflow-hidden">
+              <div className="w-full h-full rounded-[14px] bg-navy-800 flex items-center justify-center overflow-hidden">
                 {kullanici?.avatar ? (
                   <span className="text-2xl">{kullanici.avatar}</span>
                 ) : (
@@ -192,11 +192,11 @@ const Stories = () => {
             )}
             {!benimHikayem && (
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gold-500 rounded-full flex items-center justify-center">
-                <PlusIcon className="w-3 h-3 text-dark-900" />
+                <PlusIcon className="w-3 h-3 text-navy-900" />
               </div>
             )}
           </div>
-          <span className="text-xs text-dark-400 font-medium">
+          <span className="text-xs text-navy-400 font-medium">
             {benimHikayem ? 'Hikayem' : 'Ekle'}
           </span>
         </button>
@@ -217,7 +217,7 @@ const Stories = () => {
               <div className={`w-16 h-16 rounded-2xl p-[2px] ${
                 izlendi ? 'story-ring-seen' : 'story-ring'
               }`}>
-                <div className="w-full h-full rounded-[14px] bg-dark-800 flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full rounded-[14px] bg-navy-800 flex items-center justify-center overflow-hidden">
                   {hikayeGrubu.kullaniciAvatar ? (
                     <span className="text-2xl">{hikayeGrubu.kullaniciAvatar}</span>
                   ) : (
@@ -226,7 +226,7 @@ const Stories = () => {
                 </div>
               </div>
               <span className={`text-xs font-medium truncate max-w-[64px] ${
-                izlendi ? 'text-dark-500' : 'text-dark-300'
+                izlendi ? 'text-navy-500' : 'text-navy-300'
               }`}>
                 {hikayeGrubu.kullaniciIsim?.split(' ')[0]}
               </span>
@@ -236,11 +236,11 @@ const Stories = () => {
       </div>
 
       {acikHikaye && (
-        <div className="fixed inset-0 z-[100] bg-dark-950">
+        <div className="fixed inset-0 z-[100] bg-navy-950">
           <div className="absolute top-0 left-0 right-0 z-10 p-4 safe-top">
             <div className="flex gap-1 mb-4">
               {acikHikaye.hikayeler.map((_, i) => (
-                <div key={i} className="flex-1 h-1 rounded-full bg-dark-700 overflow-hidden">
+                <div key={i} className="flex-1 h-1 rounded-full bg-navy-700 overflow-hidden">
                   <div 
                     className={`h-full bg-white transition-all duration-300 ${
                       i < aktifIndex ? 'w-full' : i === aktifIndex ? 'w-full animate-pulse' : 'w-0'
@@ -252,7 +252,7 @@ const Stories = () => {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-navy-700 flex items-center justify-center">
                   {acikHikaye.kullaniciAvatar ? (
                     <span className="text-lg">{acikHikaye.kullaniciAvatar}</span>
                   ) : (
@@ -263,7 +263,7 @@ const Stories = () => {
                   <p className="text-white font-semibold text-sm">
                     {acikHikaye.kullaniciIsim}
                   </p>
-                  <p className="text-dark-400 text-xs">
+                  <p className="text-navy-400 text-xs">
                     {acikHikaye.hikayeler[aktifIndex]?.olusturulma?.toLocaleTimeString?.('tr-TR', { hour: '2-digit', minute: '2-digit' }) || 'Şimdi'}
                   </p>
                 </div>
@@ -271,7 +271,7 @@ const Stories = () => {
 
               <button
                 onClick={() => setAcikHikaye(null)}
-                className="w-10 h-10 rounded-full bg-dark-800/50 flex items-center justify-center"
+                className="w-10 h-10 rounded-full bg-navy-800/50 flex items-center justify-center"
               >
                 <XIcon className="w-5 h-5 text-white" />
               </button>
@@ -312,7 +312,7 @@ const Stories = () => {
                   <button
                     key={emoji}
                     onClick={() => handleTepki(emoji)}
-                    className="w-10 h-10 rounded-full bg-dark-800/80 flex items-center justify-center hover:scale-110 transition-transform"
+                    className="w-10 h-10 rounded-full bg-navy-800/80 flex items-center justify-center hover:scale-110 transition-transform"
                   >
                     {emoji}
                   </button>
@@ -342,7 +342,7 @@ const Stories = () => {
           {acikHikaye.kullaniciId === kullanici?.odUserId && (
             <div className="absolute bottom-0 left-0 right-0 p-4 safe-bottom">
               <div className="glass rounded-2xl p-4">
-                <p className="text-dark-400 text-sm text-center">
+                <p className="text-navy-400 text-sm text-center">
                   {acikHikaye.hikayeler[aktifIndex]?.izleyenler?.length || 0} kişi gördü
                 </p>
               </div>
@@ -355,15 +355,15 @@ const Stories = () => {
       {hikayeEklePaneli && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setHikayeEklePaneli(false)} />
-          <div className={`relative w-full max-w-lg ${isDark ? 'bg-dark-900' : 'bg-white'} rounded-t-3xl p-6 animate-slide-up`}>
-            <div className="w-12 h-1 bg-dark-600 rounded-full mx-auto mb-6" />
+          <div className={`relative w-full max-w-lg ${isDark ? 'bg-navy-900' : 'bg-white'} rounded-t-3xl p-6 animate-slide-up`}>
+            <div className="w-12 h-1 bg-navy-600 rounded-full mx-auto mb-6" />
             <h3 className={`text-lg font-semibold ${themeClasses.text} text-center mb-6`}>Hikaye Ekle</h3>
 
             <div className="grid grid-cols-2 gap-4">
               {/* Fotoğraf Seç */}
               <button
                 onClick={handleFotografSec}
-                className={`flex flex-col items-center gap-3 p-6 rounded-2xl ${isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'} transition-all`}
+                className={`flex flex-col items-center gap-3 p-6 rounded-2xl ${isDark ? 'bg-navy-800 hover:bg-navy-700' : 'bg-slate-100 hover:bg-slate-200'} transition-all`}
               >
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
                   <ImageIcon className="w-7 h-7 text-white" />
@@ -375,7 +375,7 @@ const Stories = () => {
               {/* Metin Hikaye */}
               <button
                 onClick={handleMetinHikaye}
-                className={`flex flex-col items-center gap-3 p-6 rounded-2xl ${isDark ? 'bg-dark-800 hover:bg-dark-700' : 'bg-gray-100 hover:bg-gray-200'} transition-all`}
+                className={`flex flex-col items-center gap-3 p-6 rounded-2xl ${isDark ? 'bg-navy-800 hover:bg-navy-700' : 'bg-slate-100 hover:bg-slate-200'} transition-all`}
               >
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gold-500 to-orange-500 flex items-center justify-center">
                   <span className="text-2xl">Aa</span>
@@ -391,7 +391,7 @@ const Stories = () => {
 
             <button
               onClick={() => setHikayeEklePaneli(false)}
-              className={`w-full mt-6 py-3 rounded-xl font-medium ${isDark ? 'bg-dark-800 text-dark-300' : 'bg-gray-200 text-gray-700'}`}
+              className={`w-full mt-6 py-3 rounded-xl font-medium ${isDark ? 'bg-navy-800 text-navy-300' : 'bg-slate-200 text-slate-700'}`}
             >
               İptal
             </button>

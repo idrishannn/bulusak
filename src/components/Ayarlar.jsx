@@ -58,7 +58,7 @@ const Ayarlar = () => {
     >
       <div className="flex items-center gap-3 flex-1">
         {Icon && (
-          <div className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-700' : 'bg-gray-100'} flex items-center justify-center`}>
+          <div className={`w-10 h-10 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center`}>
             <Icon className={`w-5 h-5 ${themeClasses.textSecondary}`} />
           </div>
         )}
@@ -79,7 +79,7 @@ const Ayarlar = () => {
   const Toggle = ({ value, onChange }) => (
     <button
       onClick={() => onChange(!value)}
-      className={`relative w-12 h-7 rounded-full transition-colors ${value ? 'bg-gold-500' : isDark ? 'bg-dark-600' : 'bg-gray-300'}`}
+      className={`relative w-12 h-7 rounded-full transition-colors ${value ? 'bg-gold-500' : isDark ? 'bg-navy-700' : 'bg-slate-300'}`}
     >
       <div
         className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${value ? 'translate-x-6' : 'translate-x-1'}`}
@@ -94,7 +94,7 @@ const Ayarlar = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/profil', { state: { menuAcik: true } })}
-              className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}
+              className={`w-10 h-10 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center transition-colors active:scale-95`}
             >
               <ChevronLeftIcon className={`w-5 h-5 ${themeClasses.text}`} />
             </button>
@@ -102,7 +102,7 @@ const Ayarlar = () => {
           </div>
           <button
             onClick={() => navigate('/profil')}
-            className={`w-10 h-10 rounded-xl ${isDark ? 'bg-dark-800' : 'bg-gray-100'} flex items-center justify-center`}
+            className={`w-10 h-10 rounded-xl ${isDark ? 'bg-navy-800' : 'bg-slate-100'} flex items-center justify-center transition-colors active:scale-95`}
           >
             <XIcon className={`w-5 h-5 ${themeClasses.text}`} />
           </button>
@@ -123,8 +123,8 @@ const Ayarlar = () => {
                 onClick={() => setTheme(THEMES.LIGHT)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   !isDark
-                    ? 'bg-gold-500 text-dark-900'
-                    : isDark ? 'bg-dark-700 text-dark-300' : 'bg-gray-200 text-gray-600'
+                    ? 'bg-gold-500 text-navy-950'
+                    : isDark ? 'bg-navy-800 text-navy-300' : 'bg-slate-200 text-slate-600'
                 }`}
               >
                 <SunIcon className="w-4 h-4" />
@@ -133,8 +133,8 @@ const Ayarlar = () => {
                 onClick={() => setTheme(THEMES.DARK)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   isDark
-                    ? 'bg-gold-500 text-dark-900'
-                    : 'bg-gray-200 text-gray-600'
+                    ? 'bg-gold-500 text-navy-950'
+                    : 'bg-slate-200 text-slate-600'
                 }`}
               >
                 <MoonIcon className="w-4 h-4" />
@@ -153,7 +153,7 @@ const Ayarlar = () => {
             <select
               value={profilGizlilik}
               onChange={(e) => handleProfilGizlilikDegistir(e.target.value)}
-              className={`${isDark ? 'bg-dark-700 text-white' : 'bg-gray-100 text-gray-900'} rounded-lg px-3 py-1.5 text-sm border-0 outline-none`}
+              className={`${isDark ? 'bg-navy-800 text-slate-100' : 'bg-slate-100 text-slate-900'} rounded-lg px-3 py-1.5 text-sm border-0 outline-none`}
             >
               <option value={PROFILE_PRIVACY.PUBLIC}>Herkese Açık</option>
               <option value={PROFILE_PRIVACY.PRIVATE}>Gizli</option>

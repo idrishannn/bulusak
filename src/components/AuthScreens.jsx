@@ -187,7 +187,7 @@ const GirisEkrani = ({ setEkran }) => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-900 flex flex-col">
+    <div className="min-h-screen bg-navy-900 flex flex-col">
       {/* FAZ 1 - Geliştirilmiş arka plan efektleri */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold-500/5 rounded-full blur-[100px] animate-pulse" />
@@ -202,7 +202,7 @@ const GirisEkrani = ({ setEkran }) => {
             <Logo size="xl" />
           </div>
           <Wordmark size="xl" className="mb-1" />
-          <p className="text-dark-400 text-sm mb-12 text-center">planla, buluş, yaşa</p>
+          <p className="text-navy-400 text-sm mb-12 text-center">planla, buluş, yaşa</p>
         </div>
 
         {/* FAZ 1 - Genel hata mesajı */}
@@ -280,9 +280,9 @@ const GirisEkrani = ({ setEkran }) => {
 
         <div className="w-full max-w-sm my-8">
           <div className="flex items-center gap-4">
-            <div className="flex-1 h-px bg-dark-700" />
-            <span className="text-dark-500 text-xs">veya şununla devam et</span>
-            <div className="flex-1 h-px bg-dark-700" />
+            <div className="flex-1 h-px bg-navy-700" />
+            <span className="text-navy-500 text-xs">veya şununla devam et</span>
+            <div className="flex-1 h-px bg-navy-700" />
           </div>
         </div>
 
@@ -315,8 +315,8 @@ const GirisEkrani = ({ setEkran }) => {
         </div>
       </div>
 
-      <div className="p-6 text-center glass border-t border-dark-700/50">
-        <p className="text-dark-400 text-sm">
+      <div className="p-6 text-center glass border-t border-navy-700/50">
+        <p className="text-navy-400 text-sm">
           Hesabın yok mu?{' '}
           <button onClick={() => setEkran('kayit')} className="text-gold-500 font-semibold hover:text-gold-400 transition-colors">
             Kayıt ol
@@ -328,9 +328,9 @@ const GirisEkrani = ({ setEkran }) => {
       {sifremiUnuttumAcik && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSifremiUnuttumAcik(false)} />
-          <div className="relative w-full max-w-sm bg-dark-900 rounded-2xl p-6 border border-dark-700 animate-scale-in">
+          <div className="relative w-full max-w-sm bg-navy-900 rounded-2xl p-6 border border-navy-700 animate-scale-in">
             <h3 className="text-lg font-semibold text-white mb-2">Şifremi Unuttum</h3>
-            <p className="text-dark-400 text-sm mb-4">
+            <p className="text-navy-400 text-sm mb-4">
               E-posta adresini gir, şifre sıfırlama bağlantısı gönderelim.
             </p>
 
@@ -345,7 +345,7 @@ const GirisEkrani = ({ setEkran }) => {
             <div className="flex gap-3">
               <button
                 onClick={() => setSifremiUnuttumAcik(false)}
-                className="flex-1 py-3 rounded-xl font-medium bg-dark-800 text-dark-300 hover:bg-dark-700 transition-colors"
+                className="flex-1 py-3 rounded-xl font-medium bg-navy-800 text-navy-300 hover:bg-navy-700 transition-colors"
               >
                 İptal
               </button>
@@ -443,9 +443,9 @@ const KayitEkrani = ({ setEkran }) => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-900 flex flex-col">
-      <div className="p-4 flex items-center gap-4 glass border-b border-dark-700/50">
-        <button onClick={() => setEkran('giris')} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center hover:bg-dark-700 transition-colors">
+    <div className="min-h-screen bg-navy-900 flex flex-col">
+      <div className="p-4 flex items-center gap-4 glass border-b border-navy-700/50">
+        <button onClick={() => setEkran('giris')} className="w-10 h-10 rounded-xl bg-navy-800 flex items-center justify-center hover:bg-navy-700 transition-colors">
           <ChevronLeftIcon className="w-5 h-5 text-white" />
         </button>
         <h1 className="text-lg font-semibold text-white">Kayıt Ol</h1>
@@ -456,12 +456,12 @@ const KayitEkrani = ({ setEkran }) => {
           <div className="logo-glow mb-4">
             <Logo size="lg" />
           </div>
-          <p className="text-dark-400 text-sm">Hesabını oluştur</p>
+          <p className="text-navy-400 text-sm">Hesabını oluştur</p>
         </div>
 
         <form onSubmit={handleKayit} className="space-y-4 max-w-sm mx-auto">
           <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">Kullanıcı Adı</label>
+            <label className="text-xs font-medium text-navy-400 mb-2 block">Kullanıcı Adı</label>
             <input
               type="text"
               value={kullaniciAdi}
@@ -482,7 +482,7 @@ const KayitEkrani = ({ setEkran }) => {
 
           {/* FAZ 1 - Şifre alanı (göster/gizle ve güç göstergesi ile) */}
           <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">Şifre</label>
+            <label className="text-xs font-medium text-navy-400 mb-2 block">Şifre</label>
             <PasswordInput
               value={sifre}
               onChange={(e) => {
@@ -501,7 +501,7 @@ const KayitEkrani = ({ setEkran }) => {
           </div>
 
           <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">Şifre Tekrar</label>
+            <label className="text-xs font-medium text-navy-400 mb-2 block">Şifre Tekrar</label>
             <PasswordInput
               value={sifreTekrar}
               onChange={(e) => {
@@ -547,9 +547,9 @@ const AvatarSecimEkrani = () => {
   const { seciliAvatar, setSeciliAvatar, avatarKategori, setAvatarKategori, setKayitAsamasi } = useAuth();
 
   return (
-    <div className="min-h-screen bg-dark-900 flex flex-col">
-      <div className="p-4 flex items-center gap-4 glass border-b border-dark-700/50">
-        <button onClick={() => setKayitAsamasi('giris')} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center hover:bg-dark-700 transition-colors">
+    <div className="min-h-screen bg-navy-900 flex flex-col">
+      <div className="p-4 flex items-center gap-4 glass border-b border-navy-700/50">
+        <button onClick={() => setKayitAsamasi('giris')} className="w-10 h-10 rounded-xl bg-navy-800 flex items-center justify-center hover:bg-navy-700 transition-colors">
           <ChevronLeftIcon className="w-5 h-5 text-white" />
         </button>
         <h1 className="text-lg font-semibold text-white">Avatar Seç</h1>
@@ -592,7 +592,7 @@ const AvatarSecimEkrani = () => {
                 className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all duration-200 ${
                   seciliAvatar === avatar
                     ? 'bg-gold-500/20 border-2 border-gold-500 scale-110 shadow-gold'
-                    : 'bg-dark-700 border border-dark-600 hover:bg-dark-600 hover:scale-105'
+                    : 'bg-navy-700 border border-navy-600 hover:bg-navy-600 hover:scale-105'
                 }`}
               >
                 {avatar}
@@ -602,7 +602,7 @@ const AvatarSecimEkrani = () => {
         </div>
       </div>
 
-      <div className="p-6 glass border-t border-dark-700/50">
+      <div className="p-6 glass border-t border-navy-700/50">
         <button
           onClick={() => setKayitAsamasi('bilgi')}
           className="w-full btn-gold-enhanced py-4 rounded-xl font-semibold"
@@ -654,9 +654,9 @@ const BilgiEkrani = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-900 flex flex-col">
-      <div className="p-4 flex items-center gap-4 glass border-b border-dark-700/50">
-        <button onClick={() => setKayitAsamasi('avatar')} className="w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center hover:bg-dark-700 transition-colors">
+    <div className="min-h-screen bg-navy-900 flex flex-col">
+      <div className="p-4 flex items-center gap-4 glass border-b border-navy-700/50">
+        <button onClick={() => setKayitAsamasi('avatar')} className="w-10 h-10 rounded-xl bg-navy-800 flex items-center justify-center hover:bg-navy-700 transition-colors">
           <ChevronLeftIcon className="w-5 h-5 text-white" />
         </button>
         <h1 className="text-lg font-semibold text-white">Profil Bilgileri</h1>
@@ -671,7 +671,7 @@ const BilgiEkrani = () => {
 
         <div className="space-y-4 max-w-sm mx-auto">
           <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">İsim</label>
+            <label className="text-xs font-medium text-navy-400 mb-2 block">İsim</label>
             <input
               type="text"
               value={isim}
@@ -681,9 +681,9 @@ const BilgiEkrani = () => {
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-dark-400 mb-2 block">Kullanıcı Adı</label>
+            <label className="text-xs font-medium text-navy-400 mb-2 block">Kullanıcı Adı</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">@</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-500">@</span>
               <input
                 type="text"
                 value={kullaniciAdi}
@@ -705,7 +705,7 @@ const BilgiEkrani = () => {
         </div>
       </div>
 
-      <div className="p-6 glass border-t border-dark-700/50">
+      <div className="p-6 glass border-t border-navy-700/50">
         <button
           onClick={handleTamamla}
           disabled={islemYukleniyor}
